@@ -1,9 +1,13 @@
 /**
  * .vitepress/tnotes/vitepress/assets/icons/index.ts
  *
+ * get icons:
+ *   https://iconify.design/
+ *   https://icon-sets.iconify.design/
+ *
  * SVG 图标统一导出
  */
-export { default as icon__card } from './icon__card.svg'
+
 export { default as icon__check } from './icon__check.svg'
 export { default as icon__clipboard } from './icon__clipboard.svg'
 export { default as icon__close } from './icon__close.svg'
@@ -16,12 +20,14 @@ export { default as icon__folder } from './icon__folder.svg'
 export { default as icon__fullscreen } from './icon__fullscreen.svg'
 export { default as icon__fullscreen_exit } from './icon__fullscreen_exit.svg'
 export { default as icon__github } from './icon__github.svg'
+export { default as icon__mindmap } from './icon__mindmap.svg'
 export { default as icon__next } from './icon__next.svg'
 export { default as icon__number_gray } from './icon__number_gray.svg'
 export { default as icon__number_purple } from './icon__number_purple.svg'
 export { default as icon__prev } from './icon__prev.svg'
 export { default as icon__restore } from './icon__restore.svg'
 export { default as icon__rotate } from './icon__rotate.svg'
+export { default as icon__search } from './icon__search.svg'
 export { default as icon__sidebar_collapsed } from './icon__sidebar_collapsed.svg'
 export { default as icon__sidebar_opened } from './icon__sidebar_opened.svg'
 export { default as icon__totop } from './icon__totop.svg'
