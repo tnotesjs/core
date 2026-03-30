@@ -12,7 +12,8 @@ import {
 } from 'fs'
 import { join } from 'path'
 import { execSync } from 'child_process'
-import { logger, writeNoteConfig } from '../../utils'
+import { logger } from '../../utils'
+import { NoteManager } from '../../core/NoteManager'
 import {
   NOTES_DIR_PATH,
   ROOT_DIR_PATH,
@@ -30,6 +31,12 @@ const BIRTH_DATE = new Date('1999-06-29T00:00:00+08:00').getTime()
  * 时间戳服务类
  */
 export class TimestampService {
+  private noteManager: NoteManager
+
+  constructor() {
+    this.noteManager = NoteManager.getInstance()
+  }
+
   /**
    * 从 git 获取文件的创建时间和最后修改时间
    * @param noteDirPath - 笔记目录路径
@@ -49,7 +56,7 @@ export class TimestampService {
           cwd: ROOT_DIR_PATH,
           encoding: 'utf-8',
           stdio: ['pipe', 'pipe', 'ignore'],
-        }
+        },
       )
         .split(/\r?\n/)
         .filter(Boolean)
@@ -62,7 +69,7 @@ export class TimestampService {
           cwd: ROOT_DIR_PATH,
           encoding: 'utf-8',
           stdio: ['pipe', 'pipe', 'ignore'],
-        }
+        },
       ).trim()
 
       if (!createdAtOutput || !updatedAtOutput) {
@@ -88,7 +95,7 @@ export class TimestampService {
    */
   private fixNoteTimestamps(
     noteDir: string,
-    forceUpdate: boolean = false
+    forceUpdate: boolean = false,
   ): boolean {
     const configPath = join(NOTES_DIR_PATH, noteDir, '.tnotes.json')
 
@@ -144,7 +151,7 @@ export class TimestampService {
 
       if (modified) {
         // 保持字段顺序写回文件
-        writeNoteConfig(configPath, config)
+        this.noteManager.writeNoteConfig(configPath, config)
         return true
       }
 
@@ -223,7 +230,7 @@ export class TimestampService {
         writeFileSync(
           ROOT_CONFIG_PATH,
           JSON.stringify(config, null, 2) + '\n',
-          'utf-8'
+          'utf-8',
         )
         return true
       }
@@ -326,7 +333,7 @@ export class TimestampService {
         config.updated_at = now
 
         // 保持字段顺序写回文件
-        writeNoteConfig(configPath, config)
+        this.noteManager.writeNoteConfig(configPath, config)
         updatedCount++
       } catch (error) {
         logger.error(`更新时间戳失败: ${noteDir}`, error)

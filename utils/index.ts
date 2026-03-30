@@ -4,7 +4,6 @@
  * util 统一入口
  */
 
-export { validateAndFixConfig } from './validateAndFixConfig'
 export { handleError, createError } from './errorHandler'
 export { deleteDirectory, ensureDirectory } from './file'
 export { generateAnchor } from './generateAnchor'
@@ -26,8 +25,3 @@ export {
 export { runCommand } from './runCommand'
 export { pushAllRepos, pullAllRepos, syncAllRepos } from './syncRepo'
 export { validateNoteTitle } from './validators'
-export {
-  writeNoteConfig,
-  sortConfigKeys,
-  serializeNoteConfig,
-} from './writeNoteConfig'

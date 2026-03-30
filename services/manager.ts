@@ -8,6 +8,7 @@ import { FileWatcherService } from './file-watcher'
 import { NoteIndexCache } from '../core/NoteIndexCache'
 import { NoteManager } from '../core/NoteManager'
 import { logger } from '../utils'
+import type { NoteInfo } from '../types'
 
 /**
  * 全局服务实例管理
@@ -45,21 +46,25 @@ class ServiceManager {
   /**
    * 初始化服务（扫描笔记并初始化索引缓存）
    *
+   * @param preScannedNotes - 预扫描的笔记列表（可选），传入时跳过 scanNotes
    * @throws 如果检测到重复的笔记 ID
    */
-  async initialize(): Promise<void> {
-    if (this.initialized) {
-      logger.warn('ServiceManager 已经初始化')
-      return
-    }
-
+  async initialize(preScannedNotes?: NoteInfo[]): Promise<void> {
     try {
-      // 1. 扫描所有笔记（跳过重复检测，dev 流程已在 countNotes 中完成）
-      logger.info('扫描笔记目录...')
-      const notes = this.noteManager.scanNotes({ skipDuplicateCheck: true })
-      logger.info(`扫描到 ${notes.length} 篇笔记`)
+      let notes: NoteInfo[]
 
-      // 2. 初始化笔记索引缓存（如果有重复 ID 会抛出错误）
+      if (preScannedNotes) {
+        // 使用外部传入的扫描结果（避免重复扫描）
+        notes = preScannedNotes
+        logger.info(`使用预扫描结果，共 ${notes.length} 篇笔记`)
+      } else {
+        // 内部自行扫描（兼容 updateConfigPlugin 等场景）
+        logger.info('扫描笔记目录...')
+        notes = this.noteManager.scanNotes()
+        logger.info(`扫描到 ${notes.length} 篇笔记`)
+      }
+
+      // 2. 初始化笔记索引缓存
       logger.info('初始化笔记索引缓存...')
       this.noteIndexCache.initialize(notes)
 

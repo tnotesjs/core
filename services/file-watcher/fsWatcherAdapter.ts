@@ -46,7 +46,7 @@ export class FsWatcherAdapter {
       (eventType, filename) => this.handleFsEvent(eventType, filename),
     )
 
-    logger.success(`文件监听服务已启动`)
+    logger.success(`TNotes 文件监听服务已就绪`)
     logger.success(`监听目录 - ${this.config.notesDir}`)
   }
 

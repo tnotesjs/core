@@ -12,7 +12,7 @@ import { NoteIndexCache } from '../../core/NoteIndexCache'
 import { generateNoteTitle } from '../../config/templates'
 import { NOTES_PATH, CONSTANTS, REPO_NOTES_URL } from '../../config/constants'
 import { ReadmeService } from '../readme/service'
-import { ensureDirectory, logger, writeNoteConfig } from '../../utils'
+import { ensureDirectory, logger } from '../../utils'
 
 /**
  * 新增笔记 README.md 模板
@@ -153,7 +153,7 @@ export class NoteService {
       created_at: now,
       updated_at: now,
     }
-    writeNoteConfig(configPath, config)
+    this.noteManager.writeNoteConfig(configPath, config)
 
     logger.info(`Created new note: ${dirName}`)
 

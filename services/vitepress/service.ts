@@ -4,7 +4,7 @@
  * VitePress 服务 - 封装 VitePress 开发服务器相关的业务逻辑
  */
 import { spawn } from 'child_process'
-import { ProcessManager, NoteManager } from '../../core'
+import { ProcessManager } from '../../core'
 import { ConfigManager } from '../../config/ConfigManager'
 import { logger, isPortInUse, killPortProcess, waitForPort } from '../../utils'
 import { ROOT_DIR_PATH } from '../../config/constants'
@@ -39,19 +39,18 @@ const DEFAULT_PACKAGE_MANAGER = 'pnpm'
 export class VitepressService {
   private processManager: ProcessManager
   private configManager: ConfigManager
-  private noteManager: NoteManager
 
   constructor() {
     this.processManager = ProcessManager.getInstance()
     this.configManager = ConfigManager.getInstance()
-    this.noteManager = NoteManager.getInstance()
   }
 
   /**
    * 启动 VitePress 开发服务器
+   * @param noteCount - 笔记数量（用于启动状态显示）
    * @returns 进程 ID（服务就绪后返回）
    */
-  async startServer(): Promise<number | undefined> {
+  async startServer(noteCount: number): Promise<number | undefined> {
     const port = this.configManager.get('port') || VITEPRESS_DEV_PORT
     const repoName = this.configManager.get('repoName')
     const processId = `${repoName}-${PROCESS_ID_DEV_SUFFIX}`
@@ -85,30 +84,13 @@ export class VitepressService {
       this.configManager.get('packageManager') || DEFAULT_PACKAGE_MANAGER
     const args = ['vitepress', 'dev', '--port', port.toString()]
 
-    // 预扫描笔记数量，并在启动 VitePress 之前检测冲突
-    const noteCountResult = this.noteManager.countNotes()
-
-    if (noteCountResult.conflicts.length > 0) {
-      logger.error('⚠️  检测到重复的笔记编号，服务启动已终止！')
-      for (const { index, dirNames } of noteCountResult.conflicts) {
-        logger.error(`   编号 ${index} 被以下笔记重复使用：`)
-        dirNames.forEach((dirName) => {
-          logger.error(`      - ${dirName}`)
-        })
-      }
-      logger.error(
-        '\n请检查并删除/重命名重复的笔记文件夹，确保每个笔记编号唯一！\n',
-      )
-      process.exit(1)
-    }
-
     const processInfo = this.processManager.spawn(processId, pm, args, {
       cwd: ROOT_DIR_PATH,
       stdio: ['inherit', 'pipe', 'pipe'], // stdin 继承，stdout/stderr 管道捕获
     })
 
     // 等待服务就绪，显示启动状态
-    await this.waitForServerReady(processInfo.process, noteCountResult.unique)
+    await this.waitForServerReady(processInfo.process, noteCount)
 
     return processInfo.pid
   }
@@ -163,7 +145,7 @@ export class VitepressService {
           const elapsed = Date.now() - startTime
           const seconds = (elapsed / 1000).toFixed(1)
           console.log(
-            `✅ 服务已就绪 - 共 ${noteCount} 篇笔记，启动耗时 ${seconds}s\n`,
+            `✅ VitePress 服务已就绪 - 共 ${noteCount} 篇笔记，启动耗时 ${seconds}s\n`,
           )
 
           // 显示 VitePress 输出
