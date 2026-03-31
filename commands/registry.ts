@@ -8,7 +8,7 @@ import { DevCommand } from './dev'
 import { BuildCommand, PreviewCommand } from './build'
 import { UpdateCommand } from './update'
 import { UpdateCompletedCountCommand } from './update-completed-count'
-import { PushCommand, PullCommand, SyncCommand } from './git'
+import { PushCommand, PullCommand } from './git'
 import {
   CreateNoteCommand,
   UpdateNoteConfigCommand,
@@ -27,7 +27,6 @@ const commandFactories: Record<CommandName, () => Command> = {
   'update-completed-count': () => new UpdateCompletedCountCommand(),
   push: () => new PushCommand(),
   pull: () => new PullCommand(),
-  sync: () => new SyncCommand(),
   'create-notes': () => new CreateNoteCommand(),
   'fix-timestamps': () => new FixTimestampsCommand(),
   'update-note-config': () => new UpdateNoteConfigCommand(),

@@ -6,7 +6,7 @@
 
 export { UpdateCommand } from './update'
 export { UpdateCompletedCountCommand } from './update-completed-count'
-export { PushCommand, PullCommand, SyncCommand } from './git'
+export { PushCommand, PullCommand } from './git'
 export { COMMAND_NAMES } from './models'
 export type { CommandArgs } from './models'
 export { getCommand } from './registry'
