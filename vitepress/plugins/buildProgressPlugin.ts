@@ -6,6 +6,7 @@
  * 基于 vite-plugin-progress 源码简化实现
  * https://github.com/jeddygong/vite-plugin-progress
  */
+
 import type { Plugin } from 'vite'
 import {
   existsSync,
@@ -150,7 +151,7 @@ function interceptOutput() {
   process.stdout.write = ((
     chunk: string | Uint8Array,
     encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
-    callback?: (err?: Error) => void
+    callback?: (err?: Error) => void,
   ): boolean => {
     if (filter(chunk)) {
       return originalStdoutWrite!(chunk, encodingOrCallback as any, callback)
@@ -163,7 +164,7 @@ function interceptOutput() {
   process.stderr.write = ((
     chunk: string | Uint8Array,
     encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
-    callback?: (err?: Error) => void
+    callback?: (err?: Error) => void,
   ): boolean => {
     const str = chunk.toString()
     // 允许进度条和真正的错误
@@ -200,7 +201,7 @@ function renderProgress(
   width: number,
   complete: string,
   incomplete: string,
-  isFinal: boolean = false
+  isFinal: boolean = false,
 ) {
   if (!originalStderrWrite) return
 
@@ -232,7 +233,7 @@ function renderProgress(
  * 创建构建进度插件
  */
 export function buildProgressPlugin(
-  options: BuildProgressOptions = {}
+  options: BuildProgressOptions = {},
 ): Plugin {
   const { width = 40, complete = '█', incomplete = '░' } = options
 
@@ -277,7 +278,7 @@ export function buildProgressPlugin(
         if (!id.includes('node_modules') && globalLastPercent < 0.7) {
           globalLastPercent = Math.min(
             0.7,
-            globalTransformCount / (globalFileCount * 4)
+            globalTransformCount / (globalFileCount * 4),
           )
         }
       }
@@ -295,7 +296,7 @@ export function buildProgressPlugin(
         chunksStr,
         width,
         complete,
-        incomplete
+        incomplete,
       )
 
       return null
@@ -308,7 +309,7 @@ export function buildProgressPlugin(
         const total = cache.transformCount * 2 + cache.chunkCount * 2
         globalLastPercent = Math.min(
           0.98,
-          (globalTransformCount + globalChunkCount) / total
+          (globalTransformCount + globalChunkCount) / total,
         )
       } else {
         if (globalLastPercent < 0.98) {
@@ -329,7 +330,7 @@ export function buildProgressPlugin(
         chunksStr,
         width,
         complete,
-        incomplete
+        incomplete,
       )
 
       return null
@@ -364,7 +365,7 @@ export function buildProgressPlugin(
           width,
           complete,
           incomplete,
-          true
+          true,
         )
 
         restoreOutput()
@@ -375,7 +376,7 @@ export function buildProgressPlugin(
             chunkCount: Math.floor(globalChunkCount / 2),
           })
 
-          console.log(`\n✅ 构建成功！`)
+          console.log(`✅ 构建成功！`)
           console.log(`   📁 输出目录: ${globalOutDir}`)
           console.log(`   ⏱️  耗时: ${elapsed}s`)
         } else {

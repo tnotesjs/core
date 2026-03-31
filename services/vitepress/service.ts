@@ -215,22 +215,7 @@ export class VitepressService {
   /**
    * 构建生产版本
    */
-  async build(): Promise<void> {
-    logger.info('正在构建 VitePress 站点...\n')
-
-    try {
-      await this.runBuildWithProgress()
-      logger.info('构建完成')
-    } catch (error) {
-      logger.error('构建失败', error)
-      throw error
-    }
-  }
-
-  /**
-   * 运行构建命令并过滤输出
-   */
-  private runBuildWithProgress(): Promise<void> {
+  build(): Promise<void> {
     return new Promise((resolve, reject) => {
       const pm =
         this.configManager.get('packageManager') ||
