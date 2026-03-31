@@ -19,7 +19,7 @@ interface GitFileStatus {
 /**
  * Git 状态信息接口
  */
-interface GitStatus {
+export interface GitStatus {
   hasChanges: boolean
   changedFiles: number
   staged: number

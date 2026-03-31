@@ -3,6 +3,8 @@ import fs from 'node:fs'
 import { execSync } from 'node:child_process'
 import path from 'node:path'
 
+const rootPath = process.cwd()
+
 interface ReadmeData {
   fileContent: string
   doneNotesID: string[]
@@ -13,7 +15,7 @@ interface ReadmeData {
 }
 
 export default {
-  watch: ['../../../../../README.md', '../../../../../notes'],
+  watch: [path.resolve(rootPath, 'README.md'), path.resolve(rootPath, 'notes')],
   load(watchedFiles: string[]): ReadmeData {
     let readmeData: ReadmeData = {
       fileContent: '',
@@ -62,7 +64,7 @@ function getTotalNotesCount(notesDir: string): number {
     const dirs = fs.readdirSync(notesDir, { withFileTypes: true })
     // 统计符合格式 "0001. xxx" 的目录
     return dirs.filter(
-      (dirent) => dirent.isDirectory() && /^\d{4}\./.test(dirent.name)
+      (dirent) => dirent.isDirectory() && /^\d{4}\./.test(dirent.name),
     ).length
   } catch (error) {
     console.error(`获取笔记总数失败:`, error)

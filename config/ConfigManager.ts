@@ -17,13 +17,34 @@ export class ConfigManager {
   private static instance: ConfigManager
   private config: TNotesConfig | null = null
   private configPath: string
-  private __dirname: string
+  private rootPath: string
 
-  private constructor() {
-    this.__dirname = path.dirname(fileURLToPath(import.meta.url))
+  private constructor(rootPath?: string) {
+    if (rootPath) {
+      // 显式传入根路径（NPM 包模式）
+      this.rootPath = rootPath
+    } else {
+      // 从 __dirname 推导根路径（submodule 兼容模式）
+      // __dirname = .vitepress/tnotes/config/ → 向上 3 级 = 项目根目录
+      const __dirname = path.dirname(fileURLToPath(import.meta.url))
+      this.rootPath = path.resolve(__dirname, '..', '..', '..')
+    }
     this.configPath = path.normalize(
-      path.resolve(this.__dirname, '..', '..', '..', '.tnotes.json')
+      path.resolve(this.rootPath, '.tnotes.json'),
     )
+  }
+
+  /**
+   * 使用指定的根路径初始化配置管理器
+   *
+   * 必须在 getInstance() 之前调用（如果需要指定 rootPath）。
+   * 如果已经初始化，则忽略重复调用。
+   */
+  static init({ rootPath }: { rootPath: string }): ConfigManager {
+    if (!ConfigManager.instance) {
+      ConfigManager.instance = new ConfigManager(rootPath)
+    }
+    return ConfigManager.instance
   }
 
   /**
@@ -89,10 +110,17 @@ export class ConfigManager {
   }
 
   /**
-   * 获取 __dirname
+   * 获取项目根路径
+   */
+  getRootPath(): string {
+    return this.rootPath
+  }
+
+  /**
+   * @deprecated 使用 getRootPath() 替代
    */
   getDirname(): string {
-    return this.__dirname
+    return path.resolve(this.rootPath, '.vitepress', 'tnotes', 'config')
   }
 }
 

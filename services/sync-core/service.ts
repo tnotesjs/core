@@ -1,7 +1,7 @@
 /**
  * .vitepress/tnotes/services/sync-core/service.ts
  *
- * TNotes.core 同步服务 - 批量同步兄弟知识库的 TNotes.core submodule 到最新版本
+ * tnotesjs/core 同步服务 - 批量同步兄弟知识库的 tnotesjs/core submodule 到最新版本
  */
 import { existsSync } from 'fs'
 import { join, basename } from 'path'
@@ -30,7 +30,7 @@ interface SyncResult {
 }
 
 /**
- * TNotes.core 同步服务类
+ * tnotesjs/core 同步服务类
  */
 export class SyncCoreService {
   /**
@@ -87,7 +87,10 @@ export class SyncCoreService {
       if (updated) {
         // 暂存 submodule 指针变更并提交
         await runCommand('git add .vitepress/tnotes', targetDir)
-        await runCommand('git commit -m "chore: update TNotes.core"', targetDir)
+        await runCommand(
+          'git commit -m "chore: update tnotesjs/core"',
+          targetDir,
+        )
       }
 
       return {
@@ -114,11 +117,11 @@ export class SyncCoreService {
   }
 
   /**
-   * 同步所有兄弟仓库的 TNotes.core 到最新版本
+   * 同步所有兄弟仓库的 tnotesjs/core 到最新版本
    */
   async syncToAllRepos(): Promise<void> {
     try {
-      // 获取目标目录（排除自身、TNotes.core、TNotes.en-words）
+      // tnotesjs/core、TNotes.en-words）
       const targetDirs = getTargetDirs(TNOTES_BASE_DIR, 'TNotes.', [
         ROOT_DIR_PATH,
         TNOTES_CORE_DIR,
@@ -130,7 +133,7 @@ export class SyncCoreService {
         return
       }
 
-      logger.info(`正在同步 ${targetDirs.length} 个仓库的 TNotes.core...`)
+      logger.info(`正在同步 ${targetDirs.length} 个仓库的 tnotesjs/core...`)
       console.log()
 
       // 顺序同步所有仓库
@@ -183,7 +186,7 @@ export class SyncCoreService {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
-      logger.error(`TNotes.core 同步失败: ${errorMessage}`)
+      logger.error(`tnotesjs/core 同步失败: ${errorMessage}`)
       throw error
     }
   }

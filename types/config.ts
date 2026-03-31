@@ -24,7 +24,7 @@ export interface TNotesConfig {
 /**
  * 图标配置
  */
-interface IconConfig {
+export interface IconConfig {
   svg?: string
   src?: string
 }
@@ -32,7 +32,7 @@ interface IconConfig {
 /**
  * 社交链接类型
  */
-interface SocialLink {
+export interface SocialLink {
   ariaLabel?: string
   icon: string | IconConfig
   link: string
@@ -41,7 +41,7 @@ interface SocialLink {
 /**
  * 菜单项类型
  */
-interface MenuItem {
+export interface MenuItem {
   text: string
   link: string
 }
@@ -49,7 +49,7 @@ interface MenuItem {
 /**
  * 根项目配置
  */
-interface RootItem {
+export interface RootItem {
   icon?: IconConfig
   title: string
   completed_notes_count: Record<string, number>

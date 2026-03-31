@@ -21,14 +21,14 @@ export const {
   root_item,
 } = config
 
-// 目录常量
-const __dirname = configManager.getDirname()
+// 目录常量 —— 从 ConfigManager.getRootPath() 派生
+const rootPath = configManager.getRootPath()
 
 /**
  * TNotes.* 笔记仓库的基路径
  * @example `/Users/huyouda/zm/notes/` 【在此目录下存放其它 TNotes.* 笔记仓库】
  */
-export const TNOTES_BASE_DIR = resolve(__dirname, '..', '..', '..', '..')
+export const TNOTES_BASE_DIR = resolve(rootPath, '..')
 export const TNOTES_CORE_DIR = resolve(TNOTES_BASE_DIR, 'TNotes.core')
 export const EN_WORDS_DIR = resolve(TNOTES_BASE_DIR, 'TNotes.en-words')
 
@@ -36,7 +36,7 @@ export const EN_WORDS_DIR = resolve(TNOTES_BASE_DIR, 'TNotes.en-words')
  * TNotes.* 当前的笔记仓库根路径
  * @example `/Users/huyouda/zm/notes/TNotes.template/`
  */
-export const ROOT_DIR_PATH = resolve(__dirname, '..', '..', '..')
+export const ROOT_DIR_PATH = rootPath
 export const ROOT_README_PATH = resolve(ROOT_DIR_PATH, 'README.md')
 export const ROOT_CONFIG_PATH = resolve(ROOT_DIR_PATH, '.tnotes.json')
 export const NOTES_DIR_PATH = resolve(ROOT_DIR_PATH, 'notes')

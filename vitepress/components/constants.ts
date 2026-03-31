@@ -1,71 +1,73 @@
-import {
-  author,
-  ignore_dirs,
-  repoName,
-  root_item,
-} from '../../../../.tnotes.json'
+/**
+ * 以下常量由 defineNotesConfig() 通过 vite.define 注入
+ * 见 vitepress/config/index.ts 中的 define 配置
+ */
+declare const __TNOTES_REPO_NAME__: string
+declare const __TNOTES_AUTHOR__: string
+declare const __TNOTES_IGNORE_DIRS__: string[]
+declare const __TNOTES_ROOT_ITEM__: any
 
 /**
  * 笔记仓库名儿
  */
-export const REPO_NAME: string = repoName
+export const REPO_NAME: string = __TNOTES_REPO_NAME__
 
 /**
  * 笔记仓库作者
  */
-export const AUTHOR: string = author
+export const AUTHOR: string = __TNOTES_AUTHOR__
 
 /**
  * notes 目录下需要忽略的笔记目录
  * @example
  * [".vscode", "0000", "assets", "node_modules"]
  */
-export const IGNORE_DIRS: string[] = ignore_dirs
+export const IGNORE_DIRS: string[] = __TNOTES_IGNORE_DIRS__
 
 /**
  * 根知识库配置项
  */
-export const ROOT_ITEM = root_item
+export const ROOT_ITEM = __TNOTES_ROOT_ITEM__
 
 /**
  * 存储本地笔记文件夹所在位置的 key
  */
-export const NOTES_DIR_KEY: string = 'NOTES_DIR_KEY__' + repoName
+export const NOTES_DIR_KEY: string = 'NOTES_DIR_KEY__' + REPO_NAME
 
 /**
  * 用户选择的视图
  */
-export const NOTES_VIEW_KEY: string = 'NOTES_VIEW_KEY__' + repoName
+export const NOTES_VIEW_KEY: string = 'NOTES_VIEW_KEY__' + REPO_NAME
 
 /**
  * 全局配置 EnWordList.vue 组件是否自动展示词汇卡片
  */
 export const EN_WORD_LIST_COMP_IS_AUTO_SHOW_CARD: string =
-  'EN_WORD_LIST_COMP_IS_AUTO_SHOW_CARD__' + repoName
+  'EN_WORD_LIST_COMP_IS_AUTO_SHOW_CARD__' + REPO_NAME
 
 /**
  * MarkMap 默认主题配置
  */
-export const MARKMAP_THEME_KEY: string = 'MARKMAP_THEME_KEY__' + repoName
+export const MARKMAP_THEME_KEY: string = 'MARKMAP_THEME_KEY__' + REPO_NAME
 
 /**
  * MarkMap 默认展开层级配置
  */
 export const MARKMAP_EXPAND_LEVEL_KEY: string =
-  'MARKMAP_EXPAND_LEVEL_KEY__' + repoName
+  'MARKMAP_EXPAND_LEVEL_KEY__' + REPO_NAME
 
 /**
  * 侧边栏是否显示笔记编号配置
  */
 export const SIDEBAR_SHOW_NOTE_ID_KEY: string =
-  'SIDEBAR_SHOW_NOTE_ID_KEY__' + repoName
+  'SIDEBAR_SHOW_NOTE_ID_KEY__' + REPO_NAME
 
 /**
  * 侧边栏最大解析层级配置
  * 默认值为 3，表示支持 3 层嵌套（组 → 子组 → 笔记）
  */
 export const SIDEBAR_MAX_DEPTH_KEY: string =
-  'SIDEBAR_MAX_DEPTH_KEY__' + repoName
+  'SIDEBAR_MAX_DEPTH_KEY__' + REPO_NAME
 
 /**
  * VitePress HOME README 文件名

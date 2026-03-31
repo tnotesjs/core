@@ -4,21 +4,20 @@
  * HTML head 标签配置
  */
 import { HeadConfig } from 'vitepress'
-import { author, keywords } from '../../../../.tnotes.json'
-import { GITHUB_PAGE_URL } from './constants'
+import type { TNotesConfig } from '../../types'
 
-export function getHeadConfig(): HeadConfig[] {
+export function getHeadConfig(config: TNotesConfig, githubPageUrl: string): HeadConfig[] {
   const head: HeadConfig[] = [
     [
       'meta',
       {
         name: 'keywords',
-        content: keywords.join(', '),
+        content: config.keywords.join(', '),
       },
     ],
-    ['meta', { name: 'author', content: author }],
-    ['link', { rel: 'canonical', href: GITHUB_PAGE_URL }],
-    ['link', { rel: 'icon', href: GITHUB_PAGE_URL + 'favicon.ico' }],
+    ['meta', { name: 'author', content: config.author }],
+    ['link', { rel: 'canonical', href: githubPageUrl }],
+    ['link', { rel: 'icon', href: githubPageUrl + 'favicon.ico' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
   ]
 

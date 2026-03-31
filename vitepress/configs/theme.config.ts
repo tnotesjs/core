@@ -6,11 +6,10 @@
  * doc:
  * https://vitepress.dev/reference/default-theme-config
  */
-import { DefaultTheme } from 'vitepress'
-import { menuItems, socialLinks } from '../../../../.tnotes.json'
-// import sidebar from '../../../../sidebar.json'
+import type { DefaultTheme } from 'vitepress'
+import type { TNotesConfig } from '../../types'
 
-export function getThemeConfig(): DefaultTheme.Config {
+export function getThemeConfig(config: TNotesConfig): DefaultTheme.Config {
   const themeConfig: DefaultTheme.Config = {
     docFooter: {
       prev: '上一篇',
@@ -28,7 +27,7 @@ export function getThemeConfig(): DefaultTheme.Config {
       },
       {
         text: 'Menus',
-        items: menuItems,
+        items: config.menuItems,
       },
     ],
     search: {
@@ -102,7 +101,7 @@ export function getThemeConfig(): DefaultTheme.Config {
         link: '/README',
       },
     ],
-    socialLinks,
+    socialLinks: config.socialLinks as DefaultTheme.SocialLink[],
   }
 
   return themeConfig

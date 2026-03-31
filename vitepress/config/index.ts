@@ -3,17 +3,17 @@
  *
  * VitePress 站点配置工厂函数
  *
- * 将所有共享配置封装在 TNotes.core 中，外围 config.mts 只需一行调用：
+ * 将所有共享配置封装在 tnotesjs/core 中，外围 config.mts 只需一行调用：
  *   import { defineNotesConfig } from './tnotes/vitepress/config'
  *   export default defineNotesConfig()
  */
 import fs from 'fs'
 import path from 'path'
 import { defineConfig, type UserConfig } from 'vitepress'
-import { repoName } from '../../../../.tnotes.json'
+import type { TNotesConfig } from '../../types'
 import {
-  IGNORE_LIST,
-  GITHUB_PAGE_URL,
+  getIgnoreList,
+  getGithubPageUrl,
   getHeadConfig,
   getMarkdownConfig,
   getThemeConfig,
@@ -24,12 +24,28 @@ import { getNoteByConfigIdPlugin } from '../plugins/getNoteByConfigIdPlugin'
 import { buildProgressPlugin } from '../plugins/buildProgressPlugin'
 
 /**
+ * 读取 .tnotes.json 配置文件
+ */
+function loadTNotesConfig(rootPath: string): TNotesConfig {
+  const configPath = path.resolve(rootPath, '.tnotes.json')
+  const configContent = fs.readFileSync(configPath, 'utf-8')
+  return JSON.parse(configContent) as TNotesConfig
+}
+
+/**
  * 创建 VitePress 站点配置
  *
  * @param overrides - 可选的覆盖配置，会与默认配置合并
  * @returns VitePress 配置对象
  */
 export function defineNotesConfig(overrides: UserConfig = {}) {
+  const rootPath = process.cwd()
+  const config = loadTNotesConfig(rootPath)
+  const { repoName } = config
+
+  const IGNORE_LIST = getIgnoreList(config)
+  const GITHUB_PAGE_URL = getGithubPageUrl(config)
+
   const {
     transformPageData: overrideTransformPageData,
     vite: overrideVite,
@@ -41,7 +57,7 @@ export function defineNotesConfig(overrides: UserConfig = {}) {
     base: '/' + repoName + '/',
     cleanUrls: true,
     description: repoName,
-    head: getHeadConfig(),
+    head: getHeadConfig(config, GITHUB_PAGE_URL),
     ignoreDeadLinks: true,
     lang: 'zh-Hans',
     lastUpdated: false,
@@ -50,7 +66,7 @@ export function defineNotesConfig(overrides: UserConfig = {}) {
       hostname: GITHUB_PAGE_URL,
       lastmodDateOnly: false,
     },
-    themeConfig: getThemeConfig(),
+    themeConfig: getThemeConfig(config),
     title: repoName,
     srcExclude: IGNORE_LIST,
     vite: {
@@ -79,11 +95,18 @@ export function defineNotesConfig(overrides: UserConfig = {}) {
         chunkSizeWarningLimit: 1000,
         ...overrideVite?.build,
       },
+      define: {
+        __TNOTES_REPO_NAME__: JSON.stringify(config.repoName),
+        __TNOTES_AUTHOR__: JSON.stringify(config.author),
+        __TNOTES_IGNORE_DIRS__: JSON.stringify(config.ignore_dirs),
+        __TNOTES_ROOT_ITEM__: JSON.stringify(config.root_item),
+        ...overrideVite?.define,
+      },
     },
     transformPageData(pageData, ctx) {
       // 为笔记页面注入原始 Markdown 内容（用于一键复制功能）
       if (/^notes\/\d{4}/.test(pageData.relativePath)) {
-        const fullPath = path.resolve(__dirname, '../../../../', pageData.relativePath)
+        const fullPath = path.resolve(rootPath, pageData.relativePath)
         try {
           pageData.frontmatter.rawContent = fs.readFileSync(fullPath, 'utf-8')
         } catch {

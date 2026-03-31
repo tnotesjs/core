@@ -1,6 +1,23 @@
 // .vitepress/components/notesConfig.data.ts
 import fs from 'node:fs'
-import { IGNORE_DIRS, NOTES_DIR_KEY } from './constants'
+import path from 'node:path'
+
+const rootPath = process.cwd()
+
+/**
+ * 从配置文件读取忽略目录列表
+ * 注意：data loader 运行在 Node.js 上下文，不经过 vite.define，
+ * 因此需要直接读取配置文件而非从 constants.ts 导入。
+ */
+function getIgnoreDirs(): string[] {
+  try {
+    const configPath = path.resolve(process.cwd(), '.tnotes.json')
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+    return config.ignore_dirs || []
+  } catch {
+    return []
+  }
+}
 
 interface NoteConfig {
   [key: string]: any
@@ -9,9 +26,13 @@ interface NoteConfig {
 
 export default {
   // 监听笔记目录下第一级的 .tnotes.json 文件变化
-  watch: ['../../../../notes/*/.tnotes.json'],
+  watch: [
+    path.resolve(rootPath, 'notes').replace(/\\/g, '/') + '/*/.tnotes.json',
+  ],
   load(watchedFiles: string[]): Record<string, NoteConfig> {
     // console.log('watchedFiles', watchedFiles)
+
+    const IGNORE_DIRS = getIgnoreDirs()
 
     // 初始化一个空对象，用于存储所有笔记的配置数据（以笔记索引为键）
     const allNotesConfig: Record<string, NoteConfig> = {}

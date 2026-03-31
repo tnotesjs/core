@@ -3,6 +3,9 @@
  */
 
 import fs from 'node:fs'
+import path from 'node:path'
+
+const rootPath = process.cwd()
 
 /**
  * VitePress Data Loader for Sidebar
@@ -26,7 +29,7 @@ interface SidebarConfig {
 
 export default {
   // 监听 sidebar.json 文件变化
-  watch: ['../../../../sidebar.json'],
+  watch: [path.resolve(rootPath, 'sidebar.json')],
 
   load(watchedFiles: string[]): SidebarConfig {
     const sidebarFilePath = watchedFiles[0]

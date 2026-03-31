@@ -1,17 +1,26 @@
 /**
  * .vitepress/config/constants.ts
  *
- * 常量配置
+ * 常量配置 - 从运行时配置派生，不再硬编码相对路径 import
  */
-import { author, ignore_dirs, repoName } from '../../../../.tnotes.json'
+import type { TNotesConfig } from '../../types'
 
 /**
- * 忽略的文件和目录列表
+ * 获取忽略的文件和目录列表
  */
-export const IGNORE_LIST = [...ignore_dirs.map((dir) => `**/${dir}/**`)]
+export function getIgnoreList(config: TNotesConfig): string[] {
+  return [...config.ignore_dirs.map((dir: string) => `**/${dir}/**`)]
+}
 
 /**
- * GitHub Pages URL
+ * 获取 GitHub Pages URL
  */
-export const GITHUB_PAGE_URL =
-  'https://' + author.toLowerCase() + '.github.io/' + repoName + '/'
+export function getGithubPageUrl(config: TNotesConfig): string {
+  return (
+    'https://' +
+    config.author.toLowerCase() +
+    '.github.io/' +
+    config.repoName +
+    '/'
+  )
+}

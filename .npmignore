@@ -1,0 +1,21 @@
+# Source files (CLI is compiled to dist/)
+src/
+commands/
+config/
+core/
+services/
+utils/
+index.ts
+
+# Build config
+tsup.config.ts
+tsconfig.build.json
+
+# Development files
+.git
+.gitignore
+CHANGELOG.md
+README.md
+
+# IDE
+.vscode/
