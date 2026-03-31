@@ -316,15 +316,11 @@ export class VitepressService {
       }
     }
 
-    logger.info(`执行命令：${pm} ${args.join(' ')}`)
-    logger.info('正在启动预览服务...')
-
     const processInfo = this.processManager.spawn(processId, pm, args, {
       cwd: ROOT_DIR_PATH,
       stdio: 'inherit',
     })
 
-    logger.info(`预览服务已启动 (PID: ${processInfo.pid})`)
     return processInfo.pid
   }
 }
