@@ -141,7 +141,6 @@ export class NoteService {
 
     // 创建 .tnotes.json（使用 UUID 作为配置 ID）
     const configPath = join(notePath, '.tnotes.json')
-    const now = Date.now()
     const config: NoteConfig = {
       id: configId || uuidv4(), // 配置 ID 使用 UUID（跨知识库唯一）
       bilibili: [],
@@ -150,8 +149,7 @@ export class NoteService {
       done: false,
       category,
       enableDiscussions,
-      created_at: now,
-      updated_at: now,
+      // created_at / updated_at 由 tn:push 时 fix-timestamps 自动写入
     }
     this.noteManager.writeNoteConfig(configPath, config)
 
@@ -217,7 +215,6 @@ export class NoteService {
     const updatedConfig: NoteConfig = {
       ...note.config,
       ...updates,
-      updated_at: Date.now(),
     }
 
     // 标记配置文件为忽略（防止文件监听触发循环更新）

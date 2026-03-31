@@ -35,13 +35,14 @@ export class UpdateCompletedCountCommand extends BaseCommand {
 
       // 计算所有月份的完成笔记数量
       const completedNotesCountHistory =
-        await this.getCompletedNotesCountHistory(config.root_item.created_at)
+        await this.getCompletedNotesCountHistory(
+          config.root_item.created_at ?? Date.now(),
+        )
 
-      // 更新配置
+      // 更新配置（不更新时间戳，由 tn:push 时 fix-timestamps 统一管理）
       config.root_item = {
         ...config.root_item,
         completed_notes_count: completedNotesCountHistory,
-        updated_at: Date.now(),
       }
 
       // 写入配置文件

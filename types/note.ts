@@ -16,8 +16,8 @@ export interface NoteConfig {
   category?: string
   enableDiscussions: boolean
   description?: string // 笔记简介(一句话描述)
-  created_at: number
-  updated_at: number
+  created_at?: number
+  updated_at?: number
 }
 
 /**

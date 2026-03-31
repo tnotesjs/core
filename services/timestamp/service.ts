@@ -38,6 +38,90 @@ export class TimestampService {
   }
 
   /**
+   * 批量获取所有笔记 README.md 的 git 时间戳
+   * 只执行 2 次 git log，构建 filePath → {created_at, updated_at} 的映射
+   *
+   * - 第 1 次：git log --name-only --format=... --diff-filter=A
+   *   获取每个文件的首次提交时间（created_at）
+   * - 第 2 次：git log --name-only --format=...
+   *   获取每个文件的最后修改时间（updated_at）
+   */
+  private buildGitTimestampMap(): Map<
+    string,
+    { created_at: number; updated_at: number }
+  > {
+    const createdMap = new Map<string, number>()
+    const updatedMap = new Map<string, number>()
+
+    try {
+      // 1) 获取所有文件的首次提交时间（--diff-filter=A 只看 add 事件）
+      //    --reverse 让最早的 commit 排在前面，同文件多次出现时后面覆盖前面
+      //    但我们取首次出现（最早），所以不用 --reverse，直接取最后出现的即可
+      const createdRaw = execSync(
+        `git log --name-only --format="---COMMIT---%ct" --diff-filter=A -- "notes/*/README.md"`,
+        {
+          cwd: ROOT_DIR_PATH,
+          encoding: 'utf-8',
+          maxBuffer: 100 * 1024 * 1024,
+          stdio: ['pipe', 'pipe', 'ignore'],
+        },
+      )
+
+      let currentTimestamp = 0
+      for (const line of createdRaw.split(/\r?\n/)) {
+        if (line.startsWith('---COMMIT---')) {
+          currentTimestamp = parseInt(line.slice(12)) * 1000
+        } else if (line.trim() && currentTimestamp) {
+          // git log 从新到旧，后出现的是更早的 commit，持续覆盖即可
+          // 最终 map 中保留的就是最早（首次）提交时间
+          createdMap.set(line.trim(), currentTimestamp)
+        }
+      }
+
+      // 2) 获取所有文件的最后修改时间
+      //    git log 从新到旧，只取首次出现（最新 commit）
+      const updatedRaw = execSync(
+        `git log --name-only --format="---COMMIT---%ct" -- "notes/*/README.md"`,
+        {
+          cwd: ROOT_DIR_PATH,
+          encoding: 'utf-8',
+          maxBuffer: 100 * 1024 * 1024,
+          stdio: ['pipe', 'pipe', 'ignore'],
+        },
+      )
+
+      currentTimestamp = 0
+      for (const line of updatedRaw.split(/\r?\n/)) {
+        if (line.startsWith('---COMMIT---')) {
+          currentTimestamp = parseInt(line.slice(12)) * 1000
+        } else if (line.trim() && currentTimestamp) {
+          // 只取第一次出现（最新的 commit 时间）
+          if (!updatedMap.has(line.trim())) {
+            updatedMap.set(line.trim(), currentTimestamp)
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('批量获取 git 时间戳失败', error)
+    }
+
+    // 合并为统一的 map
+    const result = new Map<string, { created_at: number; updated_at: number }>()
+    for (const [file, created_at] of createdMap) {
+      const updated_at = updatedMap.get(file) ?? created_at
+      result.set(file, { created_at, updated_at })
+    }
+    // 补充只在 updatedMap 中出现的文件（理论上不会，但防御性编程）
+    for (const [file, updated_at] of updatedMap) {
+      if (!result.has(file)) {
+        result.set(file, { created_at: updated_at, updated_at })
+      }
+    }
+
+    return result
+  }
+
+  /**
    * 从 git 获取文件的创建时间和最后修改时间
    * @param noteDirPath - 笔记目录路径
    * @returns 时间戳对象，包含 created_at 和 updated_at
@@ -91,11 +175,13 @@ export class TimestampService {
    * 修复单个笔记的时间戳
    * @param noteDir - 笔记目录名
    * @param forceUpdate - 是否强制更新（忽略现有值）
+   * @param timestampMap - 预构建的时间戳映射（批量模式传入，避免逐个 git log）
    * @returns 是否进行了修复
    */
   private fixNoteTimestamps(
     noteDir: string,
     forceUpdate: boolean = false,
+    timestampMap?: Map<string, { created_at: number; updated_at: number }>,
   ): boolean {
     const configPath = join(NOTES_DIR_PATH, noteDir, '.tnotes.json')
 
@@ -108,9 +194,11 @@ export class TimestampService {
       const configContent = readFileSync(configPath, 'utf-8')
       const config: NoteConfig = JSON.parse(configContent)
 
-      // 获取 git 时间戳
-      const noteDirPath = join(NOTES_DIR_PATH, noteDir)
-      const timestamps = this.getGitTimestamps(noteDirPath)
+      // 获取 git 时间戳：优先从批量 map 查，fallback 到逐个 git log
+      const readmeRelPath = `notes/${noteDir}/README.md`
+      const timestamps = timestampMap
+        ? (timestampMap.get(readmeRelPath) ?? null)
+        : this.getGitTimestamps(join(NOTES_DIR_PATH, noteDir))
 
       if (!timestamps) {
         return false
@@ -265,7 +353,11 @@ export class TimestampService {
       logger.success('✅ 根配置文件时间戳已修复')
     }
 
-    // 2. 修复所有笔记的时间戳
+    // 2. 批量获取所有笔记的 git 时间戳（只执行 2 次 git log）
+    const timestampMap = this.buildGitTimestampMap()
+    logger.info(`已从 git 历史中提取 ${timestampMap.size} 个文件的时间戳信息`)
+
+    // 3. 修复所有笔记的时间戳
     if (!existsSync(NOTES_DIR_PATH)) {
       logger.error('notes 目录不存在')
       return { fixed: 0, skipped: 0, total: 0, rootConfigFixed }
@@ -282,7 +374,7 @@ export class TimestampService {
     let skippedCount = 0
 
     for (const noteDir of noteDirs) {
-      const fixed = this.fixNoteTimestamps(noteDir, forceUpdate)
+      const fixed = this.fixNoteTimestamps(noteDir, forceUpdate, timestampMap)
       if (fixed) {
         fixedCount++
       } else {

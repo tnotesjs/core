@@ -108,14 +108,11 @@ export class UpdateCommand extends BaseCommand {
         [currentKey]: completedCount,
       }
 
-      // 5. 获取当前时间作为更新时间
-      const updatedAt = Date.now()
-
-      // 更新 root_item（不更新 created_at，由 timestamp-fix 命令统一管理）
+      // 5. 更新 root_item
+      // 更新 root_item（不更新时间戳，由 tn:push 时 fix-timestamps 统一管理）
       config.root_item = {
         ...config.root_item,
         completed_notes_count: completedNotesCount,
-        updated_at: updatedAt,
       }
 
       // 删除旧字段（向后兼容）

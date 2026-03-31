@@ -6,6 +6,33 @@
 
 暂无待发布的变更。
 
+## [0.1.12] - 2026-03-31
+
+### Changed
+
+- `tn:push` 流程重构：`git add -A → git commit → fix-timestamps → git commit --amend --no-edit → git push`
+  - 时间戳（`updated_at`）精确等于 git commit 时间，对外只产生 1 个 commit
+  - 移除原 commit 前 `updateNotesTimestamp(Date.now())` 逻辑
+- `TimestampService.fixAllTimestamps()` 性能优化：从 O(2n) 次 git 调用降至 2 次
+  - 新增 `buildGitTimestampMap()`，一次性解析全量 git 历史构建时间戳 Map
+  - 支持 `maxBuffer: 100MB`，适应最大 10000 篇笔记的知识库
+- `NoteConfig.created_at / updated_at` 改为 optional，创建笔记时不再写入错误的时间戳
+- `RootItem.created_at / updated_at / days_since_birth` 改为 optional
+
+### Removed
+
+- `CreateNoteCommand` / `NoteService.createNote()` 不再写入 `created_at / updated_at`（改由 `tn:push` 时统一写入）
+- `NoteService.updateNoteConfig()` 不再强制覆盖 `updated_at`
+- `UpdateCommand.updateRootItem()` 不再写入 `updated_at`
+- `UpdateCompletedCountCommand` 不再写入 `updated_at`
+
+### Fixed
+
+- 修复 `index.ts` ts(7053)：`CommandArgs` 索引签名
+- 修复 `tsup.config.ts` ts(2339)：`esbuildOptions context` 类型
+- 新增 `types/shims.d.ts`：补全 `.vue` / `.svg` 模块声明，消除 41 个 ts(2307)
+- 移除 `HelpCommand` 中无效的 `COMMAND_NAMES.SYNC_SCRIPTS` 引用
+
 ## [0.1.11] - 2026-03-31
 
 ### Removed
