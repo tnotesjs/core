@@ -27,20 +27,14 @@ export default defineConfig({
     // Node.js built-ins
     /^node:/,
   ],
-  banner: {
-    // CLI 入口添加 shebang
-    js: '#!/usr/bin/env node',
-  },
-  esbuildOptions(options, context) {
-    // 只给 CLI 入口加 shebang，其他入口不加
-    const entryPoints = (context as Record<string, unknown>).entryPoints
-    const entryStr = entryPoints?.toString() ?? ''
-    if (
-      !entryStr.includes('index.ts') ||
-      entryStr.includes('src/index.ts') ||
-      entryStr.includes('vitepress/config')
-    ) {
-      options.banner = { js: '' }
+  // shebang 不能通过 banner 加（splitting 模式下会给所有 chunk 加），
+  // 改为构建后只给 CLI 入口补上
+  async onSuccess() {
+    const { readFileSync, writeFileSync } = await import('fs')
+    const cliPath = 'dist/cli/index.js'
+    const content = readFileSync(cliPath, 'utf-8')
+    if (!content.startsWith('#!')) {
+      writeFileSync(cliPath, '#!/usr/bin/env node\n' + content)
     }
   },
 })
