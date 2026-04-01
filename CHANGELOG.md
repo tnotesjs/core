@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.0.2] - 2026-04-01
+
 ### Added
 
 - 新增 `.github/copilot-instructions.md`，明确 core 的发版流程、版本策略和本地开发约定
