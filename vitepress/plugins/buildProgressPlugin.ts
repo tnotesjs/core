@@ -25,6 +25,8 @@ const CACHE_FILE = join(CACHE_DIR, 'build-cache.json')
 interface CacheData {
   transformCount: number
   chunkCount: number
+  /** transform 阶段耗时占总构建时间的比例（0-1），用于下次按时间权重分配进度 */
+  transformEndRatio?: number
 }
 
 /** 插件配置选项 */
@@ -103,6 +105,10 @@ let globalOutDir = ''
 let globalLastPercent = 0
 let globalFileCount = 0
 let globalLastLoggedPercent = -1 // 非 TTY 环境下上次输出的百分比区间，初始为 -1 以便第一次输出
+let globalLastOutputTime = 0 // 非 TTY 环境下上次输出时间戳，用于时间节流
+let globalTransformEndTime = 0 // transform 阶段结束时间戳
+let globalLastHookTime = 0 // 最后一次 Vite hook 触发时间
+let globalStallTimer: ReturnType<typeof setInterval> | null = null
 
 /** 检测是否支持单行刷新（交互式终端） */
 const isTTY = !!(process.stdout.isTTY && process.stderr.isTTY)
@@ -150,8 +156,8 @@ function interceptOutput() {
 
   process.stdout.write = ((
     chunk: string | Uint8Array,
-    encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
-    callback?: (err?: Error) => void,
+    encodingOrCallback?: BufferEncoding | ((err?: Error | null) => void),
+    callback?: (err?: Error | null) => void,
   ): boolean => {
     if (filter(chunk)) {
       return originalStdoutWrite!(chunk, encodingOrCallback as any, callback)
@@ -163,8 +169,8 @@ function interceptOutput() {
 
   process.stderr.write = ((
     chunk: string | Uint8Array,
-    encodingOrCallback?: BufferEncoding | ((err?: Error) => void),
-    callback?: (err?: Error) => void,
+    encodingOrCallback?: BufferEncoding | ((err?: Error | null) => void),
+    callback?: (err?: Error | null) => void,
   ): boolean => {
     const str = chunk.toString()
     // 允许进度条和真正的错误
@@ -205,14 +211,16 @@ function renderProgress(
 ) {
   if (!originalStderrWrite) return
 
-  // 非单行模式下，只在 10% 间隔输出进度，避免日志过多
+  // 非单行模式下，只在 10% 间隔输出进度，并附加时间节流避免多行显示相同耗时
   if (!useSingleLineMode && !isFinal) {
     const currentPercent = Math.floor(percent * 100)
     const currentBucket = Math.floor(currentPercent / 10) * 10
-    if (currentBucket <= globalLastLoggedPercent) {
+    const now = Date.now()
+    if (currentBucket <= globalLastLoggedPercent || (now - globalLastOutputTime < 500)) {
       return
     }
     globalLastLoggedPercent = currentBucket
+    globalLastOutputTime = now
   }
 
   const filled = Math.floor(percent * width)
@@ -257,6 +265,9 @@ export function buildProgressPlugin(
           globalHasError = false
           globalLastPercent = 0
           globalLastLoggedPercent = -1
+          globalLastOutputTime = 0
+          globalTransformEndTime = 0
+          globalLastHookTime = Date.now()
           globalOutDir = config.build?.outDir || 'dist'
 
           if (!hasCache) {
@@ -264,23 +275,67 @@ export function buildProgressPlugin(
           }
 
           interceptOutput()
+
+          // 停滞填充计时器：当 Vite hook 超过 2 秒没触发时（如 VitePress 渲染页面阶段），
+          // 缓慢推进进度条，避免长时间卡住不动
+          globalStallTimer = setInterval(() => {
+            if (
+              !globalIsBuilding ||
+              globalLastPercent <= 0 ||
+              globalLastPercent >= 0.98
+            )
+              return
+            const now = Date.now()
+            if (now - globalLastHookTime < 2000) return
+
+            // 每次推进剩余距离的 2%，形成自然减速曲线
+            const remaining = 0.98 - globalLastPercent
+            globalLastPercent += remaining * 0.02
+
+            const transformsStr = hasCache
+              ? `${globalTransformCount}/${cache.transformCount * 2}`
+              : `${globalTransformCount}`
+            const chunksStr = hasCache
+              ? `${globalChunkCount}/${cache.chunkCount * 2}`
+              : `${globalChunkCount}`
+
+            renderProgress(
+              globalLastPercent,
+              transformsStr,
+              chunksStr,
+              width,
+              complete,
+              incomplete,
+            )
+          }, 1000)
         }
       }
     },
 
-    transform(_code, id) {
+    transform(_code, _id) {
       globalTransformCount++
+      globalLastHookTime = Date.now()
+
+      // 根据缓存的时间比例确定 transform 阶段在进度条中的权重
+      // 例如 transform 占总时间 37% → 进度条 0-36%，chunk 占 63% → 进度条 36-98%
+      const transformWeight =
+        hasCache && cache.transformEndRatio != null
+          ? Math.max(0.1, Math.min(0.85, cache.transformEndRatio * 0.98))
+          : 0.85
 
       if (hasCache) {
-        const total = cache.transformCount * 2 + cache.chunkCount * 2
-        globalLastPercent = Math.min(0.9, globalTransformCount / total)
+        const totalTransforms = cache.transformCount * 2
+        globalLastPercent = Math.min(
+          transformWeight,
+          (globalTransformCount / totalTransforms) * transformWeight,
+        )
       } else {
-        if (!id.includes('node_modules') && globalLastPercent < 0.7) {
-          globalLastPercent = Math.min(
-            0.7,
-            globalTransformCount / (globalFileCount * 4),
-          )
-        }
+        // 无缓存模式：渐近曲线平滑逼近上限
+        const k = 500
+        globalLastPercent = Math.min(
+          transformWeight,
+          (transformWeight * globalTransformCount) / (globalTransformCount + k),
+        )
       }
 
       const transformsStr = hasCache
@@ -304,17 +359,28 @@ export function buildProgressPlugin(
 
     renderChunk() {
       globalChunkCount++
+      globalLastHookTime = Date.now()
+
+      // 记录 transform 阶段结束时间（第一次进入 renderChunk）
+      if (!globalTransformEndTime) {
+        globalTransformEndTime = Date.now()
+      }
+
+      const transformWeight =
+        hasCache && cache.transformEndRatio != null
+          ? Math.max(0.1, Math.min(0.85, cache.transformEndRatio * 0.98))
+          : 0.85
+      const chunkWeight = 0.98 - transformWeight
 
       if (hasCache) {
-        const total = cache.transformCount * 2 + cache.chunkCount * 2
+        const totalChunks = cache.chunkCount * 2
         globalLastPercent = Math.min(
           0.98,
-          (globalTransformCount + globalChunkCount) / total,
+          transformWeight + (globalChunkCount / totalChunks) * chunkWeight,
         )
       } else {
-        if (globalLastPercent < 0.98) {
-          globalLastPercent = Math.min(0.98, globalLastPercent + 0.003)
-        }
+        globalLastPercent = Math.max(globalLastPercent, transformWeight)
+        globalLastPercent = Math.min(0.98, globalLastPercent + 0.00005)
       }
 
       const transformsStr = hasCache
@@ -347,6 +413,11 @@ export function buildProgressPlugin(
       setTimeout(() => {
         if (!globalIsBuilding) return
 
+        if (globalStallTimer) {
+          clearInterval(globalStallTimer)
+          globalStallTimer = null
+        }
+
         const elapsed = ((Date.now() - globalStartTime) / 1000).toFixed(1)
 
         // 显示 100%，带换行
@@ -371,9 +442,14 @@ export function buildProgressPlugin(
         restoreOutput()
 
         if (!globalHasError) {
+          const totalTime = Date.now() - globalStartTime
+          const transformTime = globalTransformEndTime
+            ? globalTransformEndTime - globalStartTime
+            : totalTime
           setCacheData({
             transformCount: Math.floor(globalTransformCount / 2),
             chunkCount: Math.floor(globalChunkCount / 2),
+            transformEndRatio: transformTime / totalTime,
           })
 
           console.log(`✅ 构建成功！`)

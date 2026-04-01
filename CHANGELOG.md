@@ -4,7 +4,11 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Fixed
+
+- 修复大型知识库构建时 Node.js OOM 导致构建失败：为子进程设置 `--max-old-space-size=4096`，且构建产物已生成时忽略 OOM 退出码
+- 修复构建进度条时间分布严重不均匀：按实际 transform/chunk 耗时比例分配权重，增加停滞填充计时器平滑 VitePress 页面渲染阶段的进度空窗期
+- 修复构建进度条输出拦截函数的 TypeScript 类型错误（callback 参数 `Error` → `Error | null`）
 
 ## [0.0.2] - 2026-04-01
 

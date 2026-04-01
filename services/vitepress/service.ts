@@ -224,9 +224,20 @@ export class VitepressService {
         cwd: ROOT_DIR_PATH,
         shell: true,
         stdio: ['inherit', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          NODE_OPTIONS: (process.env.NODE_OPTIONS || '').includes(
+            '--max-old-space-size',
+          )
+            ? process.env.NODE_OPTIONS
+            : [process.env.NODE_OPTIONS, '--max-old-space-size=4096']
+                .filter(Boolean)
+                .join(' '),
+        },
       })
 
       // 过滤 VitePress 的 spinner 和状态输出，但保留我们的进度条
+      let buildSucceeded = false
       const filterOutput = (data: Buffer) => {
         const str = data.toString()
 
@@ -243,6 +254,9 @@ export class VitepressService {
           str.includes('error') ||
           str.includes('Error')
         ) {
+          if (str.includes('✅ 构建成功')) {
+            buildSucceeded = true
+          }
           process.stdout.write(data)
           return
         }
@@ -271,7 +285,7 @@ export class VitepressService {
       })
 
       child.on('close', (code: number) => {
-        if (code === 0) {
+        if (code === 0 || buildSucceeded) {
           resolve()
         } else {
           reject(new Error(`Command failed with code ${code}`))
