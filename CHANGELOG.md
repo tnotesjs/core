@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.0.4] - 2026-04-01
+
 ### Fixed
 
 - 修复底部翻页组件（DocFooter）不跟随侧边栏笔记编号显示/隐藏设置的问题
@@ -43,6 +47,7 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/tnotesjs/core/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/tnotesjs/core/compare/v0.0.2...v0.0.3
 [0.0.1]: https://github.com/tnotesjs/core/releases/tag/v0.0.1
