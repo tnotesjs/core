@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.0.3] - 2026-04-01
+
 ### Fixed
 
 - 修复大型知识库构建时 Node.js OOM 导致构建失败：为子进程设置 `--max-old-space-size=4096`，且构建产物已生成时忽略 OOM 退出码
@@ -37,5 +41,6 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/tnotesjs/core/compare/v0.0.2...v0.0.3
 [0.0.1]: https://github.com/tnotesjs/core/releases/tag/v0.0.1
