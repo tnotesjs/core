@@ -216,7 +216,10 @@ function renderProgress(
     const currentPercent = Math.floor(percent * 100)
     const currentBucket = Math.floor(currentPercent / 10) * 10
     const now = Date.now()
-    if (currentBucket <= globalLastLoggedPercent || (now - globalLastOutputTime < 500)) {
+    if (
+      currentBucket <= globalLastLoggedPercent ||
+      now - globalLastOutputTime < 500
+    ) {
       return
     }
     globalLastLoggedPercent = currentBucket
@@ -452,9 +455,10 @@ export function buildProgressPlugin(
             transformEndRatio: transformTime / totalTime,
           })
 
-          console.log(`✅ 构建成功！`)
+          console.log(`🔨 Rollup 打包完成`)
           console.log(`   📁 输出目录: ${globalOutDir}`)
           console.log(`   ⏱️  耗时: ${elapsed}s`)
+          console.log(`   ⏳ VitePress 正在渲染页面...`)
         } else {
           console.log(`\n❌ 构建失败，请检查错误信息`)
         }

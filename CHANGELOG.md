@@ -4,7 +4,14 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Fixed
+
+- 修复构建进度插件在 Rollup `closeBundle` 阶段误打印"构建成功"导致 `VitepressService` 误判构建结果：SSR 渲染 OOM 时进程仍报告成功，造成部署不完整产物（GitHub Pages 404）
+- 修复 `VitepressService.build()` 中 `buildSucceeded` 标志绕过进程退出码检测的问题：现在仅依赖退出码 `code === 0` 判定构建成功
+
+### Changed
+
+- `buildProgressPlugin` 的 `closeBundle` 阶段日志从"✅ 构建成功"改为"🔨 Rollup 打包完成 → ⏳ VitePress 正在渲染页面..."，准确反映构建阶段
 
 ## [0.0.4] - 2026-04-01
 
