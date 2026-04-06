@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.0.5] - 2026-04-06
+
 ### Fixed
 
 - 修复构建进度插件在 Rollup `closeBundle` 阶段误打印"构建成功"导致 `VitepressService` 误判构建结果：SSR 渲染 OOM 时进程仍报告成功，造成部署不完整产物（GitHub Pages 404）
@@ -54,7 +58,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/tnotesjs/core/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/tnotesjs/core/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/tnotesjs/core/compare/v0.0.2...v0.0.3
 [0.0.1]: https://github.com/tnotesjs/core/releases/tag/v0.0.1
