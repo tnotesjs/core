@@ -37,6 +37,11 @@ export function renameNotePlugin(): PluginOption {
               await renameCommand.renameNote({ noteIndex, newTitle })
               const duration = Date.now() - startTime
 
+              const newFolderName = `${noteIndex}. ${newTitle.trim()}`
+              const newUrl = `/notes/${encodeURIComponent(
+                newFolderName,
+              )}/README`
+
               res.statusCode = 200
               res.setHeader('Content-Type', 'application/json')
               res.end(
@@ -44,6 +49,8 @@ export function renameNotePlugin(): PluginOption {
                   success: true,
                   duration,
                   newTitle,
+                  newFolderName,
+                  newUrl,
                   message: '重命名完成',
                 })
               )

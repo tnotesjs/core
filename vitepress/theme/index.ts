@@ -18,8 +18,9 @@ import BilibiliOutsidePlayer from '../components/BilibiliOutsidePlayer/BilibiliO
 import Discussions from '../components/Discussions/Discussions.vue'
 import EnWordList from '../components/EnWordList/EnWordList.vue'
 import Footprints from '../components/Footprints/Footprints.vue'
+import { useRenameOverlay } from '../components/Layout/composables/useRenameOverlay'
+import { redirectAfterRename } from '../components/Layout/composables/useRenameRedirect'
 import Layout from '../components/Layout/Layout.vue'
-import LoadingPage from '../components/LoadingPage/LoadingPage.vue'
 import MarkMap from '../components/MarkMap/MarkMap.vue'
 import Mermaid from '../components/Mermaid/Mermaid.vue'
 import NotesTable from '../components/NotesTable/NotesTable.vue'
@@ -42,7 +43,6 @@ function registerCoreComponents(ctx: EnhanceAppContext) {
   app.component('E', EnWordList)
   app.component('Footprints', Footprints)
   app.component('F', Footprints)
-  app.component('LoadingPage', LoadingPage)
   app.component('Settings', Settings)
   app.component('S', Settings)
   app.component('SidebarCard', SidebarCard)
@@ -51,6 +51,44 @@ function registerCoreComponents(ctx: EnhanceAppContext) {
   app.component('NotesTable', NotesTable)
   app.component('N', NotesTable)
   app.component('Tooltip', Tooltip)
+}
+
+/**
+ * 在 dev server 中监听文件夹直接重命名事件，
+ * 当当前页面路径属于被重命名的文件夹时，自动跳转到新 URL。
+ */
+function registerRenameHmrListener() {
+  if (typeof window === 'undefined') return
+  if (typeof import.meta.hot === 'undefined' || !import.meta.hot) return
+
+  const overlay = useRenameOverlay()
+  let handling = false
+
+  import.meta.hot.on(
+    'tnotes:note-renamed',
+    async (payload: {
+      oldFolder?: string
+      newFolder?: string
+      noteIndex?: string
+    }) => {
+      if (handling) return
+      if (!payload?.oldFolder || !payload?.newFolder) return
+
+      const oldSegment = encodeURIComponent(payload.oldFolder)
+      if (!window.location.pathname.includes(oldSegment)) return
+
+      handling = true
+      overlay.show({ message: '检测到文件夹重命名', tip: '正在跳转到新地址...' })
+
+      try {
+        await redirectAfterRename(
+          `notes/${encodeURIComponent(payload.newFolder)}/README`,
+        )
+      } finally {
+        handling = false
+      }
+    },
+  )
 }
 
 /**
@@ -80,6 +118,7 @@ export function defineNotesTheme(overrides: NotesThemeOverrides = {}): Theme {
     Layout: overrides.Layout ?? Layout,
     enhanceApp(ctx) {
       registerCoreComponents(ctx)
+      registerRenameHmrListener()
       overrides.enhanceApp?.(ctx)
     },
   }
@@ -93,5 +132,6 @@ export default {
   Layout,
   enhanceApp(ctx: EnhanceAppContext) {
     registerCoreComponents(ctx)
+    registerRenameHmrListener()
   },
 } satisfies Theme

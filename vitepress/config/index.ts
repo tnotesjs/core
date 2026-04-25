@@ -19,6 +19,7 @@ import {
   getThemeConfig,
 } from '../configs'
 import { buildProgressPlugin } from '../plugins/buildProgressPlugin'
+import { fileWatcherBridgePlugin } from '../plugins/fileWatcherBridgePlugin'
 import { getNoteByConfigIdPlugin } from '../plugins/getNoteByConfigIdPlugin'
 import { renameNotePlugin } from '../plugins/renameNotePlugin'
 import { updateConfigPlugin } from '../plugins/updateConfigPlugin'
@@ -77,9 +78,13 @@ export function defineNotesConfig(overrides: UserConfig = {}) {
         updateConfigPlugin() as any,
         renameNotePlugin() as any,
         getNoteByConfigIdPlugin() as any,
+        fileWatcherBridgePlugin() as any,
         ...(overrideVite?.plugins || []),
       ],
       server: {
+        // 显式同时监听 IPv4 / IPv6，避免 Node 18+ 在 Windows 下偶发只绑定 ::1
+        // 导致 Chrome 解析 localhost → 127.0.0.1 时连接被拒、页面一直 pending。
+        // host: true,
         watch: {
           ignored: IGNORE_LIST,
         },

@@ -1,6 +1,8 @@
 import { useData } from 'vitepress'
 import { ref, computed } from 'vue'
 
+import { redirectAfterRename } from './useRenameRedirect'
+
 import type { NoteConfig } from '../../../../types'
 import type { Ref, ComputedRef } from 'vue'
 
@@ -54,6 +56,8 @@ export function useNoteSave(
     isSaving.value = true
     savingMessage.value = '正在保存配置...'
 
+    let renameNewUrl: string | null = null
+
     try {
       // 如果标题有变化,先重命名文件夹
       if (titleChanged) {
@@ -75,10 +79,17 @@ export function useNoteSave(
           throw new Error(`重命名失败: ${error}`)
         }
 
-        // 后端已经完成所有更新,包括文件系统同步
-        const result = await renameResponse.json()
-        console.log('重命名完成:', result)
+        // 后端已经完成所有更新（含文件系统、根 README、sidebar）
+        const result = (await renameResponse.json()) as {
+          success: boolean
+          newUrl?: string
+        }
 
+        if (!result?.newUrl) {
+          throw new Error('重命名响应缺少 newUrl 字段')
+        }
+
+        renameNewUrl = result.newUrl
         savingMessage.value = '文件已同步,准备跳转...'
       }
 
@@ -132,21 +143,14 @@ export function useNoteSave(
         showSuccessToast.value = false
       }, 3000)
 
-      // 如果标题改变了,先跳转到loading页,再由loading页根据configId查询目标URL
-      if (titleChanged) {
-        // 获取当前笔记的 configId (UUID)
-        const configId = allNotesConfig[currentNoteId.value]?.id
+      // 如果标题改变了, 显示遮罩并整页跳到新 URL
+      if (titleChanged && renameNewUrl) {
+        // 提前结束「保存中」状态，避免遮罩退出后按钮文案残留
+        isSaving.value = false
+        savingMessage.value = ''
 
-        if (!configId) {
-          throw new Error('无法获取笔记的 configId')
-        }
-
-        // 跳转到loading页,传递 configId 参数
         const base = vpData.site.value.base || '/'
-        const loadingUrl = `${base}loading?configId=${encodeURIComponent(
-          configId
-        )}`
-        window.location.href = loadingUrl
+        await redirectAfterRename(renameNewUrl, { base })
       }
     } catch (error) {
       console.error('保存配置失败:', error)

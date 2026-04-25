@@ -8,6 +8,8 @@ import { existsSync, promises as fsPromises } from 'fs'
 import { join } from 'path'
 
 import { safeExecute } from './internal'
+import { REPO_NOTES_URL } from '../../config/constants'
+import { generateNoteTitle } from '../../config/templates'
 
 import type { EventScheduler } from './eventScheduler'
 import type { WatchState } from './watchState'
@@ -42,6 +44,17 @@ interface FolderChangeHandlerConfig {
   noteIndexCache: NoteIndexCache
   /** 日志记录器 */
   logger: Logger
+  /**
+   * 文件夹重命名成功后回调（可选）。
+   *
+   * 用于在 dev server 中通过 Vite WS 通知前端跳转到新 URL，
+   * 让「文件系统直接改名」与「关于面板保存」体验一致。
+   */
+  onRenameSuccess?: (payload: {
+    oldFolder: string
+    newFolder: string
+    noteIndex: string
+  }) => void
 }
 
 export class FolderChangeHandler {
@@ -136,6 +149,12 @@ export class FolderChangeHandler {
           logger,
         )
       }
+
+      this.config.onRenameSuccess?.({
+        oldFolder: oldName,
+        newFolder: newName,
+        noteIndex: newNoteIndex,
+      })
     } finally {
       this.scheduleTimer(() => {
         scheduler.setUpdating(false)
@@ -177,16 +196,66 @@ export class FolderChangeHandler {
     noteIndex: string,
     newName: string,
   ): Promise<void> {
-    const { noteIndexCache, readmeService, logger } = this.config
+    const { noteIndexCache, readmeService, logger, notesDir } = this.config
 
     logger.info(`笔记索引未变 (${noteIndex})，只更新标题`)
     noteIndexCache.updateFolderName(noteIndex, newName)
+
+    // 同步重写笔记目录内 README.md 的一级标题，与 RenameNoteCommand 行为一致
+    await safeExecute(
+      `更新 README 一级标题 ${noteIndex}`,
+      () => this.rewriteNoteReadmeH1(notesDir, newName, noteIndex),
+      logger,
+    )
+
     const item = noteIndexCache.getByNoteIndex(noteIndex)
     if (item) {
       await readmeService.updateNoteInReadme(noteIndex, item.noteConfig)
     }
     await readmeService.regenerateSidebar()
     logger.success(`标题更新完成`)
+  }
+
+  /**
+   * 重写指定笔记目录下 README.md 的一级标题。
+   *
+   * 输入的 `folderName` 形如 `0003. 评论功能的技术实现`，
+   * 据此推导出新标题文本（去掉 `${noteIndex}. ` 前缀）。
+   */
+  private async rewriteNoteReadmeH1(
+    notesDir: string,
+    folderName: string,
+    noteIndex: string,
+  ): Promise<void> {
+    const readmePath = join(notesDir, folderName, 'README.md')
+    if (!existsSync(readmePath)) return
+
+    const newTitle = folderName.replace(/^\d{4}\.\s*/, '').trim()
+    if (!newTitle) return
+
+    const content = await fsPromises.readFile(readmePath, 'utf-8')
+    const lines = content.split('\n')
+
+    let h1Index = -1
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].trim().startsWith('# ')) {
+        h1Index = i
+        break
+      }
+    }
+
+    if (h1Index === -1) {
+      this.config.logger.warn(
+        `未在 ${readmePath} 找到一级标题，跳过 README H1 更新`,
+      )
+      return
+    }
+
+    const newH1 = generateNoteTitle(noteIndex, newTitle, REPO_NOTES_URL)
+    if (lines[h1Index] === newH1) return
+
+    lines[h1Index] = newH1
+    await fsPromises.writeFile(readmePath, lines.join('\n'), 'utf-8')
   }
 
   private async handleIndexChangedRename(

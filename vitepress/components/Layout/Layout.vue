@@ -180,6 +180,13 @@
     <!-- <template #nav-screen-content-before>nav-screen-content-before</template> -->
     <!-- <template #nav-screen-content-after>nav-screen-content-after</template> -->
   </Layout>
+
+  <!-- 全局重命名遮罩：关于面板保存或文件系统重命名时由 useRenameOverlay 控制 -->
+  <LoadingPage
+    :visible="renameOverlayState.visible"
+    :message="renameOverlayState.message"
+    :tip="renameOverlayState.tip"
+  />
 </template>
 
 <script setup>
@@ -190,6 +197,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useCodeBlockFullscreen } from "../CodeBlockFullscreen";
 import { SIDEBAR_SHOW_NOTE_ID_KEY } from "../constants";
 import Discussions from "../Discussions/Discussions.vue";
+import LoadingPage from "../LoadingPage/LoadingPage.vue";
 import { data as allNotesConfig } from "../notesConfig.data.ts";
 import AboutModal from "./AboutModal.vue";
 import AboutPanel from "./AboutPanel.vue";
@@ -198,6 +206,7 @@ import { useNoteConfig } from "./composables/useNoteConfig";
 import { useNoteSave } from "./composables/useNoteSave";
 import { useNoteValidation } from "./composables/useNoteValidation";
 import { useRedirect } from "./composables/useRedirect";
+import { useRenameOverlay } from "./composables/useRenameOverlay";
 import { useVSCodeIntegration } from "./composables/useVSCodeIntegration";
 import ContentCollapse from "./ContentCollapse.vue";
 import CustomSidebar from "./CustomSidebar.vue";
@@ -216,6 +225,9 @@ const route = useRoute();
 
 // 启用代码块全屏功能
 useCodeBlockFullscreen();
+
+// 全局重命名遮罩状态（由 useRenameRedirect 控制 show/hide）
+const { state: renameOverlayState } = useRenameOverlay();
 
 // 自定义侧边栏引用
 const customSidebarRef = ref(null);

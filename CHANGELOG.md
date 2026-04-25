@@ -4,7 +4,23 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Added
+
+- 新增 `pnpm typecheck` 脚本（`vue-tsc --noEmit -p tsconfig.build.json`），覆盖 `.ts` 与 `.vue` 全量类型检查。
+
+### Changed
+
+- 重命名笔记不再依赖宿主仓库的 `loading.md` 中转页：后端 `/__tnotes_rename_note` 直接在响应中返回 `newUrl`，前端通过统一的 `useRenameRedirect` 工具显示遮罩并整页跳转。宿主仓库可以删除 `loading.md`。
+- 文件系统直接重命名笔记目录（在编辑器或资源管理器中改名）时，dev server 会通过 Vite WS 推送 `tnotes:note-renamed` 事件，前端检测到当前页面位于被重命名的文件夹下时会自动跳转到新 URL，与「关于面板保存标题」体验一致。
+- `LoadingPage` 组件改造为纯遮罩组件（`<Teleport to="body">`），由全局 `useRenameOverlay` store 控制显隐，不再注册为全局组件，也不再承担路由 / 自动跳转职责。
+
+### Fixed
+
+- 修复重命名标题后偶发跳回首页：旧实现的 `/loading` 页在请求 `/__tnotes_get_note` 时未拼接 `site.base`，导致 404 后落入「未找到笔记」分支并跳回 README。新方案直接复用后端返回的 URL，避免该路径。
+- 修复直接通过文件系统重命名笔记目录后，目录内 `README.md` 的一级标题未同步更新；现在 `FolderChangeHandler.handleTitleOnlyRename` 会按 `0000. 标题` 推导新标题并重写 H1（与 `RenameNoteCommand` 行为一致）。
+- 修复直接通过文件系统重命名笔记目录后，浏览器地址栏未跳转到新 URL：file-watcher 与 Vite dev server 跑在不同进程，单例无法共享导致原 WS 推送从未生效。改用 HTTP IPC：file-watcher 完成重命名后通过 Node 原生 `http.request` 调 vite dev server 暴露的 `/__tnotes_broadcast_rename` 接口（避开 Windows 上 Node 18.x undici fetch 偶发的 `TypeError: fetch failed`），并依次尝试 `127.0.0.1` 与 `::1` 兼容 vite 默认只绑 IPv6 `localhost` 的情况；vite 端 `fileWatcherBridgePlugin` 收到后 `ws.send` 广播 `tnotes:note-renamed`，中间件路径校验同时接受 base 前缀与无前缀。
+- 修复直接通过文件系统重命名「当前所在页」目录后地址栏未更新：Vite chokidar 会同时触发 `full-reload`，与我们的 `setTimeout + location.replace` 形成竞态，full-reload 以旧 URL 抢先重载。改为先用 `history.replaceState` 同步把地址栏切到新 URL，再 `location.replace`，确保无论谁先 reload 都落在新页面。
+- 修复 `FileWatcherService` 字段在 `vue-tsc` strict 模式下报「属性未初始化」：这些字段在构造函数调用的 `init()` 中赋值，TS 无法推断跨方法初始化，改为使用 definite assignment assertion (`!:`)。
 
 ## [0.0.8] - 2026-04-25
 
