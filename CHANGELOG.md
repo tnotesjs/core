@@ -4,7 +4,23 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Added
+
+- 设置面板改为全局 dialog 形式：新增 `vitepress/components/Settings/composables/useSettingsDialog.ts`（模块级 `reactive` 单例 store）与 `vitepress/components/Settings/SettingsDialog.vue`（`<ClientOnly>` + `<Teleport to="body">` 容器，支持「全屏 / 还原」切换、点击遮罩或按 Esc 关闭），由 `Layout.vue` 全局挂载。
+- 侧边栏顶部新增 ⚙️ 设置入口按钮（位于 `SidebarNavBefore` 工具区），点击直接打开设置 dialog，无需再走整页路由。
+
+### Changed
+
+- `defaultConfig.ts` 移除菜单项 `{ text: '⚙️ Settings', link: '/Settings' }`：设置不再依赖 VitePress 路由。
+- `SidebarCard.vue` 中两处「未配置本地知识库」的 `confirm` 跳转改为调用 `useSettingsDialog().open()`，不再 `router.go(\`${REPO_NAME}/Settings\`)`。
+- 设置 dialog 打开期间，捕获阶段拦截 `Ctrl/Cmd+K` 与 `Esc`，避免与 VitePress 本地搜索弹窗叠加冲突。
+
+### Migration（重要，本次为 minor 升级原因）
+
+宿主仓库（TNotes.xxx）升级到本版本后需要手动清理：
+
+1. 从 `.tnotes.json` 的 `menuItems` 中删除 `{ text: '⚙️ Settings', link: '/Settings' }`，否则顶部导航会留下指向不存在 `/Settings` 路由的 404 链接。
+2. 可安全删除根目录的 `Settings.md`（`<S />` 组件已不再需要通过单独路由承载）；`<S />` / `<Settings />` 全局组件仍然保留，存量内容不会立刻失效。
 
 ## [0.0.9] - 2026-04-25
 

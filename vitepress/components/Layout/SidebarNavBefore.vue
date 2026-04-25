@@ -30,6 +30,16 @@
     >
       <img :src="icon__focus" class="toggle-icon" alt="聚焦当前笔记" />
     </button>
+
+    <!-- 设置按钮 -->
+    <button
+      class="toggle-btn settings-btn"
+      @click="$emit('open-settings')"
+      title="打开设置"
+      aria-label="打开设置"
+    >
+      <span class="settings-icon" aria-hidden="true">⚙️</span>
+    </button>
   </div>
 </template>
 
@@ -45,6 +55,7 @@ defineEmits<{
   'toggle-expand': []
   'toggle-note-id': []
   'focus-current': []
+  'open-settings': []
 }>()
 </script>
 
@@ -87,6 +98,17 @@ defineEmits<{
 }
 
 .toggle-btn:hover .toggle-icon {
+  transform: scale(1.1);
+}
+
+.settings-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.toggle-btn:hover .settings-icon {
   transform: scale(1.1);
 }
 </style>

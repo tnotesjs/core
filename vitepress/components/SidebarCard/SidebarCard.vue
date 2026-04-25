@@ -1,14 +1,7 @@
 <script setup>
 import { useData } from 'vitepress'
-import { useRouter } from 'vitepress'
 import { ref, computed, watch } from 'vue'
 
-import { NOTES_DIR_KEY, REPO_NAME, AUTHOR, ROOT_ITEM } from '../constants.ts'
-import { data as sidebarConfig } from '../sidebar.data'
-import { formatDate } from '../utils.ts'
-// @ts-expect-error - VitePress Data Loader
-import MindMapView from './MindMapView.vue'
-import NotesTrendChart from './NotesTrendChart.vue'
 import {
   icon__fold,
   icon__github,
@@ -19,6 +12,13 @@ import {
   icon__number_gray,
   icon__number_purple,
 } from '../../assets/icons'
+import { NOTES_DIR_KEY, REPO_NAME, AUTHOR, ROOT_ITEM } from '../constants.ts'
+import { useSettingsDialog } from '../Settings/composables/useSettingsDialog'
+import { data as sidebarConfig } from '../sidebar.data'
+import { formatDate } from '../utils.ts'
+// @ts-expect-error - VitePress Data Loader
+import MindMapView from './MindMapView.vue'
+import NotesTrendChart from './NotesTrendChart.vue'
 
 // #region props
 const props = defineProps({
@@ -97,7 +97,7 @@ const folderViewData = computed(() => {
 })
 // #endregion
 
-const router = useRouter()
+const { open: openSettings } = useSettingsDialog()
 const { site } = useData()
 const baseUrl = site.value.base.replace(/\/$/, '')
 
@@ -261,10 +261,10 @@ function openVSCodeRepo() {
 
   if (!notesDir) {
     const shouldRedirect = confirm(
-      '请先配置本地知识库所在位置，点击确定跳转到设置页面',
+      '请先配置本地知识库所在位置，点击确定打开设置面板',
     )
     if (shouldRedirect) {
-      router.go(`${REPO_NAME}/Settings`)
+      openSettings()
     }
     return
   }
@@ -278,10 +278,10 @@ function openVSCodeArticle(article) {
 
   if (!notesDir) {
     const shouldRedirect = confirm(
-      '请先配置本地知识库所在位置，点击确定跳转到设置页面',
+      '请先配置本地知识库所在位置，点击确定打开设置面板',
     )
     if (shouldRedirect) {
-      router.go(`${REPO_NAME}/Settings`)
+      openSettings()
     }
     return
   }

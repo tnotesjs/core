@@ -59,10 +59,6 @@ export function getDefaultConfig(repoName?: string): TNotesConfig {
         link: '/',
       },
       {
-        text: '⚙️ Settings',
-        link: '/Settings',
-      },
-      {
         text: '📒 TNotes',
         link: 'https://tnotesjs.github.io/notes',
       },

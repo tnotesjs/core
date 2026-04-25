@@ -156,6 +156,7 @@
         @toggle-expand="toggleSidebarSections"
         @toggle-note-id="toggleNoteId"
         @focus-current="focusCurrentNote"
+        @open-settings="openSettings"
       />
     </template>
 
@@ -187,6 +188,9 @@
     :message="renameOverlayState.message"
     :tip="renameOverlayState.tip"
   />
+
+  <!-- 全局设置 Dialog：由 useSettingsDialog 控制显隐 -->
+  <SettingsDialog />
 </template>
 
 <script setup>
@@ -196,11 +200,11 @@ import { computed, onMounted, ref, watch } from "vue";
 
 import { useCodeBlockFullscreen } from "../CodeBlockFullscreen";
 import { SIDEBAR_SHOW_NOTE_ID_KEY } from "../constants";
-import Discussions from "../Discussions/Discussions.vue";
-import LoadingPage from "../LoadingPage/LoadingPage.vue";
 import { data as allNotesConfig } from "../notesConfig.data.ts";
 import AboutModal from "./AboutModal.vue";
 import AboutPanel from "./AboutPanel.vue";
+import Discussions from "../Discussions/Discussions.vue";
+import LoadingPage from "../LoadingPage/LoadingPage.vue";
 import { useCollapseControl } from "./composables/useCollapseControl";
 import { useNoteConfig } from "./composables/useNoteConfig";
 import { useNoteSave } from "./composables/useNoteSave";
@@ -217,6 +221,8 @@ import ImagePreview from "./ImagePreview.vue";
 import NoteStatus from "./NoteStatus.vue";
 import SidebarNavBefore from "./SidebarNavBefore.vue";
 import Swiper from "./Swiper.vue";
+import { useSettingsDialog } from "../Settings/composables/useSettingsDialog";
+import SettingsDialog from "../Settings/SettingsDialog.vue";
 
 const { Layout } = DefaultTheme;
 const vpData = useData();
@@ -228,6 +234,9 @@ useCodeBlockFullscreen();
 
 // 全局重命名遮罩状态（由 useRenameRedirect 控制 show/hide）
 const { state: renameOverlayState } = useRenameOverlay();
+
+// 全局设置 Dialog 控制
+const { open: openSettings } = useSettingsDialog();
 
 // 自定义侧边栏引用
 const customSidebarRef = ref(null);
