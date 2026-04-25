@@ -1,45 +1,40 @@
 <template>
   <div class="sidebar-toggle-wrapper">
-    <!-- 笔记编号显示切换按钮 -->
-    <button
-      class="toggle-btn"
-      @click="$emit('toggle-note-id')"
-      :title="showNoteId ? '隐藏笔记编号' : '显示笔记编号'"
-    >
-      <img
-        :src="showNoteId ? icon__number_purple : icon__number_gray"
-        class="toggle-icon"
-        alt="切换笔记编号"
-      />
-    </button>
+    <div class="group group-left">
+      <!-- 展开/折叠全部按钮 -->
+      <button
+        class="toggle-btn"
+        @click="$emit('toggle-expand')"
+        :title="isExpanded ? '全部折叠' : '全部展开'"
+      >
+        <img :src="icon__fold" class="toggle-icon" alt="切换展开折叠" />
+      </button>
+      <span class="group-label">目录</span>
+    </div>
 
-    <!-- 展开/折叠全部按钮 -->
-    <button
-      class="toggle-btn"
-      @click="$emit('toggle-expand')"
-      :title="isExpanded ? '全部折叠' : '全部展开'"
-    >
-      <img :src="icon__fold" class="toggle-icon" alt="切换展开折叠" />
-    </button>
+    <div class="group group-right">
+      <!-- 聚焦到当前笔记按钮 -->
+      <button
+        class="toggle-btn"
+        @click="$emit('focus-current')"
+        title="聚焦到当前笔记（点击切换多个位置）"
+      >
+        <img :src="icon__focus" class="toggle-icon" alt="聚焦当前笔记" />
+      </button>
 
-    <!-- 聚焦到当前笔记按钮 -->
-    <button
-      class="toggle-btn"
-      @click="$emit('focus-current')"
-      title="聚焦到当前笔记（点击切换多个位置）"
-    >
-      <img :src="icon__focus" class="toggle-icon" alt="聚焦当前笔记" />
-    </button>
-
-    <!-- 设置按钮 -->
-    <button
-      class="toggle-btn settings-btn"
-      @click="$emit('open-settings')"
-      title="打开设置"
-      aria-label="打开设置"
-    >
-      <span class="settings-icon" aria-hidden="true">⚙️</span>
-    </button>
+      <!-- 笔记编号显示切换按钮 -->
+      <button
+        class="toggle-btn"
+        @click="$emit('toggle-note-id')"
+        :title="showNoteId ? '隐藏笔记编号' : '显示笔记编号'"
+      >
+        <img
+          :src="showNoteId ? icon__number_purple : icon__number_gray"
+          class="toggle-icon"
+          alt="切换笔记编号"
+        />
+      </button>
+    </div>
   </div>
 </template>
 
@@ -55,7 +50,6 @@ defineEmits<{
   'toggle-expand': []
   'toggle-note-id': []
   'focus-current': []
-  'open-settings': []
 }>()
 </script>
 
@@ -63,11 +57,22 @@ defineEmits<{
 .sidebar-toggle-wrapper {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 0 16px 0;
+  justify-content: space-between;
+  padding: 12px 8px 16px;
   border-bottom: 1px solid var(--vp-c-divider);
   margin-bottom: 16px;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.group-label {
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+  user-select: none;
 }
 
 .toggle-btn {
@@ -98,17 +103,6 @@ defineEmits<{
 }
 
 .toggle-btn:hover .toggle-icon {
-  transform: scale(1.1);
-}
-
-.settings-icon {
-  font-size: 18px;
-  line-height: 1;
-  display: inline-block;
-  transition: transform 0.2s ease;
-}
-
-.toggle-btn:hover .settings-icon {
   transform: scale(1.1);
 }
 </style>

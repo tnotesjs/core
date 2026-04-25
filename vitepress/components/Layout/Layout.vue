@@ -156,7 +156,6 @@
         @toggle-expand="toggleSidebarSections"
         @toggle-note-id="toggleNoteId"
         @focus-current="focusCurrentNote"
-        @open-settings="openSettings"
       />
     </template>
 
@@ -175,7 +174,10 @@
     <!-- <template #nav-bar-title-before>nav-bar-title-before</template> -->
     <!-- <template #nav-bar-title-after>nav-bar-title-after</template> -->
     <!-- <template #nav-bar-content-before>nav-bar-content-before</template> -->
-    <!-- <template #nav-bar-content-after>nav-bar-content-after</template> -->
+    <!-- 设置入口：固定在 VPNav 右侧（social-links / appearance 之后，extra 之前） -->
+    <template #nav-bar-content-after>
+      <NavBarSettingsTrigger />
+    </template>
 
     <!-- !NOTE 不清楚下面的插槽所对应的位置 -->
     <!-- <template #nav-screen-content-before>nav-screen-content-before</template> -->
@@ -218,10 +220,10 @@ import DocBeforeControls from "./DocBeforeControls.vue";
 import DocFooter from "./DocFooter.vue";
 import { data as readmeData } from "./homeReadme.data.ts";
 import ImagePreview from "./ImagePreview.vue";
+import NavBarSettingsTrigger from "./NavBarSettingsTrigger.vue";
 import NoteStatus from "./NoteStatus.vue";
 import SidebarNavBefore from "./SidebarNavBefore.vue";
 import Swiper from "./Swiper.vue";
-import { useSettingsDialog } from "../Settings/composables/useSettingsDialog";
 import SettingsDialog from "../Settings/SettingsDialog.vue";
 
 const { Layout } = DefaultTheme;
@@ -234,9 +236,6 @@ useCodeBlockFullscreen();
 
 // 全局重命名遮罩状态（由 useRenameRedirect 控制 show/hide）
 const { state: renameOverlayState } = useRenameOverlay();
-
-// 全局设置 Dialog 控制
-const { open: openSettings } = useSettingsDialog();
 
 // 自定义侧边栏引用
 const customSidebarRef = ref(null);

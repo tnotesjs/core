@@ -4,7 +4,11 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Changed
+
+- 设置入口由侧边栏工具区迁移至 VPNav 最右侧（通过 `nav-bar-content-after` 插槽渲染 `NavBarSettingsTrigger`），点击仍调用统一的 `useSettingsDialog().open()`。
+- `NavBarSettingsTrigger` 改用统一图标资源 `icon__setting.svg` 渲染设置按钮。
+- 侧边栏顶部目录管理按钮重新分组：左侧「折叠按钮 + 『目录』文案」，右侧「定位按钮 + 索引切换按钮」。
 
 ## [0.1.14] - 2026-04-25
 
