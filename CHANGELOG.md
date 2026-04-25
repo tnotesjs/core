@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.1.15] - 2026-04-25
+
 ### Changed
 
 - 设置入口由侧边栏工具区迁移至 VPNav 最右侧（通过 `nav-bar-content-after` 插槽渲染 `NavBarSettingsTrigger`），点击仍调用统一的 `useSettingsDialog().open()`。
