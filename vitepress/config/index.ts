@@ -120,16 +120,28 @@ export function defineNotesConfig(overrides: UserConfig = {}) {
     },
     transformPageData(pageData, ctx) {
       // 为笔记页面注入原始 Markdown 内容（用于一键复制功能）
+      //
+      // 这里的 rawContent 会被 VitePress 序列化进 SFC 的
+      // `<script>export const __pageData = JSON.parse("...")</script>` 块。
+      // 如果直接写入原文，原文中的 `<script>` / `</script>` 字面量会被两
+      // 类规则误命中：
+      //   1. HTML 解析器看到 `</script` 就提前闭合脚本块，触发
+      //      "Invalid end tag"。
+      //   2. VitePress 内部还会用
+      //      `scriptClientRE = /<script\b[^>]*client\b[^>]*>([^]*?)<\/script>/`
+      //      在整段 vueSrc 上扫一遍，匹配到原文里的 `<script src="/client.js">`
+      //      之类开标签后会一路吞到真正的 `</script>`。
+      //
+      // 与其针对每条规则各自做转义（耦合 VitePress 内部实现细节），
+      // 不如直接对原文做 base64 编码：base64 字符集仅 `[A-Za-z0-9+/=]`，
+      // 不包含 `<` `>`，可彻底规避任何 HTML/正则误匹配。
+      // 前端消费时使用 `atob` + `TextDecoder('utf-8')` 还原原文。
       if (/^notes\/\d{4}/.test(pageData.relativePath)) {
         const fullPath = path.resolve(rootPath, pageData.relativePath)
         try {
           const raw = fs.readFileSync(fullPath, 'utf-8')
-          // 防止 raw 中的 `</script>` 字面量在被 JSON.stringify 后注入到
-          // `<script>…</script>` 块时提前闭合脚本块（导致 Vue SFC 解析报
-          // "Invalid end tag"）。在源串里把 `</` 拆开即可，复制时仍是原文。
-          pageData.frontmatter.rawContent = raw.replace(
-            /<\/(script)/gi,
-            '<\\/$1',
+          pageData.frontmatter.rawContent = Buffer.from(raw, 'utf-8').toString(
+            'base64',
           )
         } catch {
           pageData.frontmatter.rawContent = null

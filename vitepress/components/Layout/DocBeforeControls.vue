@@ -91,7 +91,12 @@ import { useData } from 'vitepress'
 import ToggleSidebar from './ToggleSidebar.vue'
 import ToggleFullContent from './ToggleFullContent.vue'
 
-import { icon__github, icon__vscode, icon__fold, icon__clipboard } from '../../assets/icons'
+import {
+  icon__github,
+  icon__vscode,
+  icon__fold,
+  icon__clipboard,
+} from '../../assets/icons'
 
 const props = defineProps<{
   isFullContentMode: boolean
@@ -110,9 +115,14 @@ const showCopyToast = ref(false)
 let copyToastTimer: ReturnType<typeof setTimeout> | null = null
 
 async function copyNoteContent() {
-  const raw = vpData.frontmatter.value.rawContent
-  if (!raw) return
+  const encoded = vpData.frontmatter.value.rawContent
+  if (!encoded) return
   try {
+    // rawContent 为 base64(UTF-8) —— 在构建期编码以规避 VitePress 把
+    // `<script>` 字面量注入 SFC 时的多重正则误匹配。
+    const bin = atob(encoded)
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0))
+    const raw = new TextDecoder('utf-8').decode(bytes)
     await navigator.clipboard.writeText(raw)
     if (copyToastTimer) clearTimeout(copyToastTimer)
     showCopyToast.value = true
