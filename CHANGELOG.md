@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.1.16] - 2026-04-30
+
 ### Added
 
 - 新增语雀风格自定义侧边栏：基于根 README/sidebar data 渲染目录树，并支持 README 目录入口、当前笔记聚焦和笔记编号切换。
@@ -163,7 +167,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.0.6...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.16...HEAD
+[0.1.16]: https://github.com/tnotesjs/core/compare/v0.1.15...v0.1.16
 [0.0.6]: https://github.com/tnotesjs/core/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/tnotesjs/core/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/tnotesjs/core/compare/v0.0.3...v0.0.4
