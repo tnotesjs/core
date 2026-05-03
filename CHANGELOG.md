@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.1.19] - 2026-05-03
+
 ### Changed
 
 - 移除 VitePress 正文目录和 H2 折叠内容的高度过渡动画，展开态不再限制内容高度，避免长笔记内容被截断。
@@ -200,7 +204,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.18...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.19...HEAD
+[0.1.19]: https://github.com/tnotesjs/core/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/tnotesjs/core/compare/v0.1.17...v0.1.18
 [0.1.17]: https://github.com/tnotesjs/core/compare/v0.1.16...v0.1.17
 [0.1.16]: https://github.com/tnotesjs/core/compare/v0.1.15...v0.1.16
