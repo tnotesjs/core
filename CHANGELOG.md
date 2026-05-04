@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.1.22] - 2026-05-04
+
 ### Changed
 
 - 将 VitePress 组件内的 CSS Modules 样式迁移为组件内 scoped SCSS，并按组件拆分共享样式。
