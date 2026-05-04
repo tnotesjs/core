@@ -76,8 +76,8 @@ div[class*='language-']:hover .tn-code-actions,
 
 .tn-code-action-copy::after {
   position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  top: 50%;
+  right: calc(100% + 6px);
   padding: 4px 7px;
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg-elv);
@@ -89,7 +89,7 @@ div[class*='language-']:hover .tn-code-actions,
   line-height: 18px;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-2px);
+  transform: translateY(-50%) translateX(2px);
   transition:
     opacity 0.16s ease,
     transform 0.16s ease;
@@ -99,7 +99,7 @@ div[class*='language-']:hover .tn-code-actions,
 .tn-code-action-copy[data-copy-state='copied']::after,
 .tn-code-action-copy[data-copy-state='failed']::after {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(-50%) translateX(0);
 }
 
 /* .dark .tn-code-action-copy img {

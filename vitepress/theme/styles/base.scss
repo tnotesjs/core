@@ -57,8 +57,8 @@ ul > li.task-list-item > ul {
 .vp-doc div[class*=language-] {
   // 默认值：
   // margin: 16px 24px;
-  // 移除外层 margin：
-  margin: 0px !important;
+  // 移除左右 margin：
+  margin: 16px 0 !important;
 }
 
 /* #endregion */
