@@ -48,6 +48,11 @@ ul > li.task-list-item > ul {
   border-top: none;
 }
 
+/* 修复锚点定位：为标题添加滚动偏移，避免被顶部固定导航栏遮挡 */
+.vp-doc :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--vp-nav-height) + 1rem);
+}
+
 // 代码块外层 div
 .vp-doc div[class*=language-] {
   // 默认值：
