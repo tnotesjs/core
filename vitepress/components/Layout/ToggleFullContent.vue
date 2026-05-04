@@ -1,5 +1,5 @@
 <template>
-  <img @click="toggle" :class="$style.contentToggleBtn" :aria-pressed="full" :title="full ? '退出全屏内容区' : '全屏显示内容区'" :src="full ? icon__fullscreen_exit : icon__fullscreen" alt="" />
+  <img @click="toggle" class="contentToggleBtn" :title="full ? '退出全屏内容区' : '全屏显示内容区'" :src="full ? icon__fullscreen_exit : icon__fullscreen" alt="" />
 </template>
 
 <script setup lang="ts">
@@ -32,4 +32,16 @@ function toggle() {
 }
 </script>
 
-<style module src="./ToggleFullContent.module.scss"></style>
+<style scoped lang="scss">
+.contentToggleBtn {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--vp-c-bg-alt);
+  }
+}
+</style>

@@ -4,14 +4,15 @@
  * Markdown 配置
  */
 import fs from 'fs'
-import MarkdownIt from 'markdown-it'
 import markdownItContainer from 'markdown-it-container'
 import mila from 'markdown-it-link-attributes'
 import markdownItTaskLists from 'markdown-it-task-lists'
 import path from 'path'
-import { MarkdownOptions } from 'vitepress'
 
 import { generateAnchor } from '../../utils'
+
+import type MarkdownIt from 'markdown-it'
+import type { MarkdownOptions } from 'vitepress'
 
 /**
  * 辅助函数：HTML 转义

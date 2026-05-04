@@ -115,8 +115,6 @@ function initTocCollapseByComments(
   // 创建折叠头部（可点击区域）
   const collapseHeader = document.createElement('div')
   collapseHeader.className = 'collapse-header toc-collapse-header'
-  collapseHeader.setAttribute('role', 'button')
-  collapseHeader.setAttribute('aria-label', '折叠/展开目录')
   collapseHeader.setAttribute('title', '点击折叠/展开目录')
 
   // 创建标签（折叠时显示）
@@ -127,7 +125,6 @@ function initTocCollapseByComments(
   // 创建折叠按钮
   const collapseButton = document.createElement('button')
   collapseButton.className = 'collapse-toggle toc-collapse-toggle'
-  collapseButton.setAttribute('aria-hidden', 'true') // 装饰性，实际点击区域是 header
 
   // 使用 SVG 图标
   const collapseIcon = document.createElement('img')
@@ -249,8 +246,6 @@ function initTocCollapseByStructure(vpDoc: Element): boolean {
   // 创建折叠头部
   const collapseHeader = document.createElement('div')
   collapseHeader.className = 'collapse-header toc-collapse-header'
-  collapseHeader.setAttribute('role', 'button')
-  collapseHeader.setAttribute('aria-label', '折叠/展开目录')
   collapseHeader.setAttribute('title', '点击折叠/展开目录')
 
   // 创建标签
@@ -261,7 +256,6 @@ function initTocCollapseByStructure(vpDoc: Element): boolean {
   // 创建折叠按钮
   const collapseButton = document.createElement('button')
   collapseButton.className = 'collapse-toggle toc-collapse-toggle'
-  collapseButton.setAttribute('aria-hidden', 'true')
 
   // 使用 SVG 图标
   const collapseIcon = document.createElement('img')
@@ -346,20 +340,15 @@ function initH2Collapse() {
 
     // 先清除可能存在的旧状态（避免状态冲突）
     h2.classList.remove('collapsible-h2', 'collapsed')
-    h2.removeAttribute('role')
-    h2.removeAttribute('aria-label')
     h2.removeAttribute('title')
 
     // 为 h2 添加可点击的类
     h2.classList.add('collapsible-h2')
-    h2.setAttribute('role', 'button')
-    h2.setAttribute('aria-label', '折叠/展开章节')
     h2.setAttribute('title', '点击折叠/展开章节')
 
     // 创建折叠按钮
     const collapseButton = document.createElement('button')
     collapseButton.className = 'collapse-toggle h2-collapse-toggle'
-    collapseButton.setAttribute('aria-hidden', 'true') // 装饰性
 
     // 使用 SVG 图标
     const collapseIcon = document.createElement('img')
@@ -531,8 +520,6 @@ function cleanupCollapse() {
   // 清理 H2 标题上的类名和属性
   document.querySelectorAll('h2.collapsible-h2').forEach((h2) => {
     h2.classList.remove('collapsible-h2', 'collapsed')
-    h2.removeAttribute('role')
-    h2.removeAttribute('aria-label')
     h2.removeAttribute('title')
   })
 

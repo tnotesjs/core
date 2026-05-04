@@ -331,23 +331,24 @@ const formattedTime = computed(() => {
 </script>
 
 <template>
-  <div :class="$style.textContainer">
+  <div class="textContainer">
     <div
-      :class="[$style.textContent, { [$style.collapsed]: isCollapsed }]"
+      class="textContent"
+      :class="{ collapsed: isCollapsed }"
       ref="textContainer"
     >
       <slot name="text-area"></slot>
     </div>
     <button
       v-if="isExpandable"
-      :class="$style.toggleButton"
+      class="toggleButton"
       @click="toggleCollapse"
     >
       {{ isCollapsed ? '全文' : '收起' }}
     </button>
   </div>
 
-  <div :class="$style.imageContainer" ref="imageContainer">
+  <div class="imageContainer" ref="imageContainer">
     <slot
       name="image-list"
       :openModal="openModal"
@@ -356,22 +357,116 @@ const formattedTime = computed(() => {
       :isModalVisible="isModalVisible"
     ></slot>
   </div>
-  <div :class="$style.modal" v-show="isModalVisible" @click.self="closeModal">
-    <span :class="$style.close" @click="closeModal">&times;</span>
+  <div class="modal" v-show="isModalVisible" @click.self="closeModal">
+    <span class="close" @click="closeModal">&times;</span>
     <img
-      :class="[$style.modalContent, `__dynamic__modal-content-${instanceId}`]"
+      :class="['modalContent', `__dynamic__modal-content-${instanceId}`]"
       :src="currentImage"
       alt="Preview"
       @mousedown="handleMouseDown"
     />
   </div>
 
-  <div :class="$style.timeContainer">
+  <div class="timeContainer">
     <p>{{ formattedTime }}</p>
   </div>
-  <div :class="$style.otherInfoContainer">
+  <div class="otherInfoContainer">
     <slot name="other-info"></slot>
   </div>
 </template>
 
-<style module src="./Footprints.module.scss"></style>
+<style scoped lang="scss">
+// Footprints 组件样式
+
+// 其他信息容器和时间容器
+.otherInfoContainer,
+.timeContainer {
+  font-size: 0.8rem;
+  color: gray;
+}
+
+// 文本容器
+.textContainer {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+// 文本内容
+.textContent {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+
+  // 折叠状态：隐藏从第三个开始的所有一级子元素
+  &.collapsed > :nth-child(n + 3) {
+    display: none;
+  }
+}
+
+// 切换按钮
+.toggleButton {
+  display: block;
+  margin-top: 0.5rem;
+  background-color: transparent;
+  color: #007bff;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// 图片容器
+.imageContainer {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+
+  img {
+    width: calc(33.33% - 10px);
+    aspect-ratio: 1; // 设置宽高比为 1:1
+    object-fit: cover;
+    cursor: pointer;
+    margin: 0.3rem;
+  }
+}
+
+// 模态框
+.modal {
+  display: flex;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 1);
+  align-items: center;
+  justify-content: center;
+}
+
+// 模态框内容（图片）
+.modalContent {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%;
+  max-height: 90%;
+  cursor: grab;
+}
+
+// 关闭按钮
+.close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  cursor: pointer;
+}
+</style>

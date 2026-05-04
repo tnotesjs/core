@@ -1,13 +1,13 @@
 <template>
-  <div v-if="errorMessage" :class="$style.error">
+  <div v-if="errorMessage" class="error">
     {{ errorMessage }}
   </div>
 
-  <div v-else-if="notFoundIds.length > 0" :class="$style.warning">
+  <div v-else-if="notFoundIds.length > 0" class="warning">
     以下笔记 ID 未找到配置: {{ notFoundIds.join(', ') }}
   </div>
 
-  <table v-if="tableData.length > 0" :class="$style.notesTable">
+  <table v-if="tableData.length > 0" class="notesTable">
     <thead>
       <tr>
         <th>笔记</th>
@@ -17,15 +17,13 @@
     <tbody>
       <tr v-for="note in tableData" :key="note.id">
         <td>
-          <a :href="note.url" :class="$style.noteLink">
-            <span :class="$style.noteId">{{ note.id }}.</span>
+          <a :href="note.url" class="noteLink">
+            <span class="noteId">{{ note.id }}.</span>
             <span>{{ note.title }}</span>
           </a>
         </td>
         <td>
-          <span
-            :class="[$style.description, { [$style.empty]: !note.description }]"
-          >
+          <span class="description" :class="{ empty: !note.description }">
             {{ note.description || '暂无简介' }}
           </span>
         </td>
@@ -96,4 +94,82 @@ const tableData = computed(() => {
 })
 </script>
 
-<style module src="./NotesTable.module.scss"></style>
+<style scoped lang="scss">
+.notesTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+
+  th,
+  td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: 1px solid var(--vp-c-divider);
+  }
+
+  th {
+    background-color: var(--vp-c-bg-soft);
+    font-weight: 600;
+    color: var(--vp-c-text-1);
+  }
+
+  tbody tr {
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--vp-c-bg-soft);
+    }
+  }
+
+  td {
+    color: var(--vp-c-text-2);
+  }
+
+  .noteLink {
+    color: var(--vp-c-brand-1);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--vp-c-brand-2);
+      text-decoration: underline;
+    }
+  }
+
+  .noteId {
+    font-family: var(--vp-font-family-mono);
+    font-size: 0.9em;
+    color: var(--vp-c-text-3);
+    margin-right: 0.5rem;
+  }
+
+  .description {
+    line-height: 1.6;
+
+    &.empty {
+      color: var(--vp-c-text-3);
+      font-style: italic;
+    }
+  }
+}
+
+.error {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 4px solid var(--vp-c-danger-1);
+  background-color: var(--vp-c-danger-soft);
+  color: var(--vp-c-danger-1);
+  border-radius: 4px;
+}
+
+.warning {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 4px solid var(--vp-c-warning-1);
+  background-color: var(--vp-c-warning-soft);
+  color: var(--vp-c-warning-1);
+  border-radius: 4px;
+}
+</style>

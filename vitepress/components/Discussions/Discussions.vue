@@ -193,15 +193,15 @@ watch(isDark, (newVal) => {
 </script>
 
 <template>
-  <h2 :class="$style.h2">
+  <h2 class="h2">
     <Tooltip text="在 GitHub 上发表评论（支持上传图片）">
       <a
         :href="githubDiscussionsUrl"
         target="_blank"
         rel="noopener noreferrer"
-        :class="$style.discussionsLink"
+        class="discussionsLink"
       >
-        <img :src="icon__github" alt="" :class="$style.githubIcon" />
+        <img :src="icon__github" alt="" class="githubIcon" />
         Discussions
       </a>
     </Tooltip>
@@ -209,4 +209,37 @@ watch(isDark, (newVal) => {
   <div id="giscus-comments"></div>
 </template>
 
-<style module src="./Discussions.module.scss"></style>
+<style scoped lang="scss">
+/* #region:same as vitepress theme */
+.h2 {
+  margin: 48px 0 16px;
+  border-top: 1px solid var(--vp-c-divider);
+  padding-top: 24px;
+  letter-spacing: -0.02em;
+  line-height: 32px;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+/* #endregion:same as vitepress theme */
+
+.discussionsLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 0.25s;
+
+  &:hover {
+    opacity: 0.5;
+  }
+}
+
+.githubIcon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+</style>

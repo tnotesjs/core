@@ -7,7 +7,7 @@ type CopyState = 'idle' | 'copied' | 'failed'
 
 const CODE_BLOCK_SELECTOR = 'div[class*="language-"]'
 const CODE_ACTIONS_CLASS = 'tn-code-actions'
-const COPY_RESET_DELAY = 2000
+const COPY_RESET_DELAY = 1000
 
 export function useCodeBlockFullscreen() {
   let fullscreenApp: any = null
@@ -28,7 +28,6 @@ export function useCodeBlockFullscreen() {
 
       const actions = document.createElement('div')
       actions.className = CODE_ACTIONS_CLASS
-      actions.setAttribute('aria-label', '代码块操作')
 
       const fullscreenButton = createActionButton({
         className: 'tn-code-action-fullscreen',
@@ -65,7 +64,6 @@ export function useCodeBlockFullscreen() {
     button.className = `tn-code-action ${options.className}`
     button.type = 'button'
     button.title = options.title
-    button.setAttribute('aria-label', options.title)
     button.innerHTML = `<img src="${options.icon}" alt="${options.alt}" />`
 
     return button
@@ -98,7 +96,6 @@ export function useCodeBlockFullscreen() {
       button.parentElement.dataset.copyState = state
     }
     button.title = getCopyTitle(state)
-    button.setAttribute('aria-label', getCopyTitle(state))
 
     const icon = button.querySelector('img')
     if (icon) {
@@ -112,7 +109,6 @@ export function useCodeBlockFullscreen() {
         button.parentElement.dataset.copyState = 'idle'
       }
       button.title = getCopyTitle('idle')
-      button.setAttribute('aria-label', getCopyTitle('idle'))
       icon?.setAttribute('src', icon__clipboard)
       icon?.setAttribute('alt', '复制')
       copyResetTimers.delete(button)

@@ -76,12 +76,10 @@
 
         <!-- 操作按钮（仅开发环境且非首页显示） -->
         <template #footer v-if="isDev && !modalIsHomeReadme">
-          <div :class="$style.actionBar">
+          <div class="actionBar">
             <button
-              :class="[
-                $style.saveButton,
-                { [$style.disabled]: !hasConfigChanges },
-              ]"
+              class="saveButton"
+              :class="{ disabled: !hasConfigChanges }"
               @click="saveNoteConfig"
               :disabled="!hasConfigChanges || isSaving"
               type="button"
@@ -91,7 +89,7 @@
             <button
               v-if="hasConfigChanges"
               @click="resetNoteConfig"
-              :class="$style.resetButton"
+              class="resetButton"
               type="button"
             >
               重置
@@ -100,15 +98,15 @@
 
           <!-- 保存进度提示 -->
           <Transition name="toast">
-            <div v-if="isSaving && savingMessage" :class="$style.loadingToast">
-              <div :class="$style.loadingSpinner"></div>
+            <div v-if="isSaving && savingMessage" class="loadingToast">
+              <div class="loadingSpinner"></div>
               <span>{{ savingMessage }}</span>
             </div>
           </Transition>
 
           <!-- 保存成功提示 -->
           <Transition name="toast">
-            <div v-if="showSuccessToast" :class="$style.toast">✓ 保存成功</div>
+            <div v-if="showSuccessToast" class="toast">✓ 保存成功</div>
           </Transition>
         </template>
       </AboutModal>
@@ -618,4 +616,129 @@ watch(
 }
 </style>
 
-<style module src="./Layout.module.scss" scoped></style>
+<style scoped lang="scss">
+/* 操作栏样式 */
+.actionBar {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* 保存按钮样式 */
+.saveButton {
+  padding: 0.625rem 1.5rem;
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-brand-2));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(var(--vp-c-brand-rgb), 0.3);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--vp-c-brand-rgb), 0.4);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &.disabled,
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* 重置按钮样式 */
+.resetButton {
+  padding: 0.625rem 1.5rem;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--vp-c-text-1);
+    border-color: var(--vp-c-brand-1);
+    background: var(--vp-c-bg-soft);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Toast 提示样式 */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--vp-c-brand-1);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+}
+
+/* Loading Toast 样式 */
+.loadingToast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Loading 旋转动画 */
+.loadingSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--vp-c-divider);
+  border-top-color: var(--vp-c-brand-1);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast 过渡动画 */
+:global(.toast-enter-active),
+:global(.toast-leave-active) {
+  transition: all 0.3s ease;
+}
+
+:global(.toast-enter-from),
+:global(.toast-leave-to) {
+  opacity: 0;
+  transform: translateY(20px);
+}
+</style>

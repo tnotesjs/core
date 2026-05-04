@@ -1,12 +1,7 @@
 <template>
   <ClientOnly>
     <Teleport to="body">
-      <div
-        v-if="visible"
-        class="tnotes-loading-overlay"
-        role="alert"
-        aria-live="polite"
-      >
+      <div v-if="visible" class="tnotes-loading-overlay">
         <div class="loading-container">
           <div class="spinner"></div>
           <h2>{{ message }}</h2>

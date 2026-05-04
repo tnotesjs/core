@@ -1,81 +1,83 @@
 <template>
   <div
     ref="mermaidRef"
-    :class="[$style.mermaidWrapper, { [$style.showToolbar]: showToolbar }]"
+    class="mermaidWrapper"
     @mouseenter="showToolbar = true"
     @mouseleave="showToolbar = false"
   >
     <!-- 工具栏 -->
     <div
       v-if="!loading && !error"
-      :class="[$style.toolbar, { [$style.visible]: showToolbar }]"
+      class="toolbar"
+      :class="{ visible: showToolbar }"
     >
       <button
         @click="zoomIn"
-        :class="[$style.toolbarBtn, $style.iconBtn]"
+        class="toolbarBtn iconBtn"
         title="放大 (Ctrl + +)"
       >
-        <img :src="icon__zoom_in" alt="放大" :class="$style.btnIcon" />
+        <img :src="icon__zoom_in" alt="放大" class="btnIcon" />
       </button>
       <button
         @click="zoomOut"
-        :class="[$style.toolbarBtn, $style.iconBtn]"
+        class="toolbarBtn iconBtn"
         title="缩小 (Ctrl + -)"
       >
-        <img :src="icon__zoom_out" alt="缩小" :class="$style.btnIcon" />
+        <img :src="icon__zoom_out" alt="缩小" class="btnIcon" />
       </button>
       <button
         @click="resetZoom"
-        :class="[$style.toolbarBtn, $style.iconBtn]"
+        class="toolbarBtn iconBtn"
         title="重置缩放 (Ctrl + 0)"
       >
-        <img :src="icon__zoom_reset" alt="重置" :class="$style.btnIcon" />
+        <img :src="icon__zoom_reset" alt="重置" class="btnIcon" />
       </button>
       <button
         @click="fitToScreen"
-        :class="[$style.toolbarBtn, $style.iconBtn]"
+        class="toolbarBtn iconBtn"
         title="适应屏幕"
       >
-        <img :src="icon__zoom_fit" alt="适应屏幕" :class="$style.btnIcon" />
+        <img :src="icon__zoom_fit" alt="适应屏幕" class="btnIcon" />
       </button>
       <button
         @click="toggleFullscreen"
-        :class="[$style.toolbarBtn, $style.iconBtn]"
+        class="toolbarBtn iconBtn"
         title="全屏 (F11)"
       >
         <img
           v-if="isFullscreen"
           :src="icon__fullscreen_exit"
           alt="退出全屏"
-          :class="$style.btnIcon"
+          class="btnIcon"
         />
         <img
           v-else
           :src="icon__fullscreen"
           alt="全屏"
-          :class="$style.btnIcon"
+          class="btnIcon"
         />
       </button>
-      <span :class="$style.zoomLevel">{{ Math.round(scale * 100) }}%</span>
+      <span class="zoomLevel">{{ Math.round(scale * 100) }}%</span>
     </div>
 
     <!-- 图表容器 -->
     <div
-      :class="[$style.mermaidContainer, { [$style.fullscreen]: isFullscreen }]"
+      class="mermaidContainer"
+      :class="{ fullscreen: isFullscreen }"
       @click="handleContainerClick"
     >
-      <div v-if="loading" :class="$style.mermaidLoading">
-        <div :class="$style.spinner"></div>
+      <div v-if="loading" class="mermaidLoading">
+        <div class="spinner"></div>
         <p>加载图表中...</p>
       </div>
-      <div v-else-if="error" :class="$style.mermaidError">
-        <span :class="$style.errorIcon">⚠️</span>
+      <div v-else-if="error" class="mermaidError">
+        <span class="errorIcon">⚠️</span>
         <p>{{ error }}</p>
       </div>
       <div
         v-show="!loading && !error"
         ref="diagramRef"
-        :class="[$style.mermaidDiagram, props.class]"
+        :class="['mermaidDiagram', props.class]"
         :style="{
           transform: `scale(${scale})`,
           transformOrigin: 'center center',
@@ -363,4 +365,280 @@ watch(
 // #endregion
 </script>
 
-<style module src="./Mermaid.module.scss"></style>
+<style scoped lang="scss">
+/* ===================================== */
+/* #region 容器布局                      */
+/* ===================================== */
+.mermaidWrapper {
+  position: relative;
+  margin: 1rem 0;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg-soft);
+  overflow: hidden;
+}
+/* ===================================== */
+/* #endregion 容器布局                   */
+/* ===================================== */
+
+/* ===================================== */
+/* #region 工具栏                        */
+/* ===================================== */
+.toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--vp-c-bg);
+  border-bottom: 1px solid var(--vp-c-divider);
+  flex-wrap: wrap;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+
+  &.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.toolbarBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+
+  &:hover {
+    background: var(--vp-c-brand-soft);
+    opacity: 1;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.iconBtn {
+  padding: 4px;
+
+  .btnIcon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    pointer-events: none;
+  }
+}
+
+.zoomLevel {
+  margin-left: auto;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--vp-c-text-3);
+  user-select: none;
+}
+/* ===================================== */
+/* #endregion 工具栏                     */
+/* ===================================== */
+
+/* ===================================== */
+/* #region 图表容器                      */
+/* ===================================== */
+.mermaidContainer {
+  position: relative;
+  min-height: 200px;
+  max-height: 600px;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--vp-c-bg);
+
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: none;
+    z-index: 9999;
+    background: var(--vp-c-bg);
+    padding: 40px;
+  }
+
+  /* 自定义滚动条 */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--vp-c-bg-soft);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--vp-c-divider);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--vp-c-text-3);
+    }
+  }
+}
+/* ===================================== */
+/* #endregion 图表容器                   */
+/* ===================================== */
+
+/* ===================================== */
+/* #region 加载和错误状态                */
+/* ===================================== */
+.mermaidLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 2rem;
+  color: var(--vp-c-text-2);
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--vp-c-divider);
+  border-top-color: var(--vp-c-brand-1);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mermaidError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 2rem;
+  color: var(--vp-c-danger-1);
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    text-align: center;
+  }
+}
+
+.errorIcon {
+  font-size: 32px;
+}
+/* ===================================== */
+/* #endregion 加载和错误状态             */
+/* ===================================== */
+
+/* ===================================== */
+/* #region 图表样式                      */
+/* ===================================== */
+.mermaidDiagram {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  :global(svg) {
+    max-width: 100%;
+    height: auto;
+  }
+}
+/* ===================================== */
+/* #endregion 图表样式                   */
+/* ===================================== */
+
+/* ===================================== */
+/* #region 暗色主题优化                  */
+/* ===================================== */
+:global(html.dark) .mermaidWrapper {
+  background: var(--vp-code-block-bg);
+  border-color: var(--vp-c-divider);
+}
+
+:global(html.dark) .toolbar {
+  background: var(--vp-code-block-bg);
+}
+
+:global(html.dark) .mermaidContainer {
+  background: var(--vp-code-block-bg);
+}
+/* ===================================== */
+/* #endregion 暗色主题优化               */
+/* ===================================== */
+
+/* ===================================== */
+/* #region 响应式设计                    */
+/* ===================================== */
+@media (max-width: 768px) {
+  .toolbar {
+    padding: 4px 6px;
+  }
+
+  .toolbarBtn {
+    width: 24px;
+    height: 24px;
+  }
+
+  .iconBtn {
+    padding: 3px;
+
+    .btnIcon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .zoomLevel {
+    font-size: 10px;
+  }
+
+  .mermaidContainer {
+    padding: 12px;
+    max-height: 400px;
+
+    &.fullscreen {
+      padding: 20px;
+    }
+  }
+}
+/* ===================================== */
+/* #endregion 响应式设计                 */
+/* ===================================== */
+</style>

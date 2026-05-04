@@ -33,7 +33,6 @@ export interface IconConfig {
  * 社交链接类型
  */
 export interface SocialLink {
-  ariaLabel?: string
   icon: string | IconConfig
   link: string
 }

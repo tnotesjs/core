@@ -222,7 +222,6 @@ function addLevelControl(toolbar) {
   levelInput.style.borderBottom = '.5px solid var(--vp-c-tip-1)'
   levelInput.style.color = 'var(--vp-c-tip-1)'
   levelInput.title = '展开层级'
-  levelInput.setAttribute('aria-label', 'markmap-expand-level')
 
   toolbarLevelInput = levelInput
 
@@ -408,36 +407,37 @@ onBeforeUnmount(() => {
   padding: 1rem 0;
   display: flex;
   flex-direction: column;
-}
-
-.mindmap-container {
-  width: 100%;
-  height: 500px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 8px;
-  padding: 1rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  box-sizing: border-box;
-
-  &:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-  }
-
-  svg {
+  
+  .mindmap-container {
     width: 100%;
-    height: 100%;
-    display: block;
-    transition: height 0.3s ease;
-  }
-
-  /* 鼠标悬停显示 toolbar */
-  &:hover :deep(.mm-toolbar) {
-    opacity: 1;
-    pointer-events: auto;
+    height: 500px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+  
+    &:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+  
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transition: height 0.3s ease;
+    }
+  
+    /* 鼠标悬停显示 toolbar */
+    &:hover :deep(.mm-toolbar) {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 }
+
 
 /* 暗色主题 */
 :global(.dark) .mindmap-container,

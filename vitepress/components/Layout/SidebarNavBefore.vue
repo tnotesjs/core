@@ -17,7 +17,6 @@
             { 'is-active': isCatalogActive },
           ]"
           :href="catalogLink"
-          :aria-current="isCatalogActive ? 'page' : undefined"
         >
           目录
         </a>

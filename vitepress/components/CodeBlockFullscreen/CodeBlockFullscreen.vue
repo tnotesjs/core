@@ -17,7 +17,7 @@
             <div class="code-fullscreen-actions">
               <!-- 旋转按钮（仅移动端） -->
               <button
-                class="action-btn rotate-btn mobile-only"
+                class="action-btn mobile-only"
                 @click="toggleOrientation"
                 :title="isLandscape ? '切换为竖屏' : '切换为横屏'"
               >
@@ -25,7 +25,7 @@
               </button>
               <!-- 复制按钮 -->
               <button
-                class="action-btn copy-btn"
+                class="action-btn"
                 @click="copyCode"
                 :title="copied ? '已复制' : '复制代码'"
               >

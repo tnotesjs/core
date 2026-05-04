@@ -3,14 +3,12 @@
     type="button"
     class="tnotes-nav-settings-trigger"
     title="打开设置"
-    aria-label="打开设置"
     @click="open"
   >
     <img
       :src="icon__setting"
       class="tnotes-nav-settings-icon"
       alt=""
-      aria-hidden="true"
     />
   </button>
 </template>

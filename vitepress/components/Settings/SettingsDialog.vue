@@ -5,9 +5,6 @@
         <div
           v-if="state.visible"
           class="tnotes-settings-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="tnotes-settings-title"
           @click.self="close"
         >
           <div
@@ -15,15 +12,12 @@
             :class="{ 'is-fullscreen': state.fullscreen }"
           >
             <header class="tnotes-settings-header">
-              <h2 id="tnotes-settings-title" class="tnotes-settings-title">
-                ⚙️ 设置
-              </h2>
+              <h2 class="tnotes-settings-title">⚙️ 设置</h2>
               <div class="tnotes-settings-actions">
                 <button
                   type="button"
                   class="tnotes-settings-icon-btn"
                   :title="state.fullscreen ? '退出全屏' : '全屏'"
-                  :aria-label="state.fullscreen ? '退出全屏' : '全屏'"
                   @click="toggleFullscreen"
                 >
                   <svg
@@ -36,7 +30,6 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    aria-hidden="true"
                   >
                     <path d="M4 9V4h5" />
                     <path d="M20 9V4h-5" />
@@ -53,7 +46,6 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    aria-hidden="true"
                   >
                     <path d="M9 4v5H4" />
                     <path d="M15 4v5h5" />
@@ -65,7 +57,6 @@
                   type="button"
                   class="tnotes-settings-icon-btn"
                   title="关闭"
-                  aria-label="关闭"
                   @click="close"
                 >
                   <svg
@@ -77,7 +68,6 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    aria-hidden="true"
                   >
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />

@@ -2,8 +2,7 @@
 <template>
   <img
     @click="toggleSidebar"
-    :class="$style.sidebarToggleBtn"
-    :aria-pressed="hidden"
+    class="sidebarToggleBtn"
     :title="hidden ? '显示侧边栏' : '隐藏侧边栏'"
     :src="hidden ? icon__next : icon__prev"
     alt=""
@@ -23,4 +22,16 @@ onMounted(() => {
 })
 </script>
 
-<style module src="./ToggleSidebar.module.scss"></style>
+<style scoped lang="scss">
+.sidebarToggleBtn {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--vp-c-bg-alt);
+  }
+}
+</style>

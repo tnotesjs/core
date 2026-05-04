@@ -13,12 +13,11 @@ import {
   icon__number_purple,
 } from '../../assets/icons'
 import { NOTES_DIR_KEY, REPO_NAME, AUTHOR, ROOT_ITEM } from '../constants.ts'
+import MindMapView from './MindMapView.vue'
+import NotesTrendChart from './NotesTrendChart.vue'
 import { useSettingsDialog } from '../Settings/composables/useSettingsDialog'
 import { data as sidebarConfig } from '../sidebar.data'
 import { formatDate } from '../utils.ts'
-// @ts-expect-error - VitePress Data Loader
-import MindMapView from './MindMapView.vue'
-import NotesTrendChart from './NotesTrendChart.vue'
 
 // #region props
 const props = defineProps({
@@ -294,7 +293,7 @@ function openVSCodeArticle(article) {
 </script>
 
 <template>
-  <div class="sidebar-view-container">
+  <div>
     <!-- 控制栏区域 -->
     <div class="control-bar">
       <!-- 左侧视图切换按钮 -->

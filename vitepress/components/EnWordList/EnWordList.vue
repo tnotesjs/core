@@ -448,17 +448,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div :class="$style.enWordList">
+  <div class="enWordList">
     <ol>
       <li
         v-for="(word, index) in sortedWords"
         :key="word"
         :class="{
-          [$style.pronounced]:
-            isPronouncingAll && currentPronounceAllIndex === index + 1,
+          pronounced: isPronouncingAll && currentPronounceAllIndex === index + 1,
         }"
       >
-        <span :class="$style.index">{{ index + 1 }}.</span>
+        <span class="index">{{ index + 1 }}.</span>
         <input
           type="checkbox"
           :id="word"
@@ -471,8 +470,8 @@ onUnmounted(() => {
               word.toLowerCase().replaceAll(/\s/g, '_')
             )}.md`"
             :class="{
-              [$style.lineThrough]: checkedStates[word],
-              [$style.textRed]: failedWords[word],
+              lineThrough: checkedStates[word],
+              textRed: failedWords[word],
             }"
             @mouseenter="(e) => isAutoShowCard && showWordCard(e, word)"
             @mouseleave="handleMouseLeave"
@@ -486,18 +485,18 @@ onUnmounted(() => {
     </ol>
 
     <div
-      :class="$style.wordCard"
+      class="wordCard"
       :style="{ left: cardX + 'px', top: cardY + 'px' }"
       v-if="showCard"
     >
-      <div :class="$style.wordCardContent" v-html="cardContent"></div>
+      <div class="wordCardContent" v-html="cardContent"></div>
     </div>
 
     <!-- pinned cards -->
     <div
       v-for="card in pinnedCards"
       :key="card.id"
-      :class="$style.wordCard"
+      class="wordCard"
       :style="{
         left: card.x + 'px',
         top: card.y + 'px',
@@ -508,14 +507,14 @@ onUnmounted(() => {
       @mousedown="(e) => startDrag(card, e)"
       @click="bringToFront(card)"
     >
-      <div :class="$style.wordCardContentWrapper">
-        <div :class="$style.wordCardContent" v-html="card.content"></div>
+      <div class="wordCardContentWrapper">
+        <div class="wordCardContent" v-html="card.content"></div>
       </div>
-      <button :class="$style.closeBtn" @click.stop="removeCard(card.id)">
+      <button class="closeBtn" @click.stop="removeCard(card.id)">
         ✖
       </button>
       <div
-        :class="$style.resizeHandle"
+        class="resizeHandle"
         @mousedown.stop="startResize(card, $event)"
       ></div>
     </div>
@@ -541,4 +540,125 @@ onUnmounted(() => {
   />
 </template>
 
-<style module src="./EnWordList.module.scss"></style>
+<style scoped lang="scss">
+/* EnWordList 组件样式 */
+
+.enWordList {
+  // Checkbox 样式
+  input[type='checkbox'] {
+    margin: 8px;
+    transform: scale(1.3);
+    cursor: pointer;
+  }
+
+  // 链接样式
+  a {
+    text-decoration: none;
+    color: #4fc3f7;
+
+    &:hover {
+      text-decoration: underline !important;
+    }
+
+    &.lineThrough {
+      color: #999;
+      text-decoration: line-through;
+    }
+
+    &.textRed {
+      color: #f40 !important;
+    }
+  }
+
+  // 单词列表样式
+  ol {
+    list-style-type: decimal;
+    padding-left: 20px;
+
+    li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+
+      &.pronounced {
+        background-color: rgba(255, 255, 0, 0.1);
+      }
+    }
+  }
+
+  // 序号样式
+  .index {
+    margin-right: 10px;
+    color: #aaa;
+  }
+}
+
+// 单词卡片样式（🌑 暗色悬浮卡片）
+.wordCard {
+  position: fixed;
+  z-index: 9999;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  padding: 12px 16px;
+  max-width: 600px;
+  min-width: 200px;
+  min-height: 100px;
+  font-size: 14px;
+  line-height: 1.4;
+  border-radius: 8px;
+  color: #eee;
+  pointer-events: auto;
+  font-family: sans-serif;
+  cursor: move;
+
+  // 关闭按钮
+  .closeBtn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #ccc;
+
+    &:hover {
+      color: white;
+    }
+  }
+}
+
+// 卡片内容包裹器
+.wordCardContentWrapper {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+// 卡片内容样式
+.wordCardContent {
+  :deep(ul) {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+  }
+}
+
+// 调整大小手柄
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background-color: #666;
+  cursor: nwse-resize;
+  z-index: 2;
+  border-radius: 50%;
+
+  &:hover {
+    background-color: #aaa;
+  }
+}
+</style>

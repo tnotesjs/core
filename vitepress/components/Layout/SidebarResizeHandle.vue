@@ -10,26 +10,18 @@
     <div
       v-if="!hidden"
       class="resize-hotspot"
-      :aria-label="`拖动调整侧边栏宽度，当前 ${width}px`"
-      role="separator"
-      aria-orientation="vertical"
-      :aria-valuemin="minWidth"
-      :aria-valuemax="maxWidth"
-      :aria-valuenow="width"
       @mousedown.prevent="startResize"
     ></div>
 
-    <div v-if="!hidden" class="resize-indicator" aria-hidden="true"></div>
+    <div v-if="!hidden" class="resize-indicator"></div>
 
     <button
       class="sidebar-edge-toggle"
       type="button"
-      :aria-label="toggleTitle"
-      :aria-pressed="hidden"
       @click.stop="toggleSidebar"
     >
       <img :src="toggleIcon" alt="" />
-      <span class="sidebar-edge-tooltip" role="tooltip">
+      <span class="sidebar-edge-tooltip">
         <span>{{ toggleActionText }}</span>
         <kbd>{{ shortcutText }}</kbd>
       </span>

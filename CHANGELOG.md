@@ -4,7 +4,15 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Changed
+
+- 将 VitePress 组件内的 CSS Modules 样式迁移为组件内 scoped SCSS，并按组件拆分共享样式。
+- 升级 `globals` 与 `typescript-eslint` 开发依赖到低风险兼容版本。
+
+### Removed
+
+- 移除核心主题与默认配置中的 ARIA 相关标记和 `SocialLink.ariaLabel` 配置字段。
+- 移除未直接使用的 `@typescript-eslint/parser` 开发依赖。
 
 ## [0.1.21] - 2026-05-04
 
