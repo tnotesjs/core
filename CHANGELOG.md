@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.1.24] - 2026-05-08
+
 ### Fixed
 
 - 修复宽屏布局下侧边栏没有与站点标题列对齐的问题。
@@ -244,7 +248,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.23...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.24...HEAD
+[0.1.24]: https://github.com/tnotesjs/core/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/tnotesjs/core/compare/v0.1.22...v0.1.23
 [0.1.19]: https://github.com/tnotesjs/core/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/tnotesjs/core/compare/v0.1.17...v0.1.18
