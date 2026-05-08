@@ -11,12 +11,9 @@
   --vp-sidebar-width: var(--tn-sidebar-width);
 }
 
-//  侧边栏样式重写
+// 保留 VitePress 对侧边栏宽屏居中的 left/width/padding-left 计算。
 .VPSidebar {
-  width: var(--tn-sidebar-layout-width, var(--tn-sidebar-width)) !important;
   padding-top: var(--vp-nav-height) !important;
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
   padding-bottom: 1rem !important;
 }
 
@@ -33,16 +30,20 @@
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-.hide-sidebar .VPNavBarTitle {
+.hide-sidebar .VPNavBar.has-sidebar .VPNavBarTitle {
   display: none !important;
 }
 
-.hide-sidebar .VPNavBar {
+.hide-sidebar .VPNavBar.has-sidebar {
   background-color: var(--vp-nav-bg-color) !important;
 }
 
+.hide-sidebar .VPNavBar.has-sidebar .divider {
+  padding-left: 0 !important;
+}
+
 /* 主体内容往左补齐，与导航栏标题左对齐 */
-.hide-sidebar .VPContent {
+.hide-sidebar .VPContent.has-sidebar {
   margin-left: 0 !important;
   padding-left: calc((100vw - var(--vp-layout-max-width)) / 2) !important;
 }

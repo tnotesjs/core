@@ -1,5 +1,6 @@
 <template>
   <div
+    v-if="isSidebarAvailable"
     class="sidebar-resize-handle"
     :class="{
       'is-hidden': hidden,
@@ -30,7 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vitepress'
 
 import { useSidebarLayout } from './composables/useSidebarLayout'
 import { icon__next, icon__prev } from '../../assets/icons'
@@ -46,9 +48,12 @@ const {
   saveSidebarWidth,
 } = useSidebarLayout()
 
+const route = useRoute()
 const isDragging = ref(false)
 const isContentFullscreen = ref(false)
+const isSidebarAvailable = ref(false)
 const shortcutText = ref('Ctrl + Alt + ,')
+const WIDE_LAYOUT_MIN_WIDTH = 1440
 let fullscreenObserver: MutationObserver | null = null
 
 const toggleIcon = computed(() => (hidden.value ? icon__next : icon__prev))
@@ -62,6 +67,7 @@ const toggleTitle = computed(
 onMounted(() => {
   initSidebarLayout()
   shortcutText.value = getShortcutText()
+  updateSidebarAvailability()
   updateContentFullscreen()
   fullscreenObserver = new MutationObserver(updateContentFullscreen)
   fullscreenObserver.observe(document.documentElement, {
@@ -85,13 +91,13 @@ function startResize(event: MouseEvent) {
   document.body.classList.add('is-sidebar-resizing')
   window.addEventListener('mousemove', resize)
   window.addEventListener('mouseup', stopResize)
-  setSidebarWidth(event.clientX)
+  setSidebarWidth(getSidebarWidthFromClientX(event.clientX))
 }
 
 function resize(event: MouseEvent) {
   if (!isDragging.value) return
 
-  setSidebarWidth(event.clientX)
+  setSidebarWidth(getSidebarWidthFromClientX(event.clientX))
 }
 
 function stopResize() {
@@ -105,15 +111,58 @@ function stopResize() {
 }
 
 function handleShortcut(event: KeyboardEvent) {
-  if (!isToggleShortcut(event) || isEditableTarget(event.target)) return
+  if (
+    !isSidebarAvailable.value ||
+    !isToggleShortcut(event) ||
+    isEditableTarget(event.target)
+  ) {
+    return
+  }
 
   event.preventDefault()
   toggleSidebar()
 }
 
+watch(
+  () => route.path,
+  async () => {
+    await nextTick()
+    updateSidebarAvailability()
+    updateContentFullscreen()
+  },
+)
+
+function updateSidebarAvailability() {
+  if (typeof document === 'undefined') return
+
+  isSidebarAvailable.value = Boolean(
+    document.querySelector('.VPContent.has-sidebar') &&
+      document.querySelector('.VPSidebar'),
+  )
+}
+
 function updateContentFullscreen() {
   isContentFullscreen.value =
     document.documentElement.classList.contains('content-fullscreen')
+}
+
+function getSidebarWidthFromClientX(clientX: number): number {
+  return clientX - getSidebarLayoutOffset()
+}
+
+function getSidebarLayoutOffset(): number {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return 0
+  if (window.innerWidth < WIDE_LAYOUT_MIN_WIDTH) return 0
+
+  const layoutMaxWidth = Number.parseFloat(
+    window
+      .getComputedStyle(document.documentElement)
+      .getPropertyValue('--vp-layout-max-width'),
+  )
+
+  if (!Number.isFinite(layoutMaxWidth)) return 0
+
+  return Math.max(0, (window.innerWidth - layoutMaxWidth) / 2)
 }
 
 function isToggleShortcut(event: KeyboardEvent): boolean {
@@ -306,6 +355,14 @@ function isEditableTarget(target: EventTarget | null): boolean {
 @media (max-width: 959px) {
   .sidebar-resize-handle {
     display: none;
+  }
+}
+
+@media (min-width: 1440px) {
+  .sidebar-resize-handle {
+    left: calc(
+      (100vw - var(--vp-layout-max-width)) / 2 + var(--tn-sidebar-width, 260px) - 5px
+    );
   }
 }
 </style>
