@@ -26,6 +26,7 @@ applyTo:
 - `tsup` 只预编译 CLI 入口、公共 API 入口和 VitePress config 入口；`vitepress/theme`、组件、插件和样式以源码形式发布给宿主仓库的 Vite 处理。
 - `vite`、`vitepress`、`vue` 必须保持在 `peerDependencies`，不要移动到 `dependencies`。新增依赖前确认它是否真的属于核心包运行时依赖，避免把宿主侧可选能力变成强耦合。
 - `src/index.ts` 和 `package.json` 的 `exports` 是公共 API 边界。不要顺手导出内部实现；新增公开能力时同步检查类型导出、构建入口和消费路径。
+- 遵循最小导出原则：只导出直接被外部消费的成员。文件内部的辅助函数、类型、常量不应被导出；无消费方的导出应及时清理或内联。
 - CLI 命令放在 `commands/<domain>/`，命令名和注册逻辑集中在 `commands/registry.ts` 与相关模型类型中。新增或改名命令时，同步检查帮助信息、参数解析和 README 中的脚本示例。
 - `core/` 放跨服务复用的管理器和生成器，`services/` 放面向具体工作流的服务编排，`utils/` 放低耦合工具函数。不要把带副作用的业务流程塞进通用工具层。
 - `config/` 与 `types/` 代表宿主仓库可感知的配置契约。调整默认配置、模板或类型字段时，要同时检查 `ConfigManager`、默认模板、文档示例和相关服务读取逻辑。

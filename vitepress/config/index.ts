@@ -11,6 +11,7 @@ import fs from 'fs'
 import path from 'path'
 import { defineConfig, type UserConfig } from 'vitepress'
 
+import { ConfigManager } from '../../config/ConfigManager'
 import {
   getIgnoreList,
   getGithubPageUrl,
@@ -25,17 +26,6 @@ import { renameNotePlugin } from '../plugins/renameNotePlugin'
 import { sidebarStructurePlugin } from '../plugins/sidebarStructurePlugin'
 import { updateConfigPlugin } from '../plugins/updateConfigPlugin'
 
-import type { TNotesConfig } from '../../types'
-
-/**
- * 读取 .tnotes.json 配置文件
- */
-function loadTNotesConfig(rootPath: string): TNotesConfig {
-  const configPath = path.resolve(rootPath, '.tnotes.json')
-  const configContent = fs.readFileSync(configPath, 'utf-8')
-  return JSON.parse(configContent) as TNotesConfig
-}
-
 /**
  * 创建 VitePress 站点配置
  *
@@ -44,7 +34,8 @@ function loadTNotesConfig(rootPath: string): TNotesConfig {
  */
 export function defineNotesConfig(overrides: UserConfig = {}) {
   const rootPath = process.cwd()
-  const config = loadTNotesConfig(rootPath)
+  ConfigManager.init({ rootPath })
+  const config = ConfigManager.getInstance().getAll()
   const { repoName } = config
 
   const IGNORE_LIST = getIgnoreList(config)

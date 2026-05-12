@@ -24,7 +24,6 @@ import Layout from '../components/Layout/Layout.vue'
 import MarkMap from '../components/MarkMap/MarkMap.vue'
 import Mermaid from '../components/Mermaid/Mermaid.vue'
 import NotesTable from '../components/NotesTable/NotesTable.vue'
-import Settings from '../components/Settings/Settings.vue'
 import SidebarCard from '../components/SidebarCard/SidebarCard.vue'
 import Tooltip from '../components/Tooltip/Tooltip.vue'
 
@@ -43,8 +42,6 @@ function registerCoreComponents(ctx: EnhanceAppContext) {
   app.component('E', EnWordList)
   app.component('Footprints', Footprints)
   app.component('F', Footprints)
-  app.component('Settings', Settings)
-  app.component('S', Settings)
   app.component('SidebarCard', SidebarCard)
   app.component('MarkMap', MarkMap)
   app.component('Mermaid', Mermaid)

@@ -32,6 +32,8 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.build.json",
     "dev": "tsup --watch",
     "release": "node scripts/release.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix"
   },
@@ -69,6 +71,7 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.1",
+    "vitest": "^4.1.6",
     "vue-eslint-parser": "^10.4.0",
     "vue-tsc": "^3.2.7"
   },
