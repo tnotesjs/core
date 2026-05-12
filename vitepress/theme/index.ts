@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/theme/index.ts
+ * theme/index.ts
  *
  * 自定义主题
  *

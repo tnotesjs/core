@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/commands/registry.ts
+ * commands/registry.ts
  *
  * 命令注册表 - 管理命令的注册、实例化和获取
  */
@@ -20,18 +20,18 @@ import { UpdateCompletedCountCommand } from './update-completed-count'
 
 /** 命令注册表（懒加载） */
 const commandFactories: Record<CommandName, () => Command> = {
-  dev: () => new DevCommand(),
-  build: () => new BuildCommand(),
-  preview: () => new PreviewCommand(),
-  update: () => new UpdateCommand(),
-  'update-completed-count': () => new UpdateCompletedCountCommand(),
-  push: () => new PushCommand(),
-  pull: () => new PullCommand(),
+  'build': () => new BuildCommand(),
   'create-notes': () => new CreateNoteCommand(),
+  'dev': () => new DevCommand(),
   'fix-timestamps': () => new FixTimestampsCommand(),
-  'update-note-config': () => new UpdateNoteConfigCommand(),
+  'help': () => new HelpCommand(),
+  'preview': () => new PreviewCommand(),
+  'pull': () => new PullCommand(),
+  'push': () => new PushCommand(),
   'rename-note': () => new RenameNoteCommand(),
-  help: () => new HelpCommand(),
+  'update-completed-count': () => new UpdateCompletedCountCommand(),
+  'update-note-config': () => new UpdateNoteConfigCommand(),
+  'update': () => new UpdateCommand(),
 }
 
 /** 命令实例缓存 */

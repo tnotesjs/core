@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/NotesTable/NotesTable.vue 
+-->
+
 <template>
   <div v-if="errorMessage" class="error">
     {{ errorMessage }}

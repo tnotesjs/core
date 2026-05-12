@@ -1,11 +1,11 @@
 /**
- * .vitepress/tnotes/utils/index.ts
+ * utils/index.ts
  *
  * util 统一入口
  */
 
 export { handleError, createError } from './errorHandler'
-export { deleteDirectory, ensureDirectory } from './file'
+export { ensureDirectory } from './file'
 export { generateAnchor } from './generateAnchor'
 export { genHierarchicalSidebar } from './genHierarchicalSidebar'
 export { getChangedIds } from './getChangedIds'
@@ -17,7 +17,6 @@ export { isPortInUse, killPortProcess, waitForPort } from './portUtils'
 export {
   parseNoteLine,
   buildNoteLineMarkdown,
-  isNoteLine,
   processEmptyLines,
 } from './readmeHelpers'
 export { runCommand } from './runCommand'

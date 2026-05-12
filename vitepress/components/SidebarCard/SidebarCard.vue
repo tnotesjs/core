@@ -1,3 +1,7 @@
+<!-- 
+.vitepress/components/SidebarCard/SidebarCard.vue
+-->
+
 <script setup>
 import { useData } from 'vitepress'
 import { ref, computed, watch } from 'vue'

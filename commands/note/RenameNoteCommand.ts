@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/commands/note/RenameNoteCommand.ts
+ * commands/note/RenameNoteCommand.ts
  *
  * 重命名笔记命令 - 用于在开发环境中重命名笔记文件夹
  */
+
 import { existsSync, renameSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 

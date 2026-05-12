@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/vitepress/assets/icons/index.ts
+ * vitepress/assets/icons/index.ts
  *
  * get icons:
  *   https://iconify.design/

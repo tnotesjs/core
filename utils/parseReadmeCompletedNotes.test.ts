@@ -1,3 +1,9 @@
+/**
+ * utils/parseReadmeCompletedNotes.test.ts
+ *
+ * 测试 parseReadmeCompletedNotes 函数，确保正确解析 README 中的完成状态
+ */
+
 import { describe, it, expect } from 'vitest'
 
 import { parseReadmeCompletedNotes } from './parseReadmeCompletedNotes'

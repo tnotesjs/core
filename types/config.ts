@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/types/config.ts
+ * types/config.ts
  *
  * 配置相关类型定义
  */

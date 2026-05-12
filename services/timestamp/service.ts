@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/services/TimestampService.ts
+ * services/TimestampService.ts
  *
  * 时间戳服务 - 管理笔记的创建时间和更新时间
  */
+
 import { execSync } from 'child_process'
 import {
   existsSync,

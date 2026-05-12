@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/SidebarNavBefore.vue 
+-->
+
 <template>
   <div class="sidebar-toggle-wrapper">
     <div class="toolbar-row">

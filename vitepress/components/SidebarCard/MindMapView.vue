@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/SidebarCard/MindMapView.vue 
+-->
+
 <script setup>
 import { scaleOrdinal, schemePastel2, schemeSet3, schemeTableau10 } from 'd3'
 import { Transformer } from 'markmap-lib'

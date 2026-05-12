@@ -1,9 +1,10 @@
 /**
- * .vitepress/tnotes/commands/update-completed-count/UpdateCompletedCountCommand.ts
+ * commands/update-completed-count/UpdateCompletedCountCommand.ts
  *
  * 更新完成笔记数量历史记录命令
  * 基于 Git 历史统计最近 12 个月（近 1 年）的每月完成笔记数量
  */
+
 import { execSync } from 'child_process'
 import { readFileSync, writeFileSync } from 'fs'
 

@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/services/VitepressService.ts
+ * services/vitepress/VitepressService.ts
  *
  * VitePress 服务 - 封装 VitePress 开发服务器相关的业务逻辑
  */
+
 import { spawn } from 'child_process'
 
 import { ConfigManager } from '../../config/ConfigManager'

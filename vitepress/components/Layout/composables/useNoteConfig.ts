@@ -1,3 +1,10 @@
+/**
+ * vitepress/components/Layout/composables/useNoteConfig.ts
+ * 
+ * 管理笔记配置状态
+ * 包括可编辑字段、原始值、变更检测等
+ */
+
 import { ref, computed, watch } from 'vue'
 
 import type { NoteConfig } from '../../../../types'

@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/core/NoteManager.ts
+ * core/NoteManager.ts
  *
  * 笔记管理器 - 负责笔记的扫描、验证和基本操作
  */

@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/DocBeforeControls.vue 
+-->
+
 <template>
   <div class="docBeforeContainer">
     <div class="leftArea">

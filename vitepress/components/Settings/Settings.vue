@@ -1,3 +1,9 @@
+<!-- 
+vitepress/components/Settings/Settings.vue
+
+设置组件，用于显示和修改应用设置
+-->
+
 <template>
   <div class="settingsWrapper">
     <section class="settingsSection">

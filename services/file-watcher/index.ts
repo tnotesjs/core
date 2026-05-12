@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/index.ts
+ * services/file-watcher/index.ts
  *
  * 文件监听层入口
  */

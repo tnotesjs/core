@@ -1,3 +1,9 @@
+/**
+ * vitepress/components/Layout/composables/useSidebarLayout.ts
+ *
+ * 侧边栏布局管理的组合式函数
+ */
+
 import { ref } from 'vue'
 
 const SIDEBAR_HIDDEN_KEY = 'vp:sidebar:hidden'

@@ -1,8 +1,11 @@
 /**
+ * vitepress/components/Layout/composables/useRenameRedirect.ts
+ * 
  * 重命名后跳转工具：显示遮罩 → 等 Vite HMR 重建路由 → 整页跳到新 URL。
  *
  * 关于面板保存与文件系统直接重命名两条入口共用此函数，确保行为一致。
  */
+
 import { useRenameOverlay } from './useRenameOverlay'
 
 export interface RedirectAfterRenameOptions {

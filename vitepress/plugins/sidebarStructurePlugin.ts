@@ -1,12 +1,13 @@
 /**
- * .vitepress/tnotes/vitepress/plugins/sidebarStructurePlugin.ts
+ * vitepress/plugins/sidebarStructurePlugin.ts
  *
  * VitePress dev middleware - 处理语雀风格侧边栏的目录结构操作。
  */
+
 import { FileWatcherService, NoteService, ReadmeService } from '../../services'
 
-import type { IncomingMessage, ServerResponse } from 'http'
 import type { NoteInfo } from '../../types'
+import type { IncomingMessage, ServerResponse } from 'http'
 import type { PluginOption } from 'vite'
 
 interface JsonResponse {

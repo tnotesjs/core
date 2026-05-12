@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/EnWordList/EnWordList.vue
+-->
+
 <script setup>
 import { marked } from 'marked'
 import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'

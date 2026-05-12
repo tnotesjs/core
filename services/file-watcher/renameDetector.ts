@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/renameDetector.ts
+ * services/file-watcher/renameDetector.ts
  *
  * 文件夹重命名/删除检测
  */

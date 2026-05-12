@@ -1,3 +1,9 @@
+/**
+ * utils/getChangedIds.ts
+ *
+ * 获取 Git 中变更的笔记 ID 集合
+ */
+
 import { execSync } from 'child_process'
 import path from 'path'
 

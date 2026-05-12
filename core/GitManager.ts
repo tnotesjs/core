@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/core/GitManager.ts
+ * core/GitManager.ts
  *
  * Git 仓库管理器 - 提供统一的 Git 操作接口
  */
+
 import { Logger, runCommand, createError, handleError } from '../utils'
 
 /**
@@ -17,7 +18,7 @@ interface GitFileStatus {
 /**
  * Git 状态信息接口
  */
-export interface GitStatus {
+interface GitStatus {
   hasChanges: boolean
   changedFiles: number
   staged: number

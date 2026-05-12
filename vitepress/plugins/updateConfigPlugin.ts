@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/vitepress/plugins/updateConfigPlugin.ts
+ * vitepress/plugins/updateConfigPlugin.ts
  *
  * VitePress 插件 - 处理笔记配置更新请求
  */
+
 import { UpdateNoteConfigCommand } from '../../commands/note/UpdateNoteConfigCommand'
 
 import type { PluginOption } from 'vite'

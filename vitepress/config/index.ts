@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/vitepress/config/index.ts
+ * vitepress/config/index.ts
  *
  * VitePress 站点配置工厂函数
  *
@@ -7,6 +7,7 @@
  *   import { defineNotesConfig } from './tnotes/vitepress/config'
  *   export default defineNotesConfig()
  */
+
 import fs from 'fs'
 import path from 'path'
 import { defineConfig, type UserConfig } from 'vitepress'

@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/utils/markdown.ts
+ * utils/markdown.ts
  *
  * Markdown 处理工具函数
  */
+
 import { generateAnchor } from './generateAnchor'
 
 /**

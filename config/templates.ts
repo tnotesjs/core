@@ -1,10 +1,8 @@
 /**
- * .vitepress/tnotes/config/templates.ts
+ * config/templates.ts
  *
  * 模板定义
  */
-// import { v4 as uuidv4 } from 'uuid'
-// import type { NoteConfig } from '../types'
 
 /**
  * 生成笔记一级标题

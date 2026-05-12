@@ -1,3 +1,9 @@
+/**
+ * vitepress/components/utils.ts
+ *
+ * VitePress 组件的公共工具函数
+ */
+
 export const formatDate = (timestamp: number): string => {
   const date = new Date(timestamp)
   const year = date.getFullYear()

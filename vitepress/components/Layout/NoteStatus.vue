@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/NoteStatus.vue 
+-->
+
 <template>
   <h1 v-if="shouldShow" class="note-status-title">
     <span v-if="statusEmoji" class="status-emoji">{{ statusEmoji }}</span>

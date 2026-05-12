@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/services/ReadmeService.ts
+ * services/ReadmeService.ts
  *
  * README 服务 - 封装 README 更新相关的业务逻辑
  */
+
 import {
   existsSync,
   readFileSync,

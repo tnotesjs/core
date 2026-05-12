@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/utils/validators.ts
+ * utils/validators.ts
  *
  * 验证工具函数
  */

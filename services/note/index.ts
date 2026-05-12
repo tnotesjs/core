@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/note/index.ts
+ * services/note/index.ts
  *
  * 笔记服务入口
  */

@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/commands/dev/DevCommand.ts
+ * commands/dev/DevCommand.ts
  *
  * 开发服务器命令 - 使用 VitepressService 和 FileWatcherService
  */
@@ -10,19 +10,20 @@ import { VitepressService, FileWatcherService } from '../../services'
 import { BaseCommand } from '../BaseCommand'
 
 export class DevCommand extends BaseCommand {
-  private fileWatcherService: FileWatcherService
-  private vitepressService: VitepressService
-  private noteManager: NoteManager
-  private noteIndexCache: NoteIndexCache
   private configManager: ConfigManager
+  private fileWatcherService: FileWatcherService
+  private noteIndexCache: NoteIndexCache
+  private noteManager: NoteManager
+  private vitepressService: VitepressService
 
   constructor() {
     super('dev')
-    this.fileWatcherService = new FileWatcherService()
-    this.vitepressService = new VitepressService()
-    this.noteManager = NoteManager.getInstance()
-    this.noteIndexCache = NoteIndexCache.getInstance()
+    
     this.configManager = ConfigManager.getInstance()
+    this.fileWatcherService = new FileWatcherService()
+    this.noteIndexCache = NoteIndexCache.getInstance()
+    this.noteManager = NoteManager.getInstance()
+    this.vitepressService = new VitepressService()
   }
 
   protected async run(): Promise<void> {

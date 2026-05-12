@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/readme/index.ts
+ * services/readme/index.ts
  *
  * README 服务入口
  */

@@ -1,3 +1,9 @@
+<!-- 
+vitepress/components/Settings/SettingsDialog.vue
+
+设置对话框组件，用于显示和修改应用设置
+-->
+
 <template>
   <ClientOnly>
     <Teleport to="body">

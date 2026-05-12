@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/core/ReadmeGenerator.ts
+ * core/ReadmeGenerator.ts
  *
  * README 生成器 - 负责生成各种 README 内容
  */
+
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 
 import { TocGenerator } from './TocGenerator'

@@ -1,3 +1,7 @@
+/* 
+vitepress/components/CodeBlockFullscreen/styles.css
+*/
+
 /* 代码块操作按钮样式 */
 div[class*='language-'] {
   position: relative;

@@ -1,16 +1,18 @@
 /**
- * .vitepress/tnotes/commands/misc/HelpCommand.ts
+ * commands/misc/HelpCommand.ts
  *
  * 帮助命令
  */
+
 import { createLogger, LogLevel } from '../../utils'
 import { BaseCommand } from '../BaseCommand'
 import {
   COMMAND_NAMES,
   COMMAND_OPTIONS,
   COMMAND_DESCRIPTIONS,
-  type CommandOption,
 } from '../models'
+
+import type { CommandOption } from '../models'
 
 /**
  * 命令分组（用于帮助信息展示）

@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/core/ProcessManager.ts
+ * core/ProcessManager.ts
  *
  * 进程管理器 - 管理子进程的生命周期（单例模式）
  */
+
 import { spawn, ChildProcess } from 'child_process'
 
 import { Logger } from '../utils'

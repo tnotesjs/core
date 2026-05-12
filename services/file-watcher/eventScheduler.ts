@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/eventScheduler.ts
+ * services/file-watcher/eventScheduler.ts
  *
  * 事件调度：防抖 + 批量检测 + 队列
  */

@@ -1,3 +1,11 @@
+/**
+ * vitepress/components/Layout/composables/useNoteValidation.ts
+ * 
+ * 笔记标题验证组合式函数
+ * 包含标题验证逻辑和输入事件处理器
+ * 用于确保笔记标题合法，避免文件系统错误和用户困惑
+ */
+
 import type { Ref } from 'vue'
 
 /**

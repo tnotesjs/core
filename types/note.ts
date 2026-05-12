@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/types/note.ts
+ * types/note.ts
  *
  * 笔记相关类型定义
  */

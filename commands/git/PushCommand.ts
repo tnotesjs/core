@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/commands/git/PushCommand.ts
+ * commands/git/PushCommand.ts
  *
  * Git Push 命令
  *
@@ -7,17 +7,22 @@
  * fix-timestamps 的结果（.tnotes.json 变更）通过 --amend 合并到同一个 commit，
  * 保证 updated_at 精确等于 git commit 时间，且对外只产生 1 个 commit。
  */
+
 import { ROOT_DIR_PATH } from '../../config/constants'
+import { GitManager } from '../../core'
 import { GitService, TimestampService } from '../../services'
 import { runCommand } from '../../utils'
 import { BaseCommand } from '../BaseCommand'
 
 export class PushCommand extends BaseCommand {
+  private gitManager: GitManager
   private gitService: GitService
   private timestampService: TimestampService
 
   constructor() {
     super('push')
+
+    this.gitManager = new GitManager(ROOT_DIR_PATH)
     this.gitService = new GitService()
     this.timestampService = new TimestampService()
   }
@@ -26,7 +31,7 @@ export class PushCommand extends BaseCommand {
     try {
       // 1. 检查是否有更改或已有未推送的提交
       this.logger.info('检查是否有更改...')
-      const status = await this.gitService.getStatus()
+      const status = await this.gitManager.getStatus()
       const hasPendingCommits = (status.ahead ?? 0) > 0
 
       if (!status.hasChanges && !hasPendingCommits) {

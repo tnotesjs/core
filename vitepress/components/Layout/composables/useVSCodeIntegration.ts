@@ -1,3 +1,9 @@
+/**
+ * vitepress/components/Layout/composables/useVSCodeIntegration.ts
+ *
+ * VSCode 集成和 GitHub 链接拦截
+ */
+
 import { useData } from 'vitepress'
 import { ref } from 'vue'
 

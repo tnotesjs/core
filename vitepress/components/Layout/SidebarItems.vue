@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/SidebarItems.vue 
+-->
+
 <template>
   <template v-for="item in items" :key="getItemKey(item)">
     <!-- 只有在不超过最大层级时才渲染组 -->

@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/CustomSidebar.vue 
+-->
+
 <template>
   <div class="custom-sidebar-wrapper">
     <nav class="nav" ref="navRef">

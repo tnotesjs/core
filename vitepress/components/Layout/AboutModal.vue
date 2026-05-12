@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/AboutModal.vue 
+-->
+
 <template>
   <!-- 使用 teleport 将 modal 放到 body 之下（避免父容器样式影响） -->
   <teleport to="body">

@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/NavBarSettingsTrigger.vue 
+-->
+
 <template>
   <button
     type="button"

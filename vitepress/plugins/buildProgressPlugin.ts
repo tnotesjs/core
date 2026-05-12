@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/vitepress/plugins/buildProgressPlugin.ts
+ * vitepress/plugins/buildProgressPlugin.ts
  *
  * 构建进度插件 - 仅在 build 模式下显示真实进度
  *

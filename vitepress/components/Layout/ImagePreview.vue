@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/ImagePreview.vue 
+-->
+
 <template>
   <!-- #region img preview -->
   <div

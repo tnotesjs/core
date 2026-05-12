@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/commands/update/UpdateCommand.ts
+ * commands/update/UpdateCommand.ts
  *
  * 更新命令 - 使用 ReadmeService
  */
+
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 

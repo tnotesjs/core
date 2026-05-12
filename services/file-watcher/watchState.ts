@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/watchState.ts
+ * services/file-watcher/watchState.ts
  *
  * 监听状态存储：哈希缓存、配置缓存、目录缓存
  */

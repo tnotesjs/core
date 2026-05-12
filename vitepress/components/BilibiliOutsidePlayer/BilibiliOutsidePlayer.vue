@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/BilibiliOutsidePlayer/BilibiliOutsidePlayer.vue 
+-->
+
 <template>
   <iframe
     style="width: 100%; aspect-ratio: 16/9; margin: 1rem 0"

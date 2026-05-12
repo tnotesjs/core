@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/CodeBlockFullscreen/CodeBlockFullscreen.vue 
+-->
+
 <template>
   <Teleport to="body">
     <Transition name="fullscreen-fade">

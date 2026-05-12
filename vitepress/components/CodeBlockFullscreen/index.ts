@@ -1,3 +1,11 @@
+/**
+ * vitepress/components/CodeBlockFullscreen/index.ts
+ * 
+ * 代码块全屏功能的组合式函数
+ * 负责在代码块上添加全屏和复制按钮，处理相关事件
+ * 使用 Vue 3 的 Composition API 实现，增强用户体验
+ */
+
 import { createApp, onMounted, onUnmounted } from 'vue'
 
 import CodeBlockFullscreen from './CodeBlockFullscreen.vue'

@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/AboutPanel.vue 
+-->
+
 <template>
   <div class="timeModalContent">
     <!-- 笔记编号（仅笔记页显示） -->

@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/service.ts
+ * services/file-watcher/service.ts
  *
  * 文件监听服务
  *

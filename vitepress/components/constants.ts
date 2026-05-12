@@ -1,7 +1,10 @@
 /**
+ * vitepress/components/constants.ts
+ * 
  * 以下常量由 defineNotesConfig() 通过 vite.define 注入
  * 见 vitepress/config/index.ts 中的 define 配置
  */
+
 declare const __TNOTES_REPO_NAME__: string
 declare const __TNOTES_AUTHOR__: string
 declare const __TNOTES_IGNORE_DIRS__: string[]

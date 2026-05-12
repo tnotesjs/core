@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/commands/maintenance/FixTimestampsCommand.ts
+ * commands/maintenance/FixTimestampsCommand.ts
  *
  * 修复时间戳命令 - 修复所有笔记的时间戳（基于 git 历史）
  */
+
 import { TimestampService } from '../../services'
 import { BaseCommand } from '../BaseCommand'
 

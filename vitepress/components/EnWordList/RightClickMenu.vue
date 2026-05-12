@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/EnWordList/RightClickMenu.vue 
+-->
+
 <template>
   <div
     v-if="show"

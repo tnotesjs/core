@@ -1,4 +1,7 @@
-<!-- .vitepress\components\Layout\ToggleSidebar.vue -->
+<!-- 
+vitepress/components/Layout/ToggleSidebar.vue
+-->
+
 <template>
   <img
     @click="toggleSidebar"

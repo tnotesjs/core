@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/index.ts
+ * index.ts
  *
  * TNotes 内置命令入口模块
  */

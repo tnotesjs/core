@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/readmeChangeHandler.ts
+ * services/file-watcher/readmeChangeHandler.ts
  *
  * README 变更处理
  */

@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/core/NoteIndexCache.ts
+ * core/NoteIndexCache.ts
  *
  * 笔记索引缓存 - 维护笔记的内存索引，避免重复扫描文件系统
  */

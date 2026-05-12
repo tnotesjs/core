@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/DocFooter.vue 
+-->
+
 <template>
   <nav class="custom-doc-footer" v-if="prev || next">
     <div class="container">

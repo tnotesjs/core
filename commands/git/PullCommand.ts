@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/commands/git/PullCommand.ts
+ * commands/git/PullCommand.ts
  *
  * Git Pull 命令 - 使用 GitService
  */
+
 import { GitService } from '../../services'
 import { BaseCommand } from '../BaseCommand'
 

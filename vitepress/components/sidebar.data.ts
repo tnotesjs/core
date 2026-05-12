@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/vitepress/components/sidebar.data.ts
+ * vitepress/components/sidebar.data.ts
  */
 
 import fs from 'node:fs'

@@ -1,3 +1,10 @@
+/**
+ * vitepress/components/Layout/composables/useRedirect.ts
+ * 
+ * 处理 404 重定向逻辑
+ * 当用户访问旧的笔记 URL 时,自动重定向到新的 URL
+ */
+
 import { useRoute, useData } from 'vitepress'
 import { ref, watch } from 'vue'
 

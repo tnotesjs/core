@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/commands/build/PreviewCommand.ts
+ * commands/build/PreviewCommand.ts
  *
  * 预览命令 - 使用 VitepressService
  */
+
 import { VitepressService } from '../../services'
 import { BaseCommand } from '../BaseCommand'
 

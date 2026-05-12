@@ -6,6 +6,7 @@
  * doc:
  * https://vitepress.dev/reference/default-theme-config
  */
+
 import type { TNotesConfig } from '../../types'
 import type { DefaultTheme } from 'vitepress'
 

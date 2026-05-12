@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/commands/note/UpdateNoteConfigCommand.ts
+ * commands/note/UpdateNoteConfigCommand.ts
  *
  * 更新笔记配置命令 - 用于在开发环境中更新笔记配置
  */
+
 import { NoteService } from '../../services'
 import { BaseCommand } from '../BaseCommand'
 

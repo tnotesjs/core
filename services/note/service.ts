@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/services/NoteService.ts
+ * services/NoteService.ts
  *
  * 笔记服务 - 封装笔记相关的业务逻辑
  */
+
 import { writeFileSync, readFileSync, promises as fsPromises } from 'fs'
 import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'

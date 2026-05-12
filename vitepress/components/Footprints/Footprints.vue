@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Footprints/Footprints.vue 
+-->
+
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 

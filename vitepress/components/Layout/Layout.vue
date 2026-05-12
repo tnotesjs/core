@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/Layout.vue 
+-->
+
 <template>
   <Layout>
     <template v-if="showNotFound" #not-found>

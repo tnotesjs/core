@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/services/git-service/service.ts
+ * services/git-service/service.ts
  *
  * Git 服务 - 封装 Git 操作相关的业务逻辑
  */
+
 import { ROOT_DIR_PATH } from '../../config/constants'
 import { GitManager } from '../../core'
 import { logger } from '../../utils'
@@ -79,19 +80,11 @@ export class GitService {
   }
 
   /**
-   * 获取 Git 状态
-   * @returns Git 状态信息
-   */
-  async getStatus() {
-    return await this.gitManager.getStatus()
-  }
-
-  /**
    * 检查是否有未提交的更改
    * @returns 是否有未提交的更改
    */
   async hasChanges(): Promise<boolean> {
-    const status = await this.getStatus()
+    const status = await this.gitManager.getStatus()
     return status.hasChanges
   }
 

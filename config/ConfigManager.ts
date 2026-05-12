@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/config/ConfigManager.ts
+ * config/ConfigManager.ts
  *
  * 配置管理器 - 统一管理项目配置
  */
@@ -127,11 +127,4 @@ export class ConfigManager {
  */
 export function getConfigManager(): ConfigManager {
   return ConfigManager.getInstance()
-}
-
-/**
- * 获取 TNotes 配置（向后兼容）
- */
-export function getTnotesConfig(): TNotesConfig {
-  return ConfigManager.getInstance().getAll()
 }

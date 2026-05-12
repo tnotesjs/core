@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/internal.ts
+ * services/file-watcher/internal.ts
  *
  * 文件监听层内部模型：仅供 file-watcher 层使用
  */

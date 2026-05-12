@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/commands/models.ts
+ * commands/models.ts
  *
  * commands 层对外暴露的类型和常量
  * 注意：此文件不应导入任何命令类，以避免循环引用

@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/utils/readmeHelpers.ts
+ * utils/readmeHelpers.ts
  *
  * README 更新的公共辅助函数
  */
+
 import { NoteManager } from '../core/NoteManager'
 
 import type { NoteInfo } from '../types'
@@ -115,7 +116,7 @@ export function buildNoteLineMarkdown(
  * @param line - 要检查的行
  * @returns 是否是笔记行
  */
-export function isNoteLine(line: string): boolean {
+function isNoteLine(line: string): boolean {
   return NOTE_LINE_REGEX.test(line)
 }
 

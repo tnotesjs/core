@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/SidebarResizeHandle.vue 
+-->
+
 <template>
   <div
     v-if="isSidebarAvailable"
@@ -31,8 +35,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vitepress'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { useSidebarLayout } from './composables/useSidebarLayout'
 import { icon__next, icon__prev } from '../../assets/icons'

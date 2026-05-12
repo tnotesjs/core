@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/index.ts
+ * services/index.ts
  *
  * Services 层统一 IO 层
  */

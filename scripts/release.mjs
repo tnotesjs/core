@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 /**
+ * scripts/release.mjs
+ * 
  * @tnotesjs/core 发版脚本
  *
  * 用法: node scripts/release.mjs [版本号]

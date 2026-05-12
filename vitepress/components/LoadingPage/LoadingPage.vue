@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/LoadingPage.vue 
+-->
+
 <template>
   <ClientOnly>
     <Teleport to="body">

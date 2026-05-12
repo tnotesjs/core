@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/utils/genHierarchicalSidebar.ts
+ * utils/genHierarchicalSidebar.ts
  *
  * 生成层次化侧边栏
  */

@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/utils/parseReadmeCompletedNotes.ts
+ * utils/parseReadmeCompletedNotes.ts
  *
  * 解析 README.md 中的完成笔记数量
  */

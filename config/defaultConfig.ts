@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/config/defaultConfig.ts
+ * config/defaultConfig.ts
  *
  * TNotes 项目配置默认值模板
  */

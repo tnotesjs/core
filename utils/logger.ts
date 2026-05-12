@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/utils/logger.ts
+ * utils/logger.ts
  *
  * 统一的日志系统
  */

@@ -1,3 +1,7 @@
+<!-- 
+.vitepress/components/SidebarCard/NotesTrendChart.vue
+-->
+
 <script setup>
 import { BarChart, LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'

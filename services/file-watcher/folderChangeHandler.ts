@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/folderChangeHandler.ts
+ * services/file-watcher/folderChangeHandler.ts
  *
  * 文件夹变更处理：删除、重命名、回退
  */

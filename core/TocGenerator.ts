@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/core/TocGenerator.ts
+ * core/TocGenerator.ts
  *
  * 目录生成器 - 负责生成各种目录（TOC）
  */
+
 import { EOL } from '../config/constants'
 import {
   generateToc as generateTocUtil,

@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/vitepress/plugins/getNoteByConfigIdPlugin.ts
+ * vitepress/plugins/getNoteByConfigIdPlugin.ts
  *
  * VitePress 插件 - 根据 configId 查询笔记信息
  */
+
 import { NoteIndexCache } from '../../core'
 import { logger } from '../../utils'
 

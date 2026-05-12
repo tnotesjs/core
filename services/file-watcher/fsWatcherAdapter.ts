@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/fsWatcherAdapter.ts
+ * services/file-watcher/fsWatcherAdapter.ts
  *
  *  fs.watch 适配器：仅负责监听和事件分发
  */

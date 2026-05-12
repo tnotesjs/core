@@ -1,3 +1,9 @@
+<!-- 
+vitepress/components/Tooltip/Tooltip.vue
+
+提供一个简单的 Tooltip 组件，用于在鼠标悬停时显示提示信息
+-->
+
 <template>
   <span
     class="tooltip-wrapper"

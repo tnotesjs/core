@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/commands/note/CreateNoteCommand.ts
+ * commands/note/CreateNoteCommand.ts
  *
  * 新建笔记命令 - 使用 NoteService（支持批量创建，生成全局唯一 ID）
  */
@@ -16,6 +16,7 @@ export class CreateNoteCommand extends BaseCommand {
 
   constructor() {
     super('create-notes')
+    
     this.noteService = NoteService.getInstance()
     this.readmeService = ReadmeService.getInstance()
   }

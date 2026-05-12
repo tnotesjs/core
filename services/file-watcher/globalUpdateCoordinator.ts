@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/services/file-watcher/globalUpdateCoordinator.ts
+ * services/file-watcher/globalUpdateCoordinator.ts
  *
  * 全局更新协调：应用配置更新、更新 README 列表
  */
+
 import { safeExecute } from './internal'
 
 import type { WatchEvent } from './internal'

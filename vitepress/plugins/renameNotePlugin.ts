@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/vitepress/plugins/renameNotePlugin.ts
+ * vitepress/plugins/renameNotePlugin.ts
  *
  * Vite 插件 - 处理笔记重命名请求
  */
+
 import { RenameNoteCommand } from '../../commands/note/RenameNoteCommand'
 
 import type { PluginOption } from 'vite'

@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/utils/parseArgs.ts
+ * utils/parseArgs.ts
  *
  * 轻量级命令行参数解析器
  * 替代 minimist，仅实现项目需要的功能

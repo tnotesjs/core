@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/ToggleFullContent.vue 
+-->
+
 <template>
   <img @click="toggle" class="contentToggleBtn" :title="full ? '退出全屏内容区' : '全屏显示内容区'" :src="full ? icon__fullscreen_exit : icon__fullscreen" alt="" />
 </template>

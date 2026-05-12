@@ -1,3 +1,9 @@
+/**
+ * vitepress/components/Layout/composables/useCollapseControl.ts
+ *
+ * 全局折叠/展开功能的组合式函数
+ */
+
 import { useRoute } from 'vitepress'
 import { ref, watch } from 'vue'
 

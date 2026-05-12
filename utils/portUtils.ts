@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/utils/portUtils.ts
+ * utils/portUtils.ts
  *
  * 端口管理工具函数
  */
+
 import { execSync } from 'child_process'
 
 import { logger } from './logger'

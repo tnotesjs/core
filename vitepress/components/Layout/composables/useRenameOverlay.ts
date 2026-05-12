@@ -1,9 +1,12 @@
 /**
+ * vitepress/components/Layout/composables/useRenameOverlay.ts
+ * 
  * 全局「重命名遮罩」状态。
  *
  * Layout 顶层渲染 `<LoadingPage />`，由本 store 控制 visible/message/tip，
  * `useRenameRedirect` 调用 show/hide 即可。
  */
+
 import { reactive } from 'vue'
 
 export interface RenameOverlayState {

@@ -1,3 +1,9 @@
+<!-- 
+vitepress/components/Mermaid/Mermaid.vue
+
+Mermaid 图表组件，用于在页面中渲染 Mermaid 图表
+-->
+
 <template>
   <div
     ref="mermaidRef"

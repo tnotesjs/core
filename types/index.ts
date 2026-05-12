@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/types/index.ts
+ * types/index.ts
  *
  * 类型定义统一导出
  */

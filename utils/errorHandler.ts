@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/utils/errorHandler.ts
+ * utils/errorHandler.ts
  *
  * 统一的错误处理系统
  */

@@ -1,3 +1,9 @@
+/**
+ * utils/generateAnchor.ts
+ * 
+ * 生成 GitHub 风格的锚点
+ */
+
 import GithubSlugger from 'github-slugger'
 
 const slugger = new GithubSlugger()

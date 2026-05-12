@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/commands/build/BuildCommand.ts
+ * commands/build/BuildCommand.ts
  *
  * 构建命令 - 使用 VitepressService
  */
+
 import { VitepressService } from '../../services'
 import { BaseCommand } from '../BaseCommand'
 

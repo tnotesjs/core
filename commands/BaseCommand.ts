@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/commands/BaseCommand.ts
+ * commands/BaseCommand.ts
  *
  * 命令基类
  */

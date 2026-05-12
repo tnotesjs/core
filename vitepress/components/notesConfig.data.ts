@@ -1,4 +1,10 @@
-// .vitepress/components/notesConfig.data.ts
+/**
+ * .vitepress/components/notesConfig.data.ts
+ *
+ * 负责加载和监视 notes 目录下的 .tnotes.json 配置文件变化
+ * 供 VitePress 组件使用，确保组件能够实时响应配置变更
+ */
+
 import fs from 'node:fs'
 import path from 'node:path'
 

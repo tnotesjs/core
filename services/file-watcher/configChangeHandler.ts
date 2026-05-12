@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/services/file-watcher/configChangeHandler.ts
+ * services/file-watcher/configChangeHandler.ts
  *
  * 配置变更处理
  */

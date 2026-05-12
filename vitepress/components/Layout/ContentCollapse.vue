@@ -1,3 +1,7 @@
+<!-- 
+vitepress/components/Layout/ContentCollapse.vue 
+-->
+
 <template>
   <div></div>
 </template>

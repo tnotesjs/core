@@ -1,8 +1,9 @@
 /**
- * .vitepress/tnotes/utils/runCommand.ts
+ * utils/runCommand.ts
  *
  * 运行命令的工具函数
  */
+
 import { exec } from 'child_process'
 
 /**

@@ -1,4 +1,6 @@
-// .vitepress/components/Layout/homeReadme.data.ts
+/**
+ * vitepress/components/Layout/homeReadme.data.ts
+ */
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'

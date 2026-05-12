@@ -1,5 +1,5 @@
 /**
- * .vitepress/tnotes/vitepress/plugins/fileWatcherBridgePlugin.ts
+ * vitepress/plugins/fileWatcherBridgePlugin.ts
  *
  * file-watcher 与浏览器之间的 IPC 桥。
  *
@@ -7,6 +7,7 @@
  * 两者无法共享单例。文件夹直接重命名后，file-watcher 会 fetch 本接口，
  * 本接口调 `server.ws.send` 向浏览器广播 `tnotes:note-renamed`。
  */
+
 import type { PluginOption } from 'vite'
 
 const RENAME_EVENT = 'tnotes:note-renamed'
