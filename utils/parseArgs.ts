@@ -1,9 +1,9 @@
-/**
- * utils/parseArgs.ts
- *
- * 轻量级命令行参数解析器
- * 替代 minimist，仅实现项目需要的功能
- */
+/* 
+utils/parseArgs.ts
+
+轻量级命令行参数解析器
+替代 minimist，仅实现项目需要的功能
+*/
 
 interface ParsedArgs {
   /** 非选项参数 */
@@ -18,7 +18,9 @@ interface ParsedArgs {
  * 支持的格式：
  * - `--flag`        → { flag: true }
  * - `--key=value`   → { key: 'value' }
- * - `--key value`   → { key: 'value' }（如果 value 不以 - 开头）
+ * - `--key true`    → { key: true }
+ * - `--key false`   → { key: false }
+ * - `--key value`   → { key: true, _: ['value'] }（当前项目的布尔优先语义）
  * - `--no-flag`     → { flag: false }
  * - 其他参数        → 添加到 `_` 数组
  *
@@ -52,7 +54,7 @@ export function parseArgs(args: string[]): ParsedArgs {
       const key = arg.slice(2)
       const next = args[i + 1]
 
-      // 如果下一个参数存在且不是选项，则作为值
+      // 如果下一个参数存在且不是选项，仅消费显式布尔字符串
       if (next !== undefined && !next.startsWith('-')) {
         // 检查是否为布尔字符串
         if (next === 'true') {

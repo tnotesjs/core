@@ -5,7 +5,7 @@
  */
 
 /** TNotes 错误代码枚举 */
-export enum ErrorCode {
+enum ErrorCode {
   // 文件系统错误
   FILE_NOT_FOUND = 'FILE_NOT_FOUND',
   FILE_READ_ERROR = 'FILE_READ_ERROR',

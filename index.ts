@@ -10,15 +10,11 @@ import { handleError, parseArgs, createLogger } from './utils'
 import type { CommandArgs } from './commands'
 import type { UpdateCommand, PushCommand } from './commands'
 
-/**
- * TNotes 内置命令入口函数
- */
-;
-
 (async (): Promise<void> => {
   try {
     // 解析命令行参数
     const args = parseArgs(process.argv.slice(2)) as CommandArgs
+    // console.log('解析到的命令行参数：', args)
 
     // 查找第一个为 true 的参数作为命令名
     const commandName = Object.keys(args).find(
