@@ -1,6 +1,6 @@
 ---
-name: "TNotes Core Private Rules"
-description: "Use when working in @tnotesjs/core source, CLI commands, services, config, utilities, package exports, or VitePress theme/config code. Covers project-specific boundaries, package contracts, build constraints, and validation commands."
+name: "TNotes Core 私有规则"
+description: "在处理 @tnotesjs/core 的源码、CLI、services、config、utils、包导出或 VitePress 主题与配置代码时使用。覆盖当前仓库特有的边界、契约、构建限制和验证要求。"
 applyTo:
   - "index.ts"
   - "src/**"
@@ -17,6 +17,7 @@ applyTo:
   - "tsconfig.build.json"
   - "CHANGELOG.md"
 ---
+
 # TNotes Core 私有规则
 
 这些规则只描述 `@tnotesjs/core` 当前仓库独有的约束，不重复通用工作流或通用前端规则。

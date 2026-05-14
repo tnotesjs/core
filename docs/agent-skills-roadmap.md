@@ -8,8 +8,11 @@
 - .github/skills/handoff/SKILL.md
 - .github/skills/grill-me/SKILL.md
 - .github/skills/improve-codebase-architecture/SKILL.md
+- .github/skills/pnpm/SKILL.md
 - .github/skills/tdd/SKILL.md
-- .github/skills/vue-composable-architecture/SKILL.md
+- .github/skills/vitest/SKILL.md
+- .github/skills/vitepress-runtime/SKILL.md
+- .github/skills/vue-architecture/SKILL.md
 
 ## 当前文档布局
 
@@ -34,6 +37,14 @@
 - docs/adr/ 至少积累少量真实决策，避免架构分析失去背景。
 - 能区分“短期实现问题”和“值得升级为结构问题”的事项。
 
+### pnpm
+
+当前已接入，使用时依赖：
+
+- 目标问题是包管理器、依赖分类、workspace、lockfile 或 link 行为问题。
+- 需要区分 `dependencies`、`devDependencies`、`peerDependencies`，或理解 pnpm 语义。
+- 与仓库私有发布规则的边界清楚：前者管包管理器工具层，后者管版本和发版策略。
+
 ### tdd
 
 当前已接入，使用时依赖：
@@ -41,6 +52,23 @@
 - 目标代码是纯函数或工具函数（utils/、core/），优先适用。
 - 已建立 Vitest 测试链路（当前仓库已就绪）。
 - 用户已确认 public interface 和行为优先级。
+
+### vitest
+
+当前已接入，使用时依赖：
+
+- 目标问题是 Vitest 工具层问题，而不是 test-first 工作流问题。
+- 需要处理 `vitest.config.ts`、`*.test.ts`、mocking、snapshot、coverage、过滤运行或类型测试。
+- 与 `tdd` 的边界清楚：前者管工具 API 与配置，后者管 red-green-refactor 流程。
+
+### vitepress-runtime
+
+当前已接入，使用时依赖：
+
+- 目标问题落在 `vitepress/config`、`vitepress/theme`、`vitepress/plugins`、`*.data.ts` 或 SSR 运行时边界。
+- 仓库是在封装或扩展 VitePress 运行时，而不是单纯编写 Markdown 内容。
+- 与 `vue-architecture` 的边界清楚：前者管 config / theme / runtime，后者管组件目录与 composable 架构。
+- 当前仓库里的 Vite 相关问题大多仍归这一层处理，暂不单独拆出通用 Vite skill。
 
 ## 建议的推进顺序
 

@@ -1,6 +1,6 @@
 ---
-name: "Workflow Common Rules"
-description: "Use when implementing, debugging, refactoring, or reviewing code changes. Covers clarifying assumptions, preferring simple solutions, keeping diffs small, cleaning only your own change fallout, and validating before finishing."
+name: "通用协作规则"
+description: "在实现、调试、重构或 review 代码改动时使用。覆盖澄清假设、优先最小方案、保持改动聚焦、清理改动尾巴，以及完成前做匹配范围验证。"
 applyTo:
   - "src/**"
   - "build/**"
@@ -9,6 +9,7 @@ applyTo:
   - "eslint.config.mjs"
   - "package.json"
 ---
+
 # 通用协作规则
 
 这份规则不依赖当前仓库结构，可直接复制到其它前端或 TypeScript 项目中使用。

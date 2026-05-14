@@ -1,13 +1,14 @@
 ---
-name: "Reusable Frontend Rules"
-description: "Use when editing Vue, TypeScript, SCSS, or Vite frontend files. Covers reusable frontend rules for feature folders, shared layers, composables, barrel files, imports, comments, and validation."
+name: "通用前端规则"
+description: "在编辑 Vue、SCSS、前端入口配置或偏前端的 TypeScript 代码时使用。覆盖 feature 内聚、共享层、composable、barrel、导入、注释和最小验证要求。"
 applyTo:
   - "src/**/*.ts"
-  - "src/**/*.vue"
-  - "src/**/*.scss"
+  - "**/*.vue"
+  - "**/*.scss"
   - "vite.config.ts"
   - "eslint.config.mjs"
 ---
+
 # 通用前端规则
 
 这份规则应保持跨项目可复用，不写当前仓库独有的目录名、任务名或运行时特例。

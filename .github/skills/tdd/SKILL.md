@@ -20,6 +20,7 @@ user-invocable: true
 - 测试脚本：`pnpm test`（单次运行），`pnpm test:watch`（watch 模式）。
 - 测试文件与源码同目录，命名 `<source>.test.ts`。
 - 先用 /grill-me 确认接口和行为优先级，再进入 TDD 循环。
+- 如果卡在 Vitest API、mocking、snapshot、coverage 或配置细节，使用 [../vitest/SKILL.md](../vitest/SKILL.md)。
 
 ## 哲学
 
@@ -110,5 +111,6 @@ GREEN: 最少代码 → 通过
 
 - [Good and Bad Tests](./tests.md)
 - [Mocking Guidelines](./mocking.md)
+- [Vitest Tooling](../vitest/SKILL.md)
 - [Interface Design](../improve-codebase-architecture/INTERFACE-DESIGN.md)
 - [Architecture Language](../improve-codebase-architecture/LANGUAGE.md)

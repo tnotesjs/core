@@ -14,7 +14,7 @@ import type { UpdateCommand, PushCommand } from './commands'
   try {
     // 解析命令行参数
     const args = parseArgs(process.argv.slice(2)) as CommandArgs
-    // console.log('解析到的命令行参数：', args)
+    console.log('解析到的命令行参数：', args, '\n', process.argv, '\n', process.argv.slice(2))
 
     // 查找第一个为 true 的参数作为命令名
     const commandName = Object.keys(args).find(
