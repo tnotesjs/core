@@ -1,201 +1,49 @@
 ---
 name: vitest
-description: 'Vitest 测试工具规范。适用于当前仓库里编写或维护 `*.test.ts`、调整 `vitest.config.ts`、处理 `globals: false` 下的显式导入、mocking、snapshot、coverage、过滤运行、type testing 或 Vitest 报错时使用。'
-argument-hint: '描述你要写的测试、Vitest 配置、mock 场景或报错信息'
-user-invocable: true
-disable-model-invocation: false
+description: 由 Vite 驱动的快速单元测试框架，提供兼容 Jest 的 API。编写测试、mock、配置覆盖率，或处理测试过滤与测试夹具时使用。
 ---
 
-# Vitest 工具规范
-
-## 适用范围
-
-适用于以下表面：
-
-- `vitest.config.ts`
-- `**/*.test.ts`
-- 使用 Vitest 的 TypeScript / Vue 测试文件
-- 与 mocking、snapshot、coverage、过滤运行、环境切换相关的问题
-
-当前仓库已经集成 Vitest v4，并且测试主要覆盖 `utils/`、`core/` 等纯逻辑层。这里需要的不是“是否采用 TDD”的流程讨论，而是“如何正确使用 Vitest 这个工具”。
-
-## 何时使用
-
-- 需要新增或修改测试文件
-- 需要理解 `describe`、`it`、`expect`、`vi` 的具体写法
-- 需要 mock 文件系统、Git、时间、网络等系统边界
-- 需要调整 `vitest.config.ts`
-- 需要处理 snapshot、coverage、过滤运行、type testing
-- 需要定位某个 Vitest 报错或测试执行行为
-
-## 何时不要使用
-
-- 如果问题是“是否要先写测试、怎么走 red-green-refactor、如何拆行为优先级”
-  这类问题使用 [../tdd/SKILL.md](../tdd/SKILL.md)
-- 如果问题是组件目录怎么拆、composable 怎么设计
-  这类问题使用 [../vue-architecture/SKILL.md](../vue-architecture/SKILL.md)
-
-## 当前仓库里的 Vitest 约定
-
-- 测试框架：Vitest v4
-- 配置入口：`vitest.config.ts`
-- 测试匹配：`**/*.test.ts`
-- `globals: false`，因此测试文件应显式从 `vitest` 导入 `describe`、`it`、`expect`、`vi` 等 API
-- 测试文件与源码同目录，命名 `<source>.test.ts`
-- 当前主战场是 `utils/`、`core/` 等纯函数和低副作用逻辑
-
-## 核心原则
-
-### 1. 先区分 workflow 和 tool
-
-`TDD` 解决的是开发流程，`Vitest` 解决的是测试工具本身。
-
-- 需要决定先写测试还是先写实现 → `tdd`
-- 已经确定要写测试，但不确定怎么用 `vi`、怎么配 config、怎么做 snapshot → 本 skill
-
-### 2. 遵循当前仓库的显式导入风格
-
-由于 `globals: false`，不要假设 `describe`、`it`、`expect`、`vi` 是全局可用的。
-
-当前仓库的标准写法是：
-
-```ts
-import { describe, expect, it } from 'vitest'
-```
-
-需要 mocking 或 spy 时，再显式引入 `vi`。
-
-### 3. 优先写窄测试，贴着 public interface 断言
-
-当前仓库的测试大多针对纯逻辑和公共输出。优先保持：
-
-- 每个 `it()` 只验证一个具体行为
-- 断言 public interface，不依赖内部实现
-- 测试名直接描述行为结果
-
-这和 `tdd` 的哲学一致，但本 skill 更关心如何用 Vitest 把它表达出来。
-
-### 4. mock 只打系统边界
-
-当前仓库的既有纪律是：
-
-- 可以 mock 文件系统、Git、网络、时间
-- 不要 mock 自己的 module、class 或内部实现细节
-
-在 Vitest 里，这通常意味着：
-
-- `vi.mock()` 用于外部模块边界
-- `vi.spyOn()` 用于观测外部对象的调用
-- fake timers 只在确实涉及时间行为时使用
-
-### 5. snapshot 只用于大输出，不用于小断言偷懒
-
-如果输出是：
-
-- 长 Markdown 结果
-- 复杂目录树
-- 大段结构化文本
-
-可以考虑 snapshot。
-
-如果只是字符串、布尔值、短数组、短对象，优先直接断言，不要把简单断言藏进 snapshot。
-
-### 6. 默认使用 Node 测试环境
-
-当前仓库的测试主要是 Node / 纯逻辑语境。只有在确实要测 DOM、浏览器 API、Vue 组件渲染时，才考虑引入 `jsdom` 或 `happy-dom`。
-
-不要因为 Vitest 支持多环境，就默认把测试复杂化。
-
-### 7. 配置改动优先保持最小
-
-当前 `vitest.config.ts` 很薄。新增配置前先确认是否真的需要：
-
-- 改 `include` / `exclude`
-- 切环境
-- 加 coverage
-- 调整 alias / setup files
-
-没有明确需求时，不要把通用模板整包搬进当前仓库。
-
-### 8. type testing 只在公共类型契约上使用
-
-当你需要验证公开类型、导出签名或泛型推断时，可以考虑 `expectTypeOf` / `assertType`。
-
-但如果问题只是运行时行为，不要把类型测试混进普通单元测试里增加噪音。
-
-## 分支决策
-
-| 场景 | 处理方式 |
-| ---- | -------- |
-| 给 `utils/` 或 `core/` 新增行为测试 | 同目录新增 `<source>.test.ts`，显式导入 `describe/it/expect` |
-| services 层要隔离文件系统 / Git / 时间 | 用 `vi.mock()`、`vi.spyOn()` 或 fake timers，且只打系统边界 |
-| 输出是长文本或复杂结构 | 评估 snapshot 是否比手写断言更清晰 |
-| 只是简单标量或短对象 | 直接用 `toBe`、`toEqual` 等显式断言 |
-| 需要跑单个文件或筛选测试 | 优先使用 Vitest CLI 过滤，而不是改测试源码 |
-| 需要覆盖率 | 明确开启 coverage 配置，不默认引入 |
-| 需要 DOM / 组件测试 | 先确认是否真的值得引入额外环境和渲染工具 |
-| 需要 test-first 流程指导 | 回到 `tdd` skill |
-
-## 常用起手式
-
-### 基础测试
-
-```ts
-import { describe, expect, it } from 'vitest'
-
-import { subject } from './subject'
-
-describe('subject', () => {
-  it('does something observable', () => {
-    expect(subject()).toBe('value')
-  })
-})
-```
-
-### 带 mock 的测试
-
-```ts
-import { describe, expect, it, vi } from 'vitest'
-
-describe('subject', () => {
-  it('calls external dependency once', () => {
-    const fn = vi.fn()
-
-    subject(fn)
-
-    expect(fn).toHaveBeenCalledTimes(1)
-  })
-})
-```
-
-## 阅读顺序
-
-当问题落在测试工具层时，优先阅读：
-
-1. `vitest.config.ts`
-2. 目标源码旁边的现有 `*.test.ts`
-3. 目标源码本身
-4. 若仍不清楚，再查具体 Vitest API
-
-## 检查清单
-
-在完成测试相关改动前，至少确认：
-
-- 这次问题是 Vitest 工具问题，而不是 TDD 流程问题
-- 测试文件是否沿用当前仓库的显式导入风格
-- mock 是否只打系统边界
-- 是否引入了不必要的环境、setup 或 coverage 配置
-- 测试是否仍然贴着 public interface，而不是内部实现
-
-## 参考映射
-
-这份 skill 提炼自上游 Vitest 文档中的以下几块知识，但已经按当前仓库场景收窄：
-
-- 基础测试 API
-- mocking 与 `vi`
-- snapshots
-- coverage
-- 过滤运行与配置
-- type testing
-
-未默认展开的部分不代表无用，只是当前仓库还没有足够多的场景需要它们成为默认规则。
+Vitest 是由 Vite 驱动的新一代测试框架。它开箱即用地提供兼容 Jest 的 API，并支持原生 ESM、TypeScript 和 JSX。Vitest 与你的 Vite 应用共享相同的配置、transformers、resolvers 和 plugins。
+
+**关键特性：**
+
+- Vite 原生：使用 Vite 的转换流水线，实现类似 HMR 的快速测试更新
+- 兼容 Jest：可直接替换大多数 Jest 测试套件
+- 智能 watch 模式：基于模块图仅重跑受影响的测试
+- 原生支持 ESM、TypeScript 和 JSX，无需额外配置
+- 多线程 workers，支持并行执行测试
+- 内置基于 V8 或 Istanbul 的覆盖率能力
+- 提供快照测试、mock 与 spy 工具
+
+> 该 skill 基于 Vitest 3.x，生成时间为 2026-01-28。
+
+## 核心
+
+| 主题         | 说明                                                             | 参考                                         |
+| ------------ | ---------------------------------------------------------------- | -------------------------------------------- |
+| 配置         | Vitest 与 Vite 配置集成，以及 `defineConfig` 的用法              | [core-config](references/core-config.md)     |
+| CLI          | 命令行接口、命令与参数                                           | [core-cli](references/core-cli.md)           |
+| Test API     | `test`/`it` 函数，以及 `skip`、`only`、`concurrent` 等修饰符     | [core-test-api](references/core-test-api.md) |
+| Describe API | 用于测试分组和嵌套套件的 `describe`/`suite`                      | [core-describe](references/core-describe.md) |
+| Expect API   | 包含 `toBe`、`toEqual`、matchers 和非对称匹配器的断言            | [core-expect](references/core-expect.md)     |
+| Hooks        | `beforeEach`、`afterEach`、`beforeAll`、`afterAll`、`aroundEach` | [core-hooks](references/core-hooks.md)       |
+
+## 功能
+
+| 主题       | 说明                                                   | 参考                                                       |
+| ---------- | ------------------------------------------------------ | ---------------------------------------------------------- |
+| Mocking    | 使用 `vi` 工具 mock 函数、模块、定时器与日期           | [features-mocking](references/features-mocking.md)         |
+| Snapshots  | 使用 `toMatchSnapshot` 和内联快照进行快照测试          | [features-snapshots](references/features-snapshots.md)     |
+| Coverage   | 使用 V8 或 Istanbul provider 生成代码覆盖率            | [features-coverage](references/features-coverage.md)       |
+| 测试上下文 | 测试夹具、`context.expect` 与 `test.extend` 自定义夹具 | [features-context](references/features-context.md)         |
+| 并发       | 并发测试、并行执行与分片                               | [features-concurrency](references/features-concurrency.md) |
+| 过滤       | 按名称、文件模式和标签过滤测试                         | [features-filtering](references/features-filtering.md)     |
+
+## 进阶
+
+| 主题     | 说明                                                      | 参考                                                         |
+| -------- | --------------------------------------------------------- | ------------------------------------------------------------ |
+| vi 工具  | `vi` 助手：mock、`spyOn`、fake timers、hoisted、`waitFor` | [advanced-vi](references/advanced-vi.md)                     |
+| 环境     | 测试环境：node、jsdom、happy-dom 与自定义环境             | [advanced-environments](references/advanced-environments.md) |
+| 类型测试 | 使用 `expectTypeOf` 和 `assertType` 做类型级测试          | [advanced-type-testing](references/advanced-type-testing.md) |
+| Projects | 多项目 workspace，以及按项目区分配置                      | [advanced-projects](references/advanced-projects.md)         |

@@ -1,7 +1,7 @@
 ---
 name: grill-me
-description: "围绕一个计划、设计或改动方向持续追问，直到达成共享理解。适用于用户说 grill me、想压力测试方案、想梳理设计分支、想在动手前先把边界问清楚。"
-argument-hint: "描述你要被追问的方案、计划或设计主题"
+description: '围绕一个计划、设计或改动方向持续追问，直到达成共享理解。适用于用户说 grill me、想压力测试方案、想梳理设计分支、想在动手前先把边界问清楚。'
+argument-hint: '描述你要被追问的方案、计划或设计主题'
 user-invocable: true
 ---
 

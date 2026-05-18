@@ -1,7 +1,7 @@
 ---
 name: handoff
 description: 把当前会话压缩整理成一份交接文档，方便另一个 agent 继续接手。
-argument-hint: '下一个会话准备做什么？'
+argument-hint: '下一个会话准备拿来做什么？'
 ---
 
 # 交接
