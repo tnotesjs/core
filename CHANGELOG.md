@@ -4,7 +4,9 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Fixed
+
+- 修复宿主仓库升级到 `@tnotesjs/core@0.1.25` 后，VitePress 在加载 `vitepress/components/tnotes-config.data.ts` 时无法解析 `../../config/defaultConfig` 的问题：现在发版包会包含该运行时依赖文件。
 
 ## [0.1.25] - 2026-05-29
 
