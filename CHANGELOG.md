@@ -6,6 +6,12 @@
 
 ### Fixed
 
+- 修复宿主仓库升级到 `@tnotesjs/core@0.1.25` 后，VitePress 在加载 `vitepress/components/tnotes-config.data.ts` 时无法解析 `../../config/defaultConfig` 的问题：现在发版包会包含该运行时依赖文件。
+
+## [0.1.25] - 2026-05-29
+
+### Fixed
+
 - 修复 `pnpm tn:dev` 冷启动时侧边栏偶发显示错误、需手动删除 `.vitepress/cache` 才能恢复的问题：`DevCommand` 现在会在启动 VitePress 服务前重新生成 `sidebar.json`，消除 data loader 读到过期数据的启动窗口。
 
 ## [0.1.24] - 2026-05-08
@@ -250,7 +256,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.24...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.25...HEAD
+[0.1.25]: https://github.com/tnotesjs/core/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/tnotesjs/core/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/tnotesjs/core/compare/v0.1.22...v0.1.23
 [0.1.19]: https://github.com/tnotesjs/core/compare/v0.1.18...v0.1.19
