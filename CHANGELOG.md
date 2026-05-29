@@ -4,7 +4,9 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Fixed
+
+- 修复 `pnpm tn:dev` 冷启动时侧边栏偶发显示错误、需手动删除 `.vitepress/cache` 才能恢复的问题：`DevCommand` 现在会在启动 VitePress 服务前重新生成 `sidebar.json`，消除 data loader 读到过期数据的启动窗口。
 
 ## [0.1.24] - 2026-05-08
 
