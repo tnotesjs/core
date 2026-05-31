@@ -6,6 +6,16 @@
 
 ### Fixed
 
+- 修复 Mermaid 流程图三个渲染问题：
+  - 文本截断：VitePress 全局 `line-height` 穿透 SVG foreignObject 导致
+  - 容器高度固定：移除 `max-height: 600px` 与 `overflow: auto`，改为自适应
+  - 拖拽不可用：全屏模式改用 CSS translate 实现自由平移 + 滚轮缩放
+- 按钮组交互改为与 code block 的 `.tn-code-actions` 一致（全屏/复制按钮、hover 显隐、复制反馈）
+
+## [0.1.26] - 2026-05-29
+
+### Fixed
+
 - 修复宿主仓库升级到 `@tnotesjs/core@0.1.25` 后，VitePress 在加载 `vitepress/components/tnotes-config.data.ts` 时无法解析 `../../config/defaultConfig` 的问题：现在发版包会包含该运行时依赖文件。
 
 ## [0.1.25] - 2026-05-29
@@ -256,7 +266,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.25...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.26...HEAD
+[0.1.26]: https://github.com/tnotesjs/core/compare/v0.1.25...v0.1.26
 [0.1.25]: https://github.com/tnotesjs/core/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/tnotesjs/core/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/tnotesjs/core/compare/v0.1.22...v0.1.23
