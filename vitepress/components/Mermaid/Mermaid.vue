@@ -8,45 +8,41 @@ Mermaid 图表组件，用于在页面中渲染 Mermaid 图表
   <div
     ref="mermaidRef"
     class="mermaidWrapper"
-    @mouseenter="showActions = true"
-    @mouseleave="showActions = false"
   >
     <!-- 右上角按钮组（hover 时显示，与 code block 风格一致） -->
     <div
       v-if="!loading && !error"
       class="mermaidActions"
-      :class="{ visible: showActions }"
+      :data-copy-state="copyState"
     >
       <button
-        @click="copySource"
-        class="actionBtn"
-        title="复制源码"
-      >
-        <img :src="icon__copy" alt="复制" class="btnIcon" />
-      </button>
-      <button
         @click="toggleFullscreen"
-        class="actionBtn"
-        title="全屏"
+        class="mermaidActionFullscreen"
+        :title="isFullscreen ? '退出全屏' : '全屏查看图表'"
       >
         <img
           v-if="isFullscreen"
           :src="icon__fullscreen_exit"
           alt="退出全屏"
-          class="btnIcon"
         />
         <img
           v-else
           :src="icon__fullscreen"
           alt="全屏"
-          class="btnIcon"
         />
+      </button>
+      <button
+        @click="copySource"
+        class="mermaidActionCopy"
+        :data-copy-state="copyState"
+        :title="copyTitle"
+      >
+        <img :src="copyIcon" alt="复制" />
       </button>
     </div>
 
     <!-- 图表容器 -->
     <div
-      ref="containerRef"
       class="mermaidContainer"
       :class="{ fullscreen: isFullscreen }"
       @mousedown="startDrag"
@@ -66,6 +62,8 @@ Mermaid 图表组件，用于在页面中渲染 Mermaid 图表
         v-show="!loading && !error"
         ref="diagramRef"
         :class="['mermaidDiagram', props.class]"
+        :style="diagramTransform ? { transform: diagramTransform, transformOrigin: 'top left' } : undefined"
+        @wheel="handleWheel"
       ></div>
     </div>
   </div>
@@ -73,10 +71,11 @@ Mermaid 图表组件，用于在页面中渲染 Mermaid 图表
 
 <script setup lang="ts">
 import mermaid from 'mermaid'
-import { nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 
 import {
-  icon__copy,
+  icon__check,
+  icon__clipboard,
   icon__fullscreen,
   icon__fullscreen_exit,
 } from '../../assets/icons'
@@ -97,52 +96,94 @@ const props = defineProps({
 })
 
 const mermaidRef = ref<HTMLElement | null>(null)
-const containerRef = ref<HTMLElement | null>(null)
 const diagramRef = ref<HTMLElement | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const isFullscreen = ref(false)
-const showActions = ref(false)
 
 // ===================================
 // #region 复制源码
 // ===================================
+type CopyState = 'idle' | 'copied' | 'failed'
+const COPY_RESET_DELAY = 1000
+
+const copyState = ref<CopyState>('idle')
+const copyIcon = computed(() =>
+  copyState.value === 'copied' ? icon__check : icon__clipboard,
+)
+const copyTitle = computed(() => {
+  if (copyState.value === 'copied') return '已复制'
+  if (copyState.value === 'failed') return '复制失败'
+  return '复制源码'
+})
+
+let copyResetTimer: ReturnType<typeof setTimeout> | null = null
+
 function copySource() {
   const text = decodeURIComponent(props.graph)
-  navigator.clipboard.writeText(text).catch(() => {
-    // fallback: 静默忽略
-  })
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      copyState.value = 'copied'
+    })
+    .catch(() => {
+      copyState.value = 'failed'
+    })
+    .finally(() => {
+      if (copyResetTimer) clearTimeout(copyResetTimer)
+      copyResetTimer = setTimeout(() => {
+        copyState.value = 'idle'
+      }, COPY_RESET_DELAY)
+    })
 }
 // #endregion
 
 // ===================================
-// #region 拖拽平移（仅全屏模式）
+// #region 全屏模式：拖拽平移 + Ctrl+滚轮缩放
 // ===================================
+const scale = ref(1)
+const panX = ref(0)
+const panY = ref(0)
 const dragging = ref(false)
 let dragStartX = 0
 let dragStartY = 0
-let scrollStartX = 0
-let scrollStartY = 0
+let panStartX = 0
+let panStartY = 0
+
+const MIN_SCALE = 0.1
+const MAX_SCALE = 5
+const SCALE_STEP = 0.01
+
+const diagramTransform = computed(() =>
+  isFullscreen.value
+    ? `translate(${panX.value}px, ${panY.value}px) scale(${scale.value})`
+    : undefined,
+)
 
 function startDrag(e: MouseEvent) {
-  if (!isFullscreen.value || !containerRef.value) return
+  if (!isFullscreen.value) return
   dragging.value = true
   dragStartX = e.clientX
   dragStartY = e.clientY
-  scrollStartX = containerRef.value.scrollLeft
-  scrollStartY = containerRef.value.scrollTop
+  panStartX = panX.value
+  panStartY = panY.value
 }
 
 function onDrag(e: MouseEvent) {
-  if (!dragging.value || !containerRef.value) return
-  const dx = e.clientX - dragStartX
-  const dy = e.clientY - dragStartY
-  containerRef.value.scrollLeft = scrollStartX - dx
-  containerRef.value.scrollTop = scrollStartY - dy
+  if (!dragging.value) return
+  panX.value = panStartX + (e.clientX - dragStartX)
+  panY.value = panStartY + (e.clientY - dragStartY)
 }
 
 function endDrag() {
   dragging.value = false
+}
+
+function handleWheel(e: WheelEvent) {
+  if (!isFullscreen.value) return
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -SCALE_STEP : SCALE_STEP
+  scale.value = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale.value + delta))
 }
 // #endregion
 
@@ -165,6 +206,11 @@ function toggleFullscreen() {
 
 function handleFullscreenChange() {
   isFullscreen.value = !!document.fullscreenElement
+  if (!isFullscreen.value) {
+    scale.value = 1
+    panX.value = 0
+    panY.value = 0
+  }
 }
 // #endregion
 
@@ -311,47 +357,101 @@ watch(
 /* ===================================== */
 
 /* ===================================== */
-/* #region 右上角按钮组（hover 显示，与 code block 一致） */
+/* #region 右上角按钮组（与 code block 的 .tn-code-actions 风格一致） */
 /* ===================================== */
 .mermaidActions {
   position: absolute;
   top: 8px;
   right: 8px;
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
   z-index: 10;
-
-  &.visible {
-    opacity: 1;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px;
+  background-color: color-mix(in srgb, var(--vp-code-block-bg) 92%, transparent);
+  border: 0.1px solid var(--vp-c-divider);
+  border-radius: 7px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.actionBtn {
+.mermaidWrapper:hover .mermaidActions,
+.mermaidActions:hover,
+.mermaidActions:focus-within,
+.mermaidActions[data-copy-state='copied'],
+.mermaidActions[data-copy-state='failed'] {
+  opacity: 1;
+}
+
+.mermaidActionCopy,
+.mermaidActionFullscreen {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  background: var(--vp-c-bg);
-  border: 1px solid var(--vp-c-divider);
+  background: transparent;
+  border: none;
   border-radius: 4px;
   cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
 
   &:hover {
-    opacity: 1;
+    background-color: var(--vp-c-default-soft);
+    color: var(--vp-c-brand-1);
+    transform: scale(1.05);
   }
 
-  .btnIcon {
+  &:active {
+    transform: scale(0.95);
+  }
+
+  img {
     width: 16px;
     height: 16px;
-    display: block;
-    pointer-events: none;
   }
+}
+
+/* 与 .tn-code-action-copy 完全一致的复制反馈 */
+.mermaidActionCopy {
+  position: relative;
+}
+
+.mermaidActionCopy[data-copy-state='copied'] {
+  background-color: var(--vp-c-green-soft);
+}
+
+.mermaidActionCopy[data-copy-state='failed'] {
+  background-color: var(--vp-c-danger-soft);
+}
+
+.mermaidActionCopy::after {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 6px);
+  padding: 4px 7px;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-elv);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  box-shadow: var(--vp-shadow-2);
+  content: attr(title);
+  font-size: 12px;
+  line-height: 18px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(2px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  white-space: nowrap;
+}
+
+.mermaidActionCopy[data-copy-state='copied']::after,
+.mermaidActionCopy[data-copy-state='failed']::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
 }
 /* ===================================== */
 /* #endregion 右上角按钮组               */
@@ -363,7 +463,6 @@ watch(
 .mermaidContainer {
   position: relative;
   min-height: 200px;
-  overflow: auto;
   padding: 20px;
   background: var(--vp-c-bg);
 
@@ -373,33 +472,14 @@ watch(
     left: 0;
     right: 0;
     bottom: 0;
-    max-height: none;
     z-index: 9999;
     background: var(--vp-c-bg);
     padding: 40px;
+    overflow: hidden;
     cursor: grab;
 
     &:active {
       cursor: grabbing;
-    }
-  }
-
-  /* 自定义滚动条 */
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--vp-c-bg-soft);
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--vp-c-divider);
-    border-radius: 4px;
-
-    &:hover {
-      background: var(--vp-c-text-3);
     }
   }
 }
@@ -465,11 +545,15 @@ watch(
 /* #region 图表样式                      */
 /* ===================================== */
 .mermaidDiagram {
-  display: inline-block;
-
   :global(svg) {
     max-width: 100%;
     height: auto;
+  }
+
+  // 重置 VitePress 全局 line-height，避免穿透 SVG foreignObject 导致
+  // <p> 实际渲染高度超过 Mermaid 计算值，引发文本截断
+  :global(svg .label p) {
+    line-height: 1.5;
   }
 }
 /* ===================================== */
@@ -495,11 +579,12 @@ watch(
 /* #region 响应式设计                    */
 /* ===================================== */
 @media (max-width: 768px) {
-  .actionBtn {
-    width: 28px;
-    height: 28px;
+  .mermaidActionCopy,
+  .mermaidActionFullscreen {
+    width: 24px;
+    height: 24px;
 
-    .btnIcon {
+    img {
       width: 14px;
       height: 14px;
     }

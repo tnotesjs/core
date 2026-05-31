@@ -4,7 +4,13 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Fixed
+
+- 修复 Mermaid 流程图三个渲染问题：
+  - 文本截断：VitePress 全局 `line-height` 穿透 SVG foreignObject 导致
+  - 容器高度固定：移除 `max-height: 600px` 与 `overflow: auto`，改为自适应
+  - 拖拽不可用：全屏模式改用 CSS translate 实现自由平移 + 滚轮缩放
+- 按钮组交互改为与 code block 的 `.tn-code-actions` 一致（全屏/复制按钮、hover 显隐、复制反馈）
 
 ## [0.1.26] - 2026-05-29
 
