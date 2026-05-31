@@ -8,47 +8,26 @@ Mermaid 图表组件，用于在页面中渲染 Mermaid 图表
   <div
     ref="mermaidRef"
     class="mermaidWrapper"
-    @mouseenter="showToolbar = true"
-    @mouseleave="showToolbar = false"
+    @mouseenter="showActions = true"
+    @mouseleave="showActions = false"
   >
-    <!-- 工具栏 -->
+    <!-- 右上角按钮组（hover 时显示，与 code block 风格一致） -->
     <div
       v-if="!loading && !error"
-      class="toolbar"
-      :class="{ visible: showToolbar }"
+      class="mermaidActions"
+      :class="{ visible: showActions }"
     >
       <button
-        @click="zoomIn"
-        class="toolbarBtn iconBtn"
-        title="放大 (Ctrl + +)"
+        @click="copySource"
+        class="actionBtn"
+        title="复制源码"
       >
-        <img :src="icon__zoom_in" alt="放大" class="btnIcon" />
-      </button>
-      <button
-        @click="zoomOut"
-        class="toolbarBtn iconBtn"
-        title="缩小 (Ctrl + -)"
-      >
-        <img :src="icon__zoom_out" alt="缩小" class="btnIcon" />
-      </button>
-      <button
-        @click="resetZoom"
-        class="toolbarBtn iconBtn"
-        title="重置缩放 (Ctrl + 0)"
-      >
-        <img :src="icon__zoom_reset" alt="重置" class="btnIcon" />
-      </button>
-      <button
-        @click="fitToScreen"
-        class="toolbarBtn iconBtn"
-        title="适应屏幕"
-      >
-        <img :src="icon__zoom_fit" alt="适应屏幕" class="btnIcon" />
+        <img :src="icon__copy" alt="复制" class="btnIcon" />
       </button>
       <button
         @click="toggleFullscreen"
-        class="toolbarBtn iconBtn"
-        title="全屏 (F11)"
+        class="actionBtn"
+        title="全屏"
       >
         <img
           v-if="isFullscreen"
@@ -63,14 +42,17 @@ Mermaid 图表组件，用于在页面中渲染 Mermaid 图表
           class="btnIcon"
         />
       </button>
-      <span class="zoomLevel">{{ Math.round(scale * 100) }}%</span>
     </div>
 
     <!-- 图表容器 -->
     <div
+      ref="containerRef"
       class="mermaidContainer"
       :class="{ fullscreen: isFullscreen }"
-      @click="handleContainerClick"
+      @mousedown="startDrag"
+      @mousemove="onDrag"
+      @mouseup="endDrag"
+      @mouseleave="endDrag"
     >
       <div v-if="loading" class="mermaidLoading">
         <div class="spinner"></div>
@@ -84,11 +66,6 @@ Mermaid 图表组件，用于在页面中渲染 Mermaid 图表
         v-show="!loading && !error"
         ref="diagramRef"
         :class="['mermaidDiagram', props.class]"
-        :style="{
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-        }"
-        @wheel.prevent="handleWheel"
       ></div>
     </div>
   </div>
@@ -99,10 +76,7 @@ import mermaid from 'mermaid'
 import { nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 
 import {
-  icon__zoom_in,
-  icon__zoom_out,
-  icon__zoom_reset,
-  icon__zoom_fit,
+  icon__copy,
   icon__fullscreen,
   icon__fullscreen_exit,
 } from '../../assets/icons'
@@ -123,74 +97,52 @@ const props = defineProps({
 })
 
 const mermaidRef = ref<HTMLElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
 const diagramRef = ref<HTMLElement | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
-const scale = ref(1)
 const isFullscreen = ref(false)
-const showToolbar = ref(false)
+const showActions = ref(false)
 
 // ===================================
-// #region 工具栏显示控制
+// #region 复制源码
 // ===================================
-let hideTimer: ReturnType<typeof setTimeout> | null = null
-
-function handleContainerClick() {
-  // 移动端点击切换工具栏显示
-  if (window.innerWidth <= 768) {
-    showToolbar.value = !showToolbar.value
-
-    // 3秒后自动隐藏
-    if (showToolbar.value) {
-      if (hideTimer) clearTimeout(hideTimer)
-      hideTimer = setTimeout(() => {
-        showToolbar.value = false
-      }, 3000)
-    }
-  }
+function copySource() {
+  const text = decodeURIComponent(props.graph)
+  navigator.clipboard.writeText(text).catch(() => {
+    // fallback: 静默忽略
+  })
 }
 // #endregion
 
 // ===================================
-// #region 缩放控制
+// #region 拖拽平移（仅全屏模式）
 // ===================================
-const MIN_SCALE = 0.1
-const MAX_SCALE = 5
-const SCALE_STEP = 0.1
+const dragging = ref(false)
+let dragStartX = 0
+let dragStartY = 0
+let scrollStartX = 0
+let scrollStartY = 0
 
-function zoomIn() {
-  scale.value = Math.min(scale.value + SCALE_STEP, MAX_SCALE)
+function startDrag(e: MouseEvent) {
+  if (!isFullscreen.value || !containerRef.value) return
+  dragging.value = true
+  dragStartX = e.clientX
+  dragStartY = e.clientY
+  scrollStartX = containerRef.value.scrollLeft
+  scrollStartY = containerRef.value.scrollTop
 }
 
-function zoomOut() {
-  scale.value = Math.max(scale.value - SCALE_STEP, MIN_SCALE)
+function onDrag(e: MouseEvent) {
+  if (!dragging.value || !containerRef.value) return
+  const dx = e.clientX - dragStartX
+  const dy = e.clientY - dragStartY
+  containerRef.value.scrollLeft = scrollStartX - dx
+  containerRef.value.scrollTop = scrollStartY - dy
 }
 
-function resetZoom() {
-  scale.value = 1
-}
-
-function fitToScreen() {
-  if (!diagramRef.value || !mermaidRef.value) return
-
-  const svg = diagramRef.value.querySelector('svg')
-  if (!svg) return
-
-  const containerRect = mermaidRef.value.getBoundingClientRect()
-  const svgRect = svg.getBoundingClientRect()
-
-  const scaleX = (containerRect.width * 0.9) / svgRect.width
-  const scaleY = (containerRect.height * 0.9) / svgRect.height
-
-  scale.value = Math.min(scaleX, scaleY, 1)
-}
-
-function handleWheel(e: WheelEvent) {
-  if (e.ctrlKey || e.metaKey) {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? -SCALE_STEP : SCALE_STEP
-    scale.value = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale.value + delta))
-  }
+function endDrag() {
+  dragging.value = false
 }
 // #endregion
 
@@ -213,30 +165,6 @@ function toggleFullscreen() {
 
 function handleFullscreenChange() {
   isFullscreen.value = !!document.fullscreenElement
-}
-// #endregion
-
-// ===================================
-// #region 键盘快捷键
-// ===================================
-function handleKeydown(e: KeyboardEvent) {
-  if (e.ctrlKey || e.metaKey) {
-    if (e.key === '=' || e.key === '+') {
-      e.preventDefault()
-      zoomIn()
-    } else if (e.key === '-' || e.key === '_') {
-      e.preventDefault()
-      zoomOut()
-    } else if (e.key === '0') {
-      e.preventDefault()
-      resetZoom()
-    }
-  } else if (e.key === 'F11') {
-    e.preventDefault()
-    toggleFullscreen()
-  } else if (e.key === 'Escape' && isFullscreen.value) {
-    toggleFullscreen()
-  }
 }
 // #endregion
 
@@ -346,26 +274,21 @@ onMounted(async () => {
   // 观察主题变化
   const themeObserver = observeTheme()
 
-  // 监听键盘事件
-  document.addEventListener('keydown', handleKeydown)
-
   // 监听全屏变化
   document.addEventListener('fullscreenchange', handleFullscreenChange)
 
   // 清理函数
   onBeforeUnmount(() => {
     themeObserver.disconnect()
-    document.removeEventListener('keydown', handleKeydown)
     document.removeEventListener('fullscreenchange', handleFullscreenChange)
   })
 })
 
-// 当图表内容变化时重新渲染并重置缩放
+// 当图表内容变化时重新渲染
 watch(
   () => props.graph,
   () => {
     renderDiagram()
-    resetZoom()
   }
 )
 // #endregion
@@ -388,60 +311,40 @@ watch(
 /* ===================================== */
 
 /* ===================================== */
-/* #region 工具栏                        */
+/* #region 右上角按钮组（hover 显示，与 code block 一致） */
 /* ===================================== */
-.toolbar {
+.mermaidActions {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 8px;
+  right: 8px;
   display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 8px;
-  background: var(--vp-c-bg);
-  border-bottom: 1px solid var(--vp-c-divider);
-  flex-wrap: wrap;
-  transform: translateY(-100%);
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  gap: 4px;
   opacity: 0;
+  transition: opacity 0.2s ease;
   z-index: 10;
-  pointer-events: none;
 
   &.visible {
-    transform: translateY(0);
     opacity: 1;
-    pointer-events: auto;
   }
 }
 
-.toolbarBtn {
+.actionBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  font-size: 12px;
-  background: transparent;
-  border: none;
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  opacity: 0.6;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 
   &:hover {
-    background: var(--vp-c-brand-soft);
     opacity: 1;
   }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.iconBtn {
-  padding: 4px;
 
   .btnIcon {
     width: 16px;
@@ -450,17 +353,8 @@ watch(
     pointer-events: none;
   }
 }
-
-.zoomLevel {
-  margin-left: auto;
-  padding: 0 6px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--vp-c-text-3);
-  user-select: none;
-}
 /* ===================================== */
-/* #endregion 工具栏                     */
+/* #endregion 右上角按钮组               */
 /* ===================================== */
 
 /* ===================================== */
@@ -469,11 +363,7 @@ watch(
 .mermaidContainer {
   position: relative;
   min-height: 200px;
-  max-height: 600px;
   overflow: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 20px;
   background: var(--vp-c-bg);
 
@@ -487,6 +377,11 @@ watch(
     z-index: 9999;
     background: var(--vp-c-bg);
     padding: 40px;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
   }
 
   /* 自定义滚动条 */
@@ -570,16 +465,7 @@ watch(
 /* #region 图表样式                      */
 /* ===================================== */
 .mermaidDiagram {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease;
-  cursor: grab;
-
-  &:active {
-    cursor: grabbing;
-  }
+  display: inline-block;
 
   :global(svg) {
     max-width: 100%;
@@ -598,10 +484,6 @@ watch(
   border-color: var(--vp-c-divider);
 }
 
-:global(html.dark) .toolbar {
-  background: var(--vp-code-block-bg);
-}
-
 :global(html.dark) .mermaidContainer {
   background: var(--vp-code-block-bg);
 }
@@ -613,17 +495,9 @@ watch(
 /* #region 响应式设计                    */
 /* ===================================== */
 @media (max-width: 768px) {
-  .toolbar {
-    padding: 4px 6px;
-  }
-
-  .toolbarBtn {
-    width: 24px;
-    height: 24px;
-  }
-
-  .iconBtn {
-    padding: 3px;
+  .actionBtn {
+    width: 28px;
+    height: 28px;
 
     .btnIcon {
       width: 14px;
@@ -631,13 +505,8 @@ watch(
     }
   }
 
-  .zoomLevel {
-    font-size: 10px;
-  }
-
   .mermaidContainer {
     padding: 12px;
-    max-height: 400px;
 
     &.fullscreen {
       padding: 20px;
