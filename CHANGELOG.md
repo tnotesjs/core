@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.1.27] - 2026-05-31
+
 ### Fixed
 
 - 修复 Mermaid 流程图三个渲染问题：
@@ -266,7 +270,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.26...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.27...HEAD
+[0.1.27]: https://github.com/tnotesjs/core/compare/v0.1.26...v0.1.27
 [0.1.26]: https://github.com/tnotesjs/core/compare/v0.1.25...v0.1.26
 [0.1.25]: https://github.com/tnotesjs/core/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/tnotesjs/core/compare/v0.1.23...v0.1.24
