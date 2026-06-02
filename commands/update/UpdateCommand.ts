@@ -105,29 +105,18 @@ export class UpdateCommand extends BaseCommand {
       const monthStr = String(now.getMonth() + 1).padStart(2, '0')
       const currentKey = `${yearShort}.${monthStr}`
 
-      // 4. 更新完成数量，并补齐缺失的中间月份
+      // 4. 更新完成数量，并补齐所有相邻月份之间的缺失
       const existing = { ...(config.root_item.completed_notes_count || {}) }
-      const existingKeys = Object.keys(existing).sort()
+      const _countsBeforeFix = Object.keys(existing).length
 
-      if (existingKeys.length > 0) {
-        const lastExistingKey = existingKeys[existingKeys.length - 1]
-        const lastExistingValue = existing[lastExistingKey] ?? 0
-
-        // 补齐从最后已有 key 到 currentKey 之间的所有缺失月份
-        const missingKeys = generateMissingMonthKeys(lastExistingKey, currentKey)
-        for (const key of missingKeys) {
-          existing[key] = lastExistingValue
-        }
-      }
-
-      // 设置当前月份的真实值
       existing[currentKey] = completedCount
+      const fixed = fillMissingMonthGaps(existing, currentKey)
 
       // 5. 更新 root_item
       // 更新 root_item（不更新时间戳，由 tn:push 时 fix-timestamps 统一管理）
       config.root_item = {
         ...config.root_item,
-        completed_notes_count: existing,
+        completed_notes_count: fixed,
       }
 
       // 删除旧字段（向后兼容）
@@ -137,7 +126,7 @@ export class UpdateCommand extends BaseCommand {
       writeFileSync(ROOT_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8')
 
       if (!this.quiet) {
-        const filledCount = Object.keys(existing).length - existingKeys.length
+        const filledCount = Object.keys(fixed).length - _countsBeforeFix
         const filledMsg = filledCount > 0 ? `，补齐 ${filledCount} 个缺失月份` : ''
         this.logger.success(
           `root_item 配置已更新: ${currentKey} 月完成 ${completedCount} 篇笔记${filledMsg}`,
@@ -157,7 +146,42 @@ export class UpdateCommand extends BaseCommand {
 }
 
 /**
- * 生成两个月份键之间的所有缺失月份键（不含两端）
+ * 补齐 completed_notes_count 中所有相邻月份之间的缺口
+ * 遍历排序后的所有 key，发现非连续的月份就插入前一个月份的值
+ */
+function fillMissingMonthGaps(
+  counts: Record<string, number>,
+  currentKey: string,
+): Record<string, number> {
+  const existingKeys = Object.keys(counts).sort()
+  const result: Record<string, number> = {}
+
+  // 将 currentKey 加入集合以确保覆盖到当前月
+  const keySet = new Set(existingKeys)
+  keySet.add(currentKey)
+  const allKeys = Array.from(keySet).sort()
+
+  let prevValue = 0
+  let lastKey: string | null = null
+
+  for (const key of allKeys) {
+    if (lastKey !== null) {
+      // 检查 lastKey 和 key 之间是否有缺口
+      const missing = generateMissingMonthKeys(lastKey, key)
+      for (const midKey of missing) {
+        result[midKey] = prevValue
+      }
+    }
+    result[key] = counts[key] ?? prevValue
+    prevValue = result[key]
+    lastKey = key
+  }
+
+  return result
+}
+
+/**
+ * 生成两个 YY.MM 格式月份键之间的所有缺失月份键（不含两端）
  *
  * @example
  *   generateMissingMonthKeys('26.04', '26.06') // => ['26.05']
@@ -165,7 +189,6 @@ export class UpdateCommand extends BaseCommand {
  *   generateMissingMonthKeys('26.04', '26.04') // => []
  */
 function generateMissingMonthKeys(fromKey: string, toKey: string): string[] {
-  // 解析 YY.MM 格式
   const parseKey = (key: string) => {
     const [yy, mm] = key.split('.').map(Number)
     return { year: 2000 + yy, month: mm }
@@ -178,13 +201,9 @@ function generateMissingMonthKeys(fromKey: string, toKey: string): string[] {
   let year = from.year
   let month = from.month
 
-  // 从 from 的下一个月开始，直到 to 的前一个月
   while (true) {
     month++
-    if (month > 12) {
-      month = 1
-      year++
-    }
+    if (month > 12) { month = 1; year++ }
 
     const shortYear = String(year).slice(-2)
     const paddedMonth = String(month).padStart(2, '0')
