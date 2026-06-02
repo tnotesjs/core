@@ -4,14 +4,15 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+### Fixed
+
+- 修复 `updateRootItem()` 在月初无 deploy 时 `completed_notes_count` 缺失中间月份的问题，
+  现在会自动补齐从最后已有月份到当前月份之间的所有缺口。
 
 ## [0.1.27] - 2026-05-31
 
 ### Fixed
 
-- 修复 `updateRootItem()` 在月初无 deploy 时 `completed_notes_count` 缺失中间月份的问题，
-  现在会自动补齐从最后已有月份到当前月份之间的所有缺口。
 - 修复 Mermaid 流程图三个渲染问题：
   - 文本截断：VitePress 全局 `line-height` 穿透 SVG foreignObject 导致
   - 容器高度固定：移除 `max-height: 600px` 与 `overflow: auto`，改为自适应
