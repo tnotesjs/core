@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.1.28] - 2026-06-02
+
 ### Fixed
 
 - 修复 `updateRootItem()` 在月初无 deploy 时 `completed_notes_count` 缺失中间月份的问题，
