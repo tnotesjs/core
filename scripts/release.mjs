@@ -58,6 +58,32 @@ function verifyDistArtifacts() {
   }
 }
 
+function verifyPublishSurface() {
+  const required = [
+    'services/toc/service.ts',
+    'utils/tocNodeId.ts',
+    'config/ConfigManager.ts',
+    'core/NoteManager.ts',
+  ]
+  const missing = required.filter((p) => !existsSync(p))
+  if (missing.length) {
+    fail(`npm 发布面缺失（vitepress 源码依赖）：\n${missing.join('\n')}`)
+  }
+
+  const packList = runCapture('npm pack --dry-run --json')
+  const tarball = JSON.parse(packList)
+  const files = tarball[0]?.files?.map((f) => f.path) ?? []
+  const mustInclude = [
+    'package/dist/vitepress/config/index.js',
+    'package/services/toc/service.ts',
+    'package/utils/tocNodeId.ts',
+  ]
+  const missingInPack = mustInclude.filter((p) => !files.includes(p))
+  if (missingInPack.length) {
+    fail(`npm pack 未包含必要文件：\n${missingInPack.join('\n')}`)
+  }
+}
+
 // ── 1. 检查工作区 ──────────────────────────────────────────
 const status = runCapture('git status --porcelain')
 if (status) {
@@ -140,6 +166,7 @@ info(`已提交并创建 tag v${newVersion}`)
 const answer = await ask(`\n🚀 是否推送到远端并发布到 npm？(y/n) `)
 if (answer === 'y' || answer === 'yes') {
   verifyDistArtifacts()
+  verifyPublishSurface()
   run('git push')
   run(`git push origin v${newVersion}`)
   run('npm publish --access public')

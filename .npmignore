@@ -1,10 +1,6 @@
 # Source files (CLI is compiled to dist/)
 src/
 commands/
-config/
-core/
-services/
-utils/
 index.ts
 
 # Build config

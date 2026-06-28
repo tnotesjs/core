@@ -22,7 +22,10 @@
     "./vitepress/*": "./vitepress/*"
   },
   "files": [
-    "config/defaultConfig.ts",
+    "config/",
+    "core/",
+    "services/",
+    "utils/",
     "dist/",
     "templates/",
     "vitepress/",
