@@ -43,6 +43,10 @@ function fail(msg) {
   process.exit(1)
 }
 
+function info(msg) {
+  console.log(`\n✅ ${msg}`)
+}
+
 function verifyDistArtifacts() {
   const required = [
     'dist/cli/index.js',
