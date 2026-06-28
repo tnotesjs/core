@@ -30,6 +30,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "pnpm build",
     "build:check": "tsc --noEmit -p tsconfig.build.json",
     "typecheck": "vue-tsc --noEmit -p tsconfig.build.json",
     "dev": "tsup --watch",

@@ -22,7 +22,7 @@
  */
 
 import { execSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { createInterface } from 'node:readline'
 
 const run = (cmd) => execSync(cmd, { stdio: 'inherit', encoding: 'utf-8' })
@@ -43,8 +43,15 @@ function fail(msg) {
   process.exit(1)
 }
 
-function info(msg) {
-  console.log(`\n✅ ${msg}`)
+function verifyDistArtifacts() {
+  const required = [
+    'dist/cli/index.js',
+    'dist/vitepress/config/index.js',
+  ]
+  const missing = required.filter((p) => !existsSync(p))
+  if (missing.length) {
+    fail(`dist 产物缺失，无法发布：\n${missing.join('\n')}`)
+  }
 }
 
 // ── 1. 检查工作区 ──────────────────────────────────────────
@@ -97,6 +104,7 @@ info('类型检查通过')
 // ── 5. 构建 ────────────────────────────────────────────────
 console.log('\n🔨 构建...')
 run('pnpm build')
+verifyDistArtifacts()
 info('构建成功')
 
 // ── 6. 更新 package.json ───────────────────────────────────
@@ -127,6 +135,7 @@ info(`已提交并创建 tag v${newVersion}`)
 // ── 9. 确认推送 + 发布 ────────────────────────────────────
 const answer = await ask(`\n🚀 是否推送到远端并发布到 npm？(y/n) `)
 if (answer === 'y' || answer === 'yes') {
+  verifyDistArtifacts()
   run('git push')
   run(`git push origin v${newVersion}`)
   run('npm publish --access public')
