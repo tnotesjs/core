@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.2.1] - 2026-06-28
+
 ### Fixed
 
 - 修复 `0.2.0` npm 包未包含 `dist/` 编译产物（`dist/cli/index.js`、`dist/vitepress/config/index.js`），导致宿主仓库 `pnpm tn:dev` 报 `ERR_MODULE_NOT_FOUND`。发版脚本与 `prepublishOnly` 现会在发布前校验 dist 产物。
