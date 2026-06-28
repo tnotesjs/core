@@ -4,26 +4,34 @@ vitepress/components/Layout/SidebarItems.vue
 
 <template>
   <template v-for="item in items" :key="getItemKey(item)">
-    <!-- 只有在不超过最大层级时才渲染组 -->
     <div
-      v-if="hasChildren(item) && depth < maxDepth - 1"
+      v-if="item.isDragPlaceholder"
+      class="sidebar-row is-drag-placeholder"
+      :style="getNodeStyle(depth)"
+      aria-hidden="true"
+    />
+
+    <!-- 纯目录行（无 link） -->
+    <div
+      v-else-if="isPureFolder(item)"
       class="group"
-      :class="getDensityClass()"
+      :class="[{ 'is-drag-source-slot': item.isDragSourceSlot }]"
     >
       <div
-        class="sidebar-row group-row"
-        :class="[getGroupDropClass(item), getDensityClass()]"
+        class="sidebar-row group-row folder-row"
+        :class="[{ 'is-drag-source-slot': item.isDragSourceSlot }]"
         :style="getNodeStyle(depth)"
-        :draggable="isDev"
-        @dragstart="onGroupDragStart($event, item)"
-        @dragend="clearDropTarget"
-        @dragover.prevent.stop="onGroupDragOver($event, item)"
-        @drop.stop="onGroupDrop($event, item)"
+        :data-folder-path="serializeFolderPath(item)"
+        :data-toc-line-index="item.tocLineIndex"
+        :data-node-id="getNodeId(item)"
+        @pointerdown="onFolderRowPointerDown($event, item)"
       >
         <button
-          class="group-title row-main"
-          :class="`group-title-level-${depth}`"
-          @click="toggleItem(item)"
+          v-if="hasChildren(item)"
+          class="group-arrow-btn"
+          type="button"
+          :title="item.collapsed ? '展开' : '折叠'"
+          @click.stop="toggleItem(item)"
         >
           <span class="arrow" :class="{ collapsed: item.collapsed }">
             <img
@@ -33,44 +41,55 @@ vitepress/components/Layout/SidebarItems.vue
               alt=""
             />
           </span>
+        </button>
+        <span v-else class="group-arrow-spacer" aria-hidden="true" />
 
+        <button
+          type="button"
+          class="group-title row-main"
+          @click.stop="onGroupTitleClick(item)"
+        >
           <span class="group-title-text">{{ item.text }}</span>
         </button>
 
         <div
           v-if="isDev"
           class="row-actions"
-          :class="{ 'menu-open': isGroupMenuOpen(item) }"
+          :class="{ 'menu-open': isGroupMenuOpen(item) || isFolderMenuOpen(item) }"
           @click.stop
         >
           <button
             class="action-btn menu-trigger"
             title="更多操作"
             type="button"
-            @click="toggleMenu(getGroupMenuKey(item, 'more'))"
+            @click="toggleMenu(getFolderMenuKey(item, 'more'))"
           >
             <span class="ellipsis">...</span>
           </button>
 
           <div
-            v-if="isMenuOpen(getGroupMenuKey(item, 'more'))"
+            v-if="isMenuOpen(getFolderMenuKey(item, 'more'))"
             class="action-menu"
           >
-            <button class="menu-item" type="button" @click="renameGroup(item)">
-              重命名目录
+            <button
+              class="menu-item"
+              type="button"
+              @click="renameFolder(item)"
+            >
+              重命名
             </button>
             <button
               class="menu-item danger"
               type="button"
-              @click="deleteGroup(item)"
+              @click="deleteFolder(item)"
             >
-              删除目录
+              删除分组
             </button>
           </div>
 
           <button
             class="action-btn menu-trigger add-trigger"
-            title="新增"
+            title="新增子笔记"
             type="button"
             @click="toggleMenu(getGroupMenuKey(item, 'add'))"
           >
@@ -95,6 +114,159 @@ vitepress/components/Layout/SidebarItems.vue
             >
               新增多篇笔记
             </button>
+            <button
+              class="menu-item"
+              type="button"
+              @click="createFolderInGroup(item)"
+            >
+              新建子目录
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-show="!item.collapsed" class="group-items">
+        <SidebarItems
+          :items="getChildItems(item)"
+          :depth="depth + 1"
+          :max-depth="maxDepth"
+          :show-note-id="showNoteId"
+          :base="base"
+          :current-path="currentPath"
+          :item-depth="depth + 1"
+          :group-path="getFolderPath(item)"
+          :is-dev="isDev"
+          :done-prefix="donePrefix"
+          :undone-prefix="undonePrefix"
+          :drag-context="getSidebarDrag()"
+          @create-note-in-group="$emit('create-note-in-group', $event)"
+          @create-notes-in-group="$emit('create-notes-in-group', $event)"
+          @create-folder-in-group="$emit('create-folder-in-group', $event)"
+          @rename-folder="$emit('rename-folder', $event)"
+          @delete-entry="$emit('delete-entry', $event)"
+          @rename-note="$emit('rename-note', $event)"
+          @delete-note="$emit('delete-note', $event)"
+          @create-note-around="$emit('create-note-around', $event)"
+          @open-note-about="$emit('open-note-about', $event)"
+        />
+      </div>
+    </div>
+
+    <!-- 父笔记行（legacy：有 link 且有子项） -->
+    <div
+      v-else-if="hasChildren(item)"
+      class="group"
+      :class="[{ 'is-drag-source-slot': item.isDragSourceSlot }]"
+    >
+      <div
+        class="sidebar-row group-row parent-note-row"
+        :class="[{ 'is-drag-source-slot': item.isDragSourceSlot }]"
+        :style="getNodeStyle(depth)"
+        :data-note-id="extractNoteIdFromLink(item.link) || undefined"
+        :data-toc-line-index="item.tocLineIndex"
+        :data-node-id="getNodeId(item)"
+        @pointerdown="onRowPointerDown($event, item)"
+      >
+        <button
+          class="group-arrow-btn"
+          type="button"
+          :title="item.collapsed ? '展开' : '折叠'"
+          @click.stop="toggleItem(item)"
+        >
+          <span class="arrow" :class="{ collapsed: item.collapsed }">
+            <img
+              :src="
+                item.collapsed ? icon__sidebar_collapsed : icon__sidebar_opened
+              "
+              alt=""
+            />
+          </span>
+        </button>
+
+        <a
+          :href="getFullLink(item.link)"
+          :class="[
+            'nav-item',
+            'row-main',
+            'parent-note-link',
+            { active: isActive(item.link) },
+            `nav-item-${extractNoteIdFromLink(item.link)}`,
+            `nav-item-level-${depth + 1}`,
+          ]"
+          :data-note-id="extractNoteIdFromLink(item.link)"
+          @click="onParentNoteTitleClick($event, item)"
+        >
+          {{ getNoteDisplayText(item.text, item.link) }}
+        </a>
+
+        <div
+          v-if="isDev"
+          class="row-actions"
+          :class="{ 'menu-open': isGroupMenuOpen(item) || isNoteMenuOpen(item) }"
+          @click.stop
+        >
+          <button
+            class="action-btn menu-trigger"
+            title="更多操作"
+            type="button"
+            @click="toggleMenu(getNoteMenuKey(item, 'more'))"
+          >
+            <span class="ellipsis">...</span>
+          </button>
+
+          <div
+            v-if="isMenuOpen(getNoteMenuKey(item, 'more'))"
+            class="action-menu"
+          >
+            <button class="menu-item" type="button" @click="renameNote(item)">
+              重命名
+            </button>
+            <button
+              class="menu-item danger"
+              type="button"
+              @click="deleteNote(item)"
+            >
+              删除笔记
+            </button>
+            <button class="menu-item" type="button" @click="openNoteAbout(item)">
+              关于
+            </button>
+          </div>
+
+          <button
+            class="action-btn menu-trigger add-trigger"
+            title="新增子笔记"
+            type="button"
+            @click="toggleMenu(getGroupMenuKey(item, 'add'))"
+          >
+            +
+          </button>
+
+          <div
+            v-if="isMenuOpen(getGroupMenuKey(item, 'add'))"
+            class="action-menu"
+          >
+            <button
+              class="menu-item"
+              type="button"
+              @click="createNoteInGroup(item)"
+            >
+              新增笔记
+            </button>
+            <button
+              class="menu-item"
+              type="button"
+              @click="createNotesInGroup(item)"
+            >
+              新增多篇笔记
+            </button>
+            <button
+              class="menu-item"
+              type="button"
+              @click="createFolderInGroup(item)"
+            >
+              新建子目录
+            </button>
           </div>
         </div>
       </div>
@@ -110,18 +282,18 @@ vitepress/components/Layout/SidebarItems.vue
           :item-depth="depth + 1"
           :group-path="getGroupPath(item)"
           :is-dev="isDev"
-          :sidebar-density="sidebarDensity"
           :done-prefix="donePrefix"
           :undone-prefix="undonePrefix"
-          @rename-group="$emit('rename-group', $event)"
-          @delete-group="$emit('delete-group', $event)"
+          :drag-context="getSidebarDrag()"
           @create-note-in-group="$emit('create-note-in-group', $event)"
           @create-notes-in-group="$emit('create-notes-in-group', $event)"
+          @create-folder-in-group="$emit('create-folder-in-group', $event)"
+          @rename-folder="$emit('rename-folder', $event)"
+          @delete-entry="$emit('delete-entry', $event)"
           @rename-note="$emit('rename-note', $event)"
           @delete-note="$emit('delete-note', $event)"
           @create-note-around="$emit('create-note-around', $event)"
           @open-note-about="$emit('open-note-about', $event)"
-          @reorder-sidebar="$emit('reorder-sidebar', $event)"
         />
       </div>
     </div>
@@ -130,14 +302,15 @@ vitepress/components/Layout/SidebarItems.vue
     <div
       v-else-if="!hasChildren(item)"
       class="sidebar-row note-row"
-      :class="[getNoteDropClass(item), getDensityClass()]"
+      :class="[{ 'is-drag-source-slot': item.isDragSourceSlot }]"
       :style="getNodeStyle(actualItemDepth)"
-      :draggable="isDev"
-      @dragstart="onNoteDragStart($event, item)"
-      @dragend="clearDropTarget"
-      @dragover.prevent.stop="onNoteDragOver($event, item)"
-      @drop.stop="onNoteDrop($event, item)"
+      :data-note-id="extractNoteIdFromLink(item.link) || undefined"
+      :data-toc-line-index="item.tocLineIndex"
+      :data-node-id="getNodeId(item)"
+      @pointerdown="onRowPointerDown($event, item)"
     >
+      <span class="group-arrow-spacer" aria-hidden="true" />
+
       <a
         :href="getFullLink(item.link)"
         :class="[
@@ -220,18 +393,29 @@ vitepress/components/Layout/SidebarItems.vue
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vitepress'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
+import { useSidebarDragContext } from './composables/useSidebarDrag'
+import { SIDEBAR_INDENT_SIZE } from './sidebarDragLogic'
+import { computeSidebarNodeId } from '../../../utils/tocNodeId'
 import {
   icon__sidebar_opened,
   icon__sidebar_collapsed,
 } from '../../assets/icons'
+
+import type { SidebarDragContext } from './composables/useSidebarDrag'
 
 interface SidebarItem {
   text: string
   link?: string
   items?: SidebarItem[]
   collapsed?: boolean
+  folderPath?: string[]
+  tocLineIndex?: number
+  nodeId?: string
+  isDragSourceSlot?: boolean
+  isDragPlaceholder?: boolean
 }
 
 interface Props {
@@ -244,42 +428,57 @@ interface Props {
   itemDepth?: number // 用于计算链接项的缩进，默认等于 depth
   groupPath?: string[]
   isDev?: boolean
-  sidebarDensity?: SidebarDensity
   donePrefix?: string
   undonePrefix?: string
+  dragContext?: SidebarDragContext | null
 }
+
+const router = useRouter()
 
 const props = withDefaults(defineProps<Props>(), {
   depth: 0,
-  maxDepth: 3,
+  maxDepth: 0,
   showNoteId: false,
   base: '/',
   currentPath: '',
   itemDepth: undefined,
   groupPath: () => [],
   isDev: false,
-  sidebarDensity: 'default',
   donePrefix: '✅',
   undonePrefix: '⏰',
+  dragContext: null,
 })
 
 const emit = defineEmits<{
-  'rename-group': [payload: GroupPayload]
-  'delete-group': [payload: GroupPayload]
-  'create-note-in-group': [payload: GroupPayload]
-  'create-notes-in-group': [payload: GroupPayload]
+  'create-note-in-group': [payload: ParentNotePayload]
+  'create-notes-in-group': [payload: ParentNotePayload]
+  'create-folder-in-group': [payload: ParentNotePayload]
+  'rename-folder': [payload: FolderPayload]
+  'delete-entry': [payload: EntryPayload]
   'rename-note': [payload: NotePayload]
   'delete-note': [payload: NotePayload]
   'create-note-around': [
     payload: NotePayload & { placement: 'before' | 'after' },
   ]
   'open-note-about': [payload: NotePayload]
-  'reorder-sidebar': [payload: ReorderPayload]
 }>()
 
-interface GroupPayload {
-  groupPath: string[]
+interface ParentNotePayload {
+  parentNoteIndex?: string
+  parentFolderPath?: string[]
+  parentTocLineIndex?: number
   text: string
+}
+
+interface FolderPayload {
+  tocLineIndex: number
+  text: string
+}
+
+interface EntryPayload {
+  tocLineIndex: number
+  text: string
+  noteIndex?: string
 }
 
 interface NotePayload {
@@ -288,53 +487,26 @@ interface NotePayload {
   link?: string
 }
 
-interface DragPayload {
-  type: 'group' | 'note'
-  groupPath?: string[]
-  noteIndex?: string
-}
-
-interface DropTarget {
-  type: 'group' | 'note'
-  key: string
-  placement: 'before' | 'after' | 'inside'
-}
-
-interface ReorderPayload {
-  dragType: 'group' | 'note'
-  groupPath?: string[]
-  noteIndex?: string
-  targetType: 'group' | 'note'
-  targetGroupPath?: string[]
-  targetNoteIndex?: string
-  placement?: 'before' | 'after'
-}
-
 type MenuType = 'more' | 'add'
-type SidebarDensity = 'compact' | 'default' | 'loose'
 type NoteStatus = 'done' | 'undone' | null
 
 // 获取实际的 item depth（用于链接项的缩进）
 const actualItemDepth = computed(() => props.itemDepth ?? props.depth)
 const openMenuKey = ref<string | null>(null)
-const dropTarget = ref<DropTarget | null>(null)
+const injectedDrag = useSidebarDragContext()
 let ignoredToggleKey: string | null = null
 
-const dragDataType = 'application/x-tnotes-sidebar-node'
-const dragNoteType = 'application/x-tnotes-sidebar-note'
-const dragGroupType = 'application/x-tnotes-sidebar-group'
+function getSidebarDrag(): SidebarDragContext | null {
+  return props.dragContext ?? injectedDrag
+}
 
 if (typeof document !== 'undefined') {
   document.addEventListener('click', closeMenuOnDocumentClick, true)
-  document.addEventListener('dragend', clearDropTarget, true)
-  document.addEventListener('drop', clearDropTarget, true)
 }
 
 onBeforeUnmount(() => {
   if (typeof document !== 'undefined') {
     document.removeEventListener('click', closeMenuOnDocumentClick, true)
-    document.removeEventListener('dragend', clearDropTarget, true)
-    document.removeEventListener('drop', clearDropTarget, true)
   }
 })
 
@@ -349,12 +521,53 @@ function getChildItems(item: SidebarItem): SidebarItem[] {
 
 // 获取项的唯一 key
 function getItemKey(item: SidebarItem): string {
+  if (item.isDragPlaceholder) {
+    return `drag-placeholder-${item.tocLineIndex ?? 'slot'}`
+  }
   return item.link || item.text
 }
 
 // 切换项的展开/折叠状态
 function toggleItem(item: SidebarItem) {
+  if (!hasChildren(item)) return
   item.collapsed = !item.collapsed
+}
+
+function onGroupTitleClick(item: SidebarItem) {
+  toggleItem(item)
+}
+
+function navigateToSidebarLink(link?: string) {
+  if (!link || isActive(link)) return
+  router.go(getFullLink(link))
+}
+
+function activateParentNoteLink(item: SidebarItem) {
+  if (!hasChildren(item) || !item.link) return
+  toggleItem(item)
+  navigateToSidebarLink(item.link)
+}
+
+function suppressNextParentNoteClick(row: HTMLElement) {
+  row.addEventListener(
+    'click',
+    (event) => {
+      if (!(event.target instanceof Element)) return
+      if (!event.target.closest('.parent-note-link')) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+    },
+    { capture: true, once: true },
+  )
+}
+
+function onParentNoteTitleClick(event: MouseEvent, item: SidebarItem) {
+  if (!hasChildren(item) || !item.link) return
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+    return
+  }
+  event.preventDefault()
+  activateParentNoteLink(item)
 }
 
 function getNodeStyle(depth: number) {
@@ -363,24 +576,42 @@ function getNodeStyle(depth: number) {
   }
 }
 
-function getDensityClass(): string {
-  return `density-${props.sidebarDensity}`
-}
-
 function getIndentSize(): number {
-  if (props.sidebarDensity === 'compact') return 20
-  if (props.sidebarDensity === 'loose') return 28
-  return 24
+  return SIDEBAR_INDENT_SIZE
 }
 
 function getGroupPath(item: SidebarItem): string[] {
   return [...props.groupPath, item.text]
 }
 
-function getGroupPayload(item: SidebarItem): GroupPayload {
-  return {
-    groupPath: getGroupPath(item),
+function isPureFolder(item: SidebarItem): boolean {
+  return !item.link && (!!(item.folderPath && item.folderPath.length > 0) || hasChildren(item))
+}
+
+function getFolderPath(item: SidebarItem): string[] {
+  return item.folderPath ?? getGroupPath(item)
+}
+
+function serializeFolderPath(item: SidebarItem): string {
+  return JSON.stringify(getFolderPath(item))
+}
+
+function getParentNotePayload(item: SidebarItem): ParentNotePayload {
+  const base = {
+    parentTocLineIndex: item.tocLineIndex,
     text: item.text,
+  }
+
+  if (isPureFolder(item)) {
+    return {
+      ...base,
+      parentFolderPath: getFolderPath(item),
+    }
+  }
+
+  return {
+    ...base,
+    parentNoteIndex: extractNoteIdFromLink(item.link) || '',
   }
 }
 
@@ -393,19 +624,18 @@ function getNotePayload(item: SidebarItem): NotePayload {
 }
 
 function getGroupMenuKey(item: SidebarItem, menuType: MenuType): string {
+  if (item.tocLineIndex !== undefined) {
+    return `group:${menuType}:${item.tocLineIndex}`
+  }
   return `group:${menuType}:${getGroupPath(item).join('/')}`
 }
 
-function getGroupDropKey(item: SidebarItem): string {
-  return `group:${getGroupPath(item).join('/')}`
+function getFolderMenuKey(item: SidebarItem, menuType: MenuType): string {
+  return `folder:${menuType}:${item.tocLineIndex ?? item.text}`
 }
 
 function getNoteMenuKey(item: SidebarItem, menuType: MenuType): string {
   return `note:${menuType}:${extractNoteIdFromLink(item.link) || item.link || item.text}`
-}
-
-function getNoteDropKey(item: SidebarItem): string {
-  return `note:${extractNoteIdFromLink(item.link) || item.link || item.text}`
 }
 
 function toggleMenu(menuKey: string) {
@@ -440,10 +670,11 @@ function closeMenuOnDocumentClick() {
 }
 
 function isGroupMenuOpen(item: SidebarItem): boolean {
-  return (
-    isMenuOpen(getGroupMenuKey(item, 'more')) ||
-    isMenuOpen(getGroupMenuKey(item, 'add'))
-  )
+  return isMenuOpen(getGroupMenuKey(item, 'add'))
+}
+
+function isFolderMenuOpen(item: SidebarItem): boolean {
+  return isMenuOpen(getFolderMenuKey(item, 'more'))
 }
 
 function isNoteMenuOpen(item: SidebarItem): boolean {
@@ -453,23 +684,43 @@ function isNoteMenuOpen(item: SidebarItem): boolean {
   )
 }
 
-function renameGroup(item: SidebarItem) {
-  emit('rename-group', getGroupPayload(item))
-  closeMenu()
-}
-
-function deleteGroup(item: SidebarItem) {
-  emit('delete-group', getGroupPayload(item))
-  closeMenu()
-}
-
 function createNoteInGroup(item: SidebarItem) {
-  emit('create-note-in-group', getGroupPayload(item))
+  emit('create-note-in-group', getParentNotePayload(item))
   closeMenu()
 }
 
 function createNotesInGroup(item: SidebarItem) {
-  emit('create-notes-in-group', getGroupPayload(item))
+  emit('create-notes-in-group', getParentNotePayload(item))
+  closeMenu()
+}
+
+function createFolderInGroup(item: SidebarItem) {
+  emit('create-folder-in-group', getParentNotePayload(item))
+  closeMenu()
+}
+
+function getFolderPayload(item: SidebarItem): FolderPayload {
+  return {
+    tocLineIndex: item.tocLineIndex ?? -1,
+    text: item.text,
+  }
+}
+
+function getEntryPayload(item: SidebarItem): EntryPayload {
+  return {
+    tocLineIndex: item.tocLineIndex ?? -1,
+    text: item.text,
+    noteIndex: extractNoteIdFromLink(item.link) || undefined,
+  }
+}
+
+function renameFolder(item: SidebarItem) {
+  emit('rename-folder', getFolderPayload(item))
+  closeMenu()
+}
+
+function deleteFolder(item: SidebarItem) {
+  emit('delete-entry', getEntryPayload(item))
   closeMenu()
 }
 
@@ -479,7 +730,11 @@ function renameNote(item: SidebarItem) {
 }
 
 function deleteNote(item: SidebarItem) {
-  emit('delete-note', getNotePayload(item))
+  if (hasChildren(item) && item.tocLineIndex !== undefined) {
+    emit('delete-entry', getEntryPayload(item))
+  } else {
+    emit('delete-note', getNotePayload(item))
+  }
   closeMenu()
 }
 
@@ -496,228 +751,147 @@ function createNoteAround(item: SidebarItem, placement: 'before' | 'after') {
   closeMenu()
 }
 
-function setDragData(event: DragEvent, payload: DragPayload) {
-  if (!event.dataTransfer) return
-
-  event.dataTransfer.effectAllowed = 'move'
-  event.dataTransfer.setData(dragDataType, JSON.stringify(payload))
-  event.dataTransfer.setData(
-    payload.type === 'note' ? dragNoteType : dragGroupType,
-    '1',
+function isInteractiveDragTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return !!target.closest(
+    '.group-arrow-btn, .row-actions, .action-menu, .action-btn',
   )
 }
 
-function getDragData(event: DragEvent): DragPayload | null {
-  const raw = event.dataTransfer?.getData(dragDataType)
-  if (!raw) return null
+const DRAG_START_THRESHOLD_PX = 4
 
-  try {
-    return JSON.parse(raw) as DragPayload
-  } catch {
-    return null
-  }
-}
+function onRowPointerDown(event: PointerEvent, item: SidebarItem) {
+  const sidebarDrag = getSidebarDrag()
+  if (!props.isDev || !sidebarDrag || event.button !== 0) return
+  if (isInteractiveDragTarget(event.target)) return
 
-function getDragTypes(event: DragEvent): string[] {
-  return Array.from(event.dataTransfer?.types ?? [])
-}
-
-function getDraggedType(event: DragEvent): DragPayload['type'] | null {
-  const types = getDragTypes(event)
-
-  if (types.includes(dragNoteType)) return 'note'
-  if (types.includes(dragGroupType)) return 'group'
-
-  return getDragData(event)?.type ?? null
-}
-
-function setDropEffect(event: DragEvent) {
-  if (event.dataTransfer) {
-    event.dataTransfer.dropEffect = 'move'
-  }
-}
-
-function clearDropTarget() {
-  dropTarget.value = null
-}
-
-function isSamePath(left: string[], right: string[]): boolean {
-  return (
-    left.length === right.length &&
-    left.every((item, index) => item === right[index])
-  )
-}
-
-function getNoteDropPlacement(event: DragEvent): 'before' | 'after' {
-  const row = event.currentTarget as HTMLElement | null
-  if (!row) return 'before'
-
-  const rect = row.getBoundingClientRect()
-  return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
-}
-
-function getGroupDropClass(item: SidebarItem): Record<string, boolean> {
-  const key = getGroupDropKey(item)
-  return {
-    'drop-before':
-      dropTarget.value?.type === 'group' &&
-      dropTarget.value.key === key &&
-      dropTarget.value.placement === 'before',
-    'drop-inside':
-      dropTarget.value?.type === 'group' &&
-      dropTarget.value.key === key &&
-      dropTarget.value.placement === 'inside',
-  }
-}
-
-function getNoteDropClass(item: SidebarItem): Record<string, boolean> {
-  const key = getNoteDropKey(item)
-  return {
-    'drop-before':
-      dropTarget.value?.type === 'note' &&
-      dropTarget.value.key === key &&
-      dropTarget.value.placement === 'before',
-    'drop-after':
-      dropTarget.value?.type === 'note' &&
-      dropTarget.value.key === key &&
-      dropTarget.value.placement === 'after',
-  }
-}
-
-function onGroupDragStart(event: DragEvent, item: SidebarItem) {
-  if (!props.isDev) return
-  closeMenu()
-  setDragData(event, {
-    type: 'group',
-    groupPath: getGroupPath(item),
-  })
-}
-
-function onNoteDragStart(event: DragEvent, item: SidebarItem) {
-  if (!props.isDev) return
   const noteIndex = extractNoteIdFromLink(item.link)
-  if (!noteIndex) return
+  if (!noteIndex || item.tocLineIndex === undefined) return
 
-  closeMenu()
-  setDragData(event, {
-    type: 'note',
-    noteIndex,
-  })
-}
+  const row = event.currentTarget as HTMLElement
+  const fromLink =
+    event.target instanceof Element && !!event.target.closest('.row-main')
 
-function onGroupDragOver(event: DragEvent, item: SidebarItem) {
-  if (!props.isDev) return
-
-  const draggedType = getDraggedType(event)
-  if (!draggedType) return
-
-  setDropEffect(event)
-
-  const targetGroupPath = getGroupPath(item)
-  const payload = getDragData(event)
-  if (
-    draggedType === 'group' &&
-    payload?.groupPath &&
-    isSamePath(payload.groupPath, targetGroupPath)
-  ) {
-    clearDropTarget()
-    return
+  if (fromLink) {
+    event.preventDefault()
   }
 
-  dropTarget.value = {
-    type: 'group',
-    key: getGroupDropKey(item),
-    placement: draggedType === 'note' ? 'inside' : 'before',
-  }
-}
+  row.setPointerCapture(event.pointerId)
 
-function onGroupDrop(event: DragEvent, item: SidebarItem) {
-  if (!props.isDev) return
+  const startX = event.clientX
+  const startY = event.clientY
+  const pointerId = event.pointerId
+  let dragged = false
 
-  const payload = getDragData(event)
-  if (!payload) {
-    clearDropTarget()
-    return
-  }
+  function onPendingMove(moveEvent: PointerEvent) {
+    if (moveEvent.pointerId !== pointerId) return
 
-  const targetGroupPath = getGroupPath(item)
+    const distance = Math.hypot(
+      moveEvent.clientX - startX,
+      moveEvent.clientY - startY,
+    )
+    if (distance < DRAG_START_THRESHOLD_PX) return
 
-  if (payload.type === 'note' && payload.noteIndex) {
-    emit('reorder-sidebar', {
-      dragType: 'note',
-      noteIndex: payload.noteIndex,
-      targetType: 'group',
-      targetGroupPath,
-    })
-    clearDropTarget()
-    return
+    dragged = true
+    moveEvent.preventDefault()
+    cleanupPending()
+    closeMenu()
+    sidebarDrag.startDrag(noteIndex, item.tocLineIndex!, row, moveEvent)
   }
 
-  if (payload.type === 'group' && payload.groupPath) {
-    if (isSamePath(payload.groupPath, targetGroupPath)) {
-      clearDropTarget()
-      return
+  function onPendingUp(upEvent: PointerEvent) {
+    if (upEvent.pointerId !== pointerId) return
+
+    cleanupPending()
+
+    if (!dragged && fromLink) {
+      if (hasChildren(item) && item.link) {
+        suppressNextParentNoteClick(row)
+        activateParentNoteLink(item)
+      } else if (hasChildren(item)) {
+        toggleItem(item)
+      } else {
+        row.querySelector<HTMLAnchorElement>('.row-main')?.click()
+      }
     }
-
-    emit('reorder-sidebar', {
-      dragType: 'group',
-      groupPath: payload.groupPath,
-      targetType: 'group',
-      targetGroupPath,
-      placement: 'before',
-    })
   }
 
-  clearDropTarget()
+  function cleanupPending() {
+    if (row.hasPointerCapture(pointerId)) {
+      row.releasePointerCapture(pointerId)
+    }
+    window.removeEventListener('pointermove', onPendingMove)
+    window.removeEventListener('pointerup', onPendingUp)
+    window.removeEventListener('pointercancel', onPendingUp)
+  }
+
+  window.addEventListener('pointermove', onPendingMove)
+  window.addEventListener('pointerup', onPendingUp)
+  window.addEventListener('pointercancel', onPendingUp)
 }
 
-function onNoteDragOver(event: DragEvent, item: SidebarItem) {
-  if (!props.isDev || getDraggedType(event) !== 'note') return
+function onFolderRowPointerDown(event: PointerEvent, item: SidebarItem) {
+  const sidebarDrag = getSidebarDrag()
+  if (!props.isDev || !sidebarDrag || event.button !== 0) return
+  if (isInteractiveDragTarget(event.target)) return
+  if (item.tocLineIndex === undefined) return
 
-  const targetNoteIndex = extractNoteIdFromLink(item.link)
-  const payload = getDragData(event)
-  if (!targetNoteIndex || payload?.noteIndex === targetNoteIndex) {
-    clearDropTarget()
-    return
+  const row = event.currentTarget as HTMLElement
+  const fromTitle =
+    event.target instanceof Element && !!event.target.closest('.group-title')
+
+  if (fromTitle) {
+    event.preventDefault()
   }
 
-  setDropEffect(event)
-  dropTarget.value = {
-    type: 'note',
-    key: getNoteDropKey(item),
-    placement: getNoteDropPlacement(event),
+  row.setPointerCapture(event.pointerId)
+
+  const startX = event.clientX
+  const startY = event.clientY
+  const pointerId = event.pointerId
+  let dragged = false
+
+  function onPendingMove(moveEvent: PointerEvent) {
+    if (moveEvent.pointerId !== pointerId) return
+
+    const distance = Math.hypot(
+      moveEvent.clientX - startX,
+      moveEvent.clientY - startY,
+    )
+    if (distance < DRAG_START_THRESHOLD_PX) return
+
+    dragged = true
+    moveEvent.preventDefault()
+    cleanupPending()
+    closeMenu()
+    sidebarDrag!.startFolderDrag(item.tocLineIndex!, row, moveEvent)
   }
+
+  function onPendingUp(upEvent: PointerEvent) {
+    if (upEvent.pointerId !== pointerId) return
+    cleanupPending()
+
+    if (!dragged && fromTitle) {
+      toggleItem(item)
+    }
+  }
+
+  function cleanupPending() {
+    if (row.hasPointerCapture(pointerId)) {
+      row.releasePointerCapture(pointerId)
+    }
+    window.removeEventListener('pointermove', onPendingMove)
+    window.removeEventListener('pointerup', onPendingUp)
+    window.removeEventListener('pointercancel', onPendingUp)
+  }
+
+  window.addEventListener('pointermove', onPendingMove)
+  window.addEventListener('pointerup', onPendingUp)
+  window.addEventListener('pointercancel', onPendingUp)
 }
 
-function onNoteDrop(event: DragEvent, item: SidebarItem) {
-  if (!props.isDev) return
-
-  const payload = getDragData(event)
-  const targetNoteIndex = extractNoteIdFromLink(item.link)
-  if (
-    !payload ||
-    payload.type !== 'note' ||
-    !payload.noteIndex ||
-    !targetNoteIndex
-  ) {
-    clearDropTarget()
-    return
-  }
-
-  if (payload.noteIndex === targetNoteIndex) {
-    clearDropTarget()
-    return
-  }
-
-  const placement = getNoteDropPlacement(event)
-  emit('reorder-sidebar', {
-    dragType: 'note',
-    noteIndex: payload.noteIndex,
-    targetType: 'note',
-    targetNoteIndex,
-    placement,
-  })
-  clearDropTarget()
+function getNodeId(item: SidebarItem): string {
+  return item.nodeId ?? computeSidebarNodeId(item)
 }
 
 // 获取完整链接（包含 base）
@@ -817,14 +991,8 @@ function getNoteDisplayText(text: string, link?: string): string {
 <style scoped>
 .group {
   margin-bottom: 2px;
-}
-
-.group.density-compact {
-  margin-bottom: 0;
-}
-
-.group.density-loose {
-  margin-bottom: 6px;
+  width: 100%;
+  min-width: 0;
 }
 
 .sidebar-row {
@@ -832,50 +1000,33 @@ function getNoteDisplayText(text: string, link?: string): string {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 30px;
-  border-radius: 6px;
-  transition: background-color 0.18s ease;
-}
-
-.sidebar-row.density-compact {
-  min-height: 26px;
-  border-radius: 4px;
-}
-
-.sidebar-row.density-loose {
   min-height: 36px;
   border-radius: 8px;
+  transition: background-color 0.18s ease;
 }
 
 .sidebar-row:hover {
   background: var(--vp-c-default-soft);
 }
 
-.sidebar-row.drop-before::before,
-.sidebar-row.drop-after::after {
-  position: absolute;
-  right: 8px;
-  left: 8px;
-  z-index: 4;
-  height: 2px;
-  background: var(--vp-c-brand-1);
-  border-radius: 999px;
-  content: '';
+body.sidebar-drag-active .sidebar-row:not(.is-dragging-source) {
+  cursor: grabbing;
+}
+
+.sidebar-row.is-dragging-source {
+  opacity: 0.35;
+}
+
+/* 语雀式：拖拽中源项原位保留布局高度，内容不可见 */
+.group.is-drag-source-slot,
+.sidebar-row.is-drag-source-slot {
+  visibility: hidden;
   pointer-events: none;
 }
 
-.sidebar-row.drop-before::before {
-  top: -2px;
-}
-
-.sidebar-row.drop-after::after {
-  bottom: -2px;
-}
-
-.sidebar-row.drop-inside {
-  background: var(--vp-c-brand-soft);
-  outline: 1px solid var(--vp-c-brand-1);
-  outline-offset: -1px;
+.sidebar-row.is-drag-placeholder {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .row-main {
@@ -883,35 +1034,57 @@ function getNoteDisplayText(text: string, link?: string): string {
   flex: 1;
 }
 
+.parent-note-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.note-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.group-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.group-arrow-spacer {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.parent-note-link {
+  font-weight: 600;
+}
+
 .group-title {
   display: flex;
   align-items: center;
   gap: 6px;
   width: 100%;
-  padding: 4px 6px;
+  min-height: 36px;
+  padding: 6px 8px;
   font-weight: 600;
+  font-size: 14px;
+  line-height: 22px;
   color: var(--vp-c-text-1);
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
   transition: color 0.25s;
-}
-
-.sidebar-row.density-compact .group-title,
-.sidebar-row.density-compact .nav-item {
-  min-height: 26px;
-  padding: 2px 5px;
-  font-size: 13px;
-  line-height: 18px;
-}
-
-.sidebar-row.density-loose .group-title,
-.sidebar-row.density-loose .nav-item {
-  min-height: 36px;
-  padding: 6px 8px;
-  font-size: 14px;
-  line-height: 22px;
 }
 
 .group-title:hover {
@@ -944,17 +1117,19 @@ function getNoteDisplayText(text: string, link?: string): string {
 .nav-item {
   display: flex;
   align-items: center;
-  min-height: 30px;
-  padding: 4px 6px;
+  min-height: 36px;
+  padding: 6px 8px;
   color: var(--vp-c-text-2);
   text-decoration: none;
   border-radius: 4px;
   font-size: 14px;
-  line-height: 20px;
+  line-height: 22px;
   transition: all 0.25s;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .nav-item:hover {

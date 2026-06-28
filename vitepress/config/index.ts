@@ -23,6 +23,7 @@ import {
 import { buildProgressPlugin } from '../plugins/buildProgressPlugin'
 import { fileWatcherBridgePlugin } from '../plugins/fileWatcherBridgePlugin'
 import { getNoteByConfigIdPlugin } from '../plugins/getNoteByConfigIdPlugin'
+import { localSearchReindexPlugin } from '../plugins/localSearchReindexPlugin'
 import { renameNotePlugin } from '../plugins/renameNotePlugin'
 import { sidebarStructurePlugin } from '../plugins/sidebarStructurePlugin'
 import { updateConfigPlugin } from '../plugins/updateConfigPlugin'
@@ -73,6 +74,7 @@ export function defineNotesConfig(overrides: UserConfig = {}) {
         sidebarStructurePlugin() as any,
         getNoteByConfigIdPlugin() as any,
         fileWatcherBridgePlugin() as any,
+        localSearchReindexPlugin() as any,
         ...(overrideVite?.plugins || []),
       ],
       server: {

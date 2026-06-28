@@ -24,6 +24,7 @@ import { NoteIndexCache } from '../../core/NoteIndexCache'
 import { logger } from '../../utils'
 import { NoteService } from '../note/service'
 import { ReadmeService } from '../readme/service'
+import { TocService } from '../toc/service'
 
 import type { WatchEvent } from './internal'
 
@@ -33,6 +34,7 @@ const UPDATE_UNLOCK_DELAY_MS = 500
 
 /** vite 端 fileWatcherBridgePlugin 暴露的 broadcast 接口路径 */
 const RENAME_BROADCAST_PATH = '/__tnotes_broadcast_rename'
+const SEARCH_REINDEX_PATH = '/__tnotes_search_reindex'
 
 export class FileWatcherService {
   private static instance: FileWatcherService | null = null
@@ -47,6 +49,7 @@ export class FileWatcherService {
   private adapter!: FsWatcherAdapter
   private noteService!: NoteService
   private readmeService!: ReadmeService
+  private tocService!: TocService
   private noteIndexCache!: NoteIndexCache
   private unlockTimer: NodeJS.Timeout | null = null
 
@@ -65,6 +68,7 @@ export class FileWatcherService {
   private init(): void {
     this.noteService = NoteService.getInstance()
     this.readmeService = ReadmeService.getInstance()
+    this.tocService = TocService.getInstance()
     this.noteIndexCache = NoteIndexCache.getInstance()
 
     this.watchState = this.initWatchState()
@@ -99,6 +103,7 @@ export class FileWatcherService {
       scheduler: this.scheduler,
       noteService: this.noteService,
       readmeService: this.readmeService,
+      tocService: this.tocService,
       noteIndexCache: this.noteIndexCache,
       logger,
       onRenameSuccess: (payload) => {
@@ -106,7 +111,29 @@ export class FileWatcherService {
         // 通过 HTTP 调 vite 子进程暴露的 broadcast 接口，由其转发为 WS 事件。
         void this.broadcastRename(payload)
       },
+      onNoteStructureChanged: (reason) => {
+        void this.broadcastSearchReindex(reason)
+      },
     })
+  }
+
+  private async broadcastSearchReindex(reason: string): Promise<void> {
+    const path = `/${repoName}${SEARCH_REINDEX_PATH}`
+    const body = JSON.stringify({ reason })
+    const hosts = ['127.0.0.1', '::1']
+
+    let lastError: unknown = null
+    for (const host of hosts) {
+      try {
+        await this.postOnce(host, path, body)
+        return
+      } catch (error) {
+        lastError = error
+      }
+    }
+    logger.warn(
+      `广播搜索索引重建失败 (POST http://[127.0.0.1|::1]:${port}${path}): ${String(lastError)}`,
+    )
   }
 
   private async broadcastRename(payload: {
@@ -202,6 +229,7 @@ export class FileWatcherService {
   private initCoordinator(): GlobalUpdateCoordinator {
     return new GlobalUpdateCoordinator({
       readmeService: this.readmeService,
+      tocService: this.tocService,
       noteIndexCache: this.noteIndexCache,
       logger,
     })

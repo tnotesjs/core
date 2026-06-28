@@ -88,6 +88,13 @@ export class ConfigManager {
   }
 
   /**
+   * 清除内存中的配置缓存，下次 get/getAll 时重新从磁盘加载
+   */
+  clearCache(): void {
+    this.config = null
+  }
+
+  /**
    * 获取配置项
    */
   get<K extends keyof TNotesConfig>(key: K): TNotesConfig[K] {

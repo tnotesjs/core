@@ -10,11 +10,14 @@ import type { WatchEvent } from './internal'
 import type { NoteIndexCache } from '../../core/NoteIndexCache'
 import type { Logger } from '../../utils'
 import type { ReadmeService } from '../readme/service'
+import type { TocService } from '../toc/service'
 
 
 interface GlobalUpdateCoordinatorConfig {
-  /** README 服务实例，用于更新 README 文件和侧边栏 */
+  /** README 服务实例，用于更新笔记 README */
   readmeService: ReadmeService
+  /** TOC 服务实例，用于更新 TOC.md 与 sidebar */
+  tocService: TocService
   /** 笔记索引缓存实例 */
   noteIndexCache: NoteIndexCache
   /** 日志记录器 */
@@ -27,7 +30,7 @@ export class GlobalUpdateCoordinator {
   async applyConfigUpdates(changedNoteIndexes: string[]): Promise<void> {
     if (changedNoteIndexes.length === 0) return
 
-    const { readmeService, noteIndexCache, logger } = this.config
+    const { tocService, noteIndexCache, logger } = this.config
 
     logger.info('检测到笔记状态变化，增量更新全局文件...')
 
@@ -36,17 +39,17 @@ export class GlobalUpdateCoordinator {
         `增量更新 ${noteIndex}`,
         async () => {
           const item = noteIndexCache.getByNoteIndex(noteIndex)
-          await readmeService.updateNoteInReadme(
+          await tocService.updateNoteInToc(
             noteIndex,
             item?.noteConfig || {},
           )
-          logger.info(`增量更新 README 中的笔记: ${noteIndex}`)
+          logger.info(`增量更新 TOC.md 中的笔记: ${noteIndex}`)
         },
         logger,
       )
     }
 
-    await readmeService.regenerateSidebar()
+    await tocService.regenerateSidebar()
   }
 
   async updateNoteReadmesOnly(events: WatchEvent[]): Promise<void> {

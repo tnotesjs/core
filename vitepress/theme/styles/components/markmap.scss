@@ -16,8 +16,9 @@
   border-radius: 6px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(8px);
-  opacity: 0;
-  pointer-events: none;
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 10;
   transition: opacity 0.3s ease;
   color: var(--vp-c-tip-1);
   font-weight: 700;
@@ -71,6 +72,26 @@
 
 .markmap-dark .mm-toolbar-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+html.markmap-dark .markmapContainer,
+.markmapContainer.is-markmap-dark {
+  background-color: #1d1d1d;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+html.markmap-dark .markmapContainer:hover,
+.markmapContainer.is-markmap-dark:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+html.markmap-dark .markmapContainer:fullscreen,
+html.markmap-dark .markmapContainer:-ms-fullscreen,
+html.markmap-dark .markmapContainer:-webkit-full-screen,
+.markmapContainer.is-markmap-dark:fullscreen,
+.markmapContainer.is-markmap-dark:-ms-fullscreen,
+.markmapContainer.is-markmap-dark:-webkit-full-screen {
+  background: #1d1d1d;
 }
 
 /* #endregion */

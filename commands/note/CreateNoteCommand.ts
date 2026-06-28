@@ -94,7 +94,7 @@ export class CreateNoteCommand extends BaseCommand {
       )
     }
 
-    // 自动更新索引文件（home README、sidebar.json、TOC.md）
+    // 自动更新索引文件（TOC.md、sidebar.json）
     if (successCount > 0) {
       this.logger.info('正在更新知识库索引...')
       await this.readmeService.updateAllReadmes()

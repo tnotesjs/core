@@ -13,6 +13,7 @@ const SIDEBAR_MAX_WIDTH = 480
 const SIDEBAR_DEFAULT_WIDTH = 260
 
 const hidden = ref(false)
+const autoHidden = ref(false)
 const width = ref(SIDEBAR_DEFAULT_WIDTH)
 let initialized = false
 
@@ -38,17 +39,21 @@ function readStoredWidth(): number {
   return clampSidebarWidth(Number(savedWidth))
 }
 
+function isSidebarLayoutCollapsed(): boolean {
+  return hidden.value || autoHidden.value
+}
+
 function applyHiddenState(nextHidden: boolean) {
   if (!canUseDOM()) return
 
   document.documentElement.classList.toggle('hide-sidebar', nextHidden)
 }
 
-function applySidebarWidth(nextWidth: number, nextHidden = hidden.value) {
+function applySidebarWidth(nextWidth: number, layoutCollapsed = isSidebarLayoutCollapsed()) {
   if (!canUseDOM()) return
 
   const widthValue = `${clampSidebarWidth(nextWidth)}px`
-  const layoutWidthValue = nextHidden ? '0px' : widthValue
+  const layoutWidthValue = layoutCollapsed ? '0px' : widthValue
   document.documentElement.style.setProperty('--tn-sidebar-width', widthValue)
   document.documentElement.style.setProperty(
     '--tn-sidebar-layout-width',
@@ -79,6 +84,11 @@ function persistSidebarWidth(nextWidth: number) {
   } catch {}
 }
 
+function applySidebarLayout() {
+  applyHiddenState(hidden.value)
+  applySidebarWidth(width.value, isSidebarLayoutCollapsed())
+}
+
 function initSidebarLayout() {
   if (!canUseDOM()) return
 
@@ -88,15 +98,19 @@ function initSidebarLayout() {
     initialized = true
   }
 
-  applyHiddenState(hidden.value)
-  applySidebarWidth(width.value, hidden.value)
+  applySidebarLayout()
+}
+
+function setSidebarAutoHidden(nextAutoHidden: boolean) {
+  autoHidden.value = nextAutoHidden
+  applySidebarWidth(width.value, isSidebarLayoutCollapsed())
 }
 
 function setSidebarHidden(nextHidden: boolean) {
   hidden.value = nextHidden
-  applyHiddenState(hidden.value)
-  applySidebarWidth(width.value, hidden.value)
-  persistHiddenState(hidden.value)
+  applyHiddenState(nextHidden)
+  applySidebarWidth(width.value, isSidebarLayoutCollapsed())
+  persistHiddenState(nextHidden)
 }
 
 function toggleSidebar() {
@@ -105,7 +119,7 @@ function toggleSidebar() {
 
 function setSidebarWidth(nextWidth: number) {
   width.value = clampSidebarWidth(nextWidth)
-  applySidebarWidth(width.value)
+  applySidebarWidth(width.value, isSidebarLayoutCollapsed())
 }
 
 function saveSidebarWidth() {
@@ -115,14 +129,17 @@ function saveSidebarWidth() {
 export function useSidebarLayout() {
   return {
     hidden,
+    autoHidden,
     width,
     minWidth: SIDEBAR_MIN_WIDTH,
     maxWidth: SIDEBAR_MAX_WIDTH,
     defaultWidth: SIDEBAR_DEFAULT_WIDTH,
     initSidebarLayout,
+    setSidebarAutoHidden,
     setSidebarHidden,
     toggleSidebar,
     setSidebarWidth,
     saveSidebarWidth,
+    isSidebarLayoutCollapsed,
   }
 }

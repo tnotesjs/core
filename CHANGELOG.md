@@ -4,7 +4,146 @@
 
 ## [Unreleased]
 
-暂无待发布的变更。
+本版本为 **minor** 升级，核心变更是将知识库目录数据源从根 `README.md` 迁移至 **`TOC.md`**，并配套语雀式侧边栏交互、三栏文档布局与 CLI 脚手架。自 v0.1.x 升级的宿主仓库请阅读文末 **Migration** 小节。
+
+### Added
+
+#### 目录与 CLI（TOC.md 体系）
+
+- 根目录 **`TOC.md`** 作为笔记层级与侧边栏的唯一数据源；`pnpm tn:update` 规范化 `TOC.md` 并生成 `sidebar.json`。
+- 新增 **`TocService`**（`services/toc/`）与 **`utils/tocHelpers.ts`**：解析 canonical 格式、缩进树序列化、`tocLineIndex` 行号定位、从 TOC 生成 sidebar。
+- 新增 **`utils/tocNodeId.ts`**：dev 模式下为拖拽 API 提供 `node_uuid`（`note:0001` / `folder:…`），不写入 `TOC.md`。
+- 新增常量 **`ROOT_TOC_PATH`**。
+- 新增过渡命令 **`init-toc`**（`pnpm tn:init-toc`）：从 v0.1.x 根 `README.md`（`<!-- endregion:toc -->` 之后）解析笔记分区，按 `##` 标题生成 folder 行、组内笔记缩进为子项，写入 `TOC.md` 并刷新 sidebar。**仅在 v0.2.x 提供，v0.3.x 移除。**
+- 新增 **`utils/migrateReadmeToToc.ts`** 迁移解析器。
+- **`sidebar.data.ts`**：加载前从 `TOC.md` 重建 `sidebar.json`；监听 `TOC.md` / `sidebar.json` 变更触发 HMR。
+
+#### 侧边栏结构与拖拽
+
+- 语雀式 Pointer 拖拽 v3：**`useSidebarDrag`**、**`sidebarDragLogic`**、**`sidebarHitTest`**；整行拖拽、水平缩进改层级、overlay 落点指示线、幽灵预览与乐观 UI。
+- 落点持久化：`POST /__tnotes_sidebar_reorder`，`moveAfter` / `prependChild` + `node_uuid` / `target_uuid`（旧 `dragTocLineIndex` 仍作 fallback）。
+- 纯目录行（无 link）：展开/折叠、「+」新建子笔记/子目录、作为拖拽源与落点；folder 重命名与级联删除（子树 TOC 行 + 磁盘笔记）。
+- TOC 支持目录与笔记任意嵌套；Sidebar「+」可新建子目录。
+- 侧边栏展开状态 v2 写入 localStorage（`note:` / `line:` 键），拖拽排序与 HMR 后不再全部折叠。
+
+#### 文档布局
+
+- 语雀式三栏：左目录（260–480px 可调）、中间正文、右页内目录（VitePress `VPDocAside`，300px 贴齐视口右侧）；左右栏不再受 1440px 居中壳偏移。
+- **`useDocLayout`** / **`doc-layout.scss`**：正文区域页宽模式 **`wide`**（超宽，默认）与 **`standard`**（750px），由设置面板配置，存 localStorage。
+- 视口宽度不足时自动降级：先隐藏右侧页内目录，仍不足则自动折叠左目录（不写 localStorage，与用户手动折叠独立）。
+
+#### 子库脚手架
+
+- 新增 CLI 命令 **`init-sub-repo`**（`pnpm tn:init-sub-repo`）：交互式初始化 `TNotes.{topic}` 子知识库；内置 **`templates/sub-repo/`** 模板（deploy workflow、VitePress 入口、VS Code snippets、静态资源等）。
+- 生成 `.tnotes.json`、`package.json`、根 `README.md`、`TOC.md`、`index.md`、首篇笔记 `0001. TNotes.{topic}`，并自动规范化 TOC、生成 `sidebar.json`。
+- 检测到已有 `.tnotes.json` 时打印绝对路径并退出；`templates/` 纳入 npm 发布包。
+
+#### 开发体验与其他
+
+- dev 模式 Local Search：笔记新增/删除后服务端 debounced 全量重建索引（file-watcher HTTP 桥 + **`localSearchReindexPlugin`**）；生产 `tn:build` 不受影响。
+- 新增 **`utils/vscodePaths.ts`**：Sidebar 与文档页统一解析 VS Code 本地 README 路径。
+- 首页 **`FolderTreeItems.vue`** / **`sidebarTreeHelpers.ts`**：嵌套文件夹视图，支持纯目录节点。
+- **`ConfigManager.clearCache()`**：init 等场景下重新加载 `.tnotes.json`。
+- 无 `.tnotes.json` 时 CLI 以默认配置启动（便于 `init-sub-repo` 在空目录执行）。
+
+### Changed
+
+#### Breaking — 目录与 update 流程
+
+- **`TOC.md` canonical 格式**：目录行（无 checkbox）与笔记行（`- [x] 0001. 标题` 或 `- [ ] 0001` 简写，**无 markdown link**）分离；根级可为目录或笔记，笔记可作为父节点挂子项。
+- **`pnpm tn:update` 不再维护根目录 `README.md` 中的笔记目录区**；改为规范化 `TOC.md` 并生成 `sidebar.json`（单篇笔记 README 内 `region:toc` 不变）。
+- 完成笔记数量统计（`update` / `update-completed-count`）改从 **`TOC.md`** 解析；Git 历史回填时对 TOC 引入前的月份仍可读 `README.md`。
+- `normalize` 不再将「含子项的父笔记」自动拆成「目录 + 重复笔记行」。
+- 文件监听、重命名、note-config 增量更新均写入 **`TOC.md`**，不再改根 README 笔记行。
+- 旧 TOC link 格式（`- [x] [0001. 标题](/notes/…)`）只读兼容一个版本周期；请执行 `pnpm tn:update` 规范化。
+
+#### Breaking — 侧边栏行为
+
+- Sidebar 新建/删除/排序直接读写 **`TOC.md`**；移除独立的「重命名目录 / 删除目录」菜单，改为 TOC 条目级重命名与级联删除。
+- **`sidebarMaxDepth` 默认值 `3` → `0`（不限制嵌套层级）**；仅当在 `.tnotes.json` 显式设置 `> 0` 时启用 UI / 写入 / 拖拽深度校验。
+
+#### 侧边栏拖拽交互（非 API breaking，体验重写）
+
+- 中间落点仅同级排序；末行 after 显示多级导轨，支持左拖 outdent。
+- inside 落点插入目标子层级**开头**（非末尾）；从文件夹外拖入、父行 after / tail 左导轨等语雀式落点语义对齐。
+- 被拖项从列表隐藏（仅保留幽灵）；落点 overlay 绘制 + 命中迟滞，减少闪烁与跳动。
+
+#### 设置面板与首页
+
+- 新增 **「正文区域」** 页宽配置；移除 **「目录风格」**（紧凑/默认/宽松）密度选项。
+- MarkMap：**分支主题**选择器移除，改由站点暗色模式驱动；保留 **「笔记内 MarkMap」** 初始展开层级。
+- **`SidebarCard`** 移除首页思维导图视图，保留文件夹视图与搜索视图。
+
+#### 组件与样式
+
+- 新增笔记 README 正文模板集中到 **`config/templates.ts`**（`getNewNoteReadmeBody()`）。
+- **Footprints**：朋友圈式图片网格（1 / 2 / 2×2 / 3 列），CSS Grid + `:deep()` 修复 Markdown `p`/`a` 包裹导致的纵向堆叠；`onContentUpdated` 后重新统计图片数。
+- **MarkMap**：折叠区块 HMR 后重新挂载 toolbar；与 `markmap-dark` / 站点暗色同步。
+- **Swiper**：`.swiper-container` 上下 margin 改为 `0`，与代码块/tab 更紧凑。
+- 移除 `base.scss` 对代码块外层 `margin: 0 !important` 的覆盖，恢复 VitePress 相邻代码块默认间距。
+- 删除笔记 API 返回 `redirectUrl` / `redirectNoteIndex`，按 TOC 顺序回退导航。
+
+### Removed
+
+- 设置面板 **「显示代码块行号」**、**「代码块内容自动换行」** 及对应 localStorage / `html` class 逻辑；正文代码块回退 VitePress 原生行号与布局（构建级 `lineNumbers: true` 不变）。
+- 设置面板侧边栏 **目录风格**（`SIDEBAR_DENSITY_KEY`）。
+- 设置面板 MarkMap **分支主题** UI（`MARKMAP_THEME_KEY`）。
+- 首页思维导图视图（**`MindMapView.vue`**）及 **`icon__mindmap.svg`**。
+- 根 README 笔记目录区的自动同步（`ReadmeService.updateAllReadmes` 默认 `updateHome: false`）。
+
+### Fixed
+
+- 文档页 / Sidebar「在 VS Code 中打开」路径 **`notes` 目录重复拼接**（`vscodePaths.ts`）。
+- Sidebar 与 **`TOC.md` 不同步**：`sidebar.data.ts` 加载前重建 `sidebar.json`，TOC 变更触发 HMR。
+- **`sidebarMaxDepth: 3`** 时第 3 层纯目录被 `depth < maxDepth - 1` 误截断。
+- 首页文件夹视图：纯目录节点显示标题，不再空白或缺层。
+- 删除当前浏览中的笔记：按 TOC 顺序回退上一篇（首项回退 `/`），展开父链并高亮；父笔记同时有 `link` 与子项时展开逻辑正确。
+- Sidebar 高度：`.VPSidebar` 使用 `top + calc(100vh - nav)`，移除 `#VPSidebarNav` 多余嵌套滚动。
+- 拖拽边界：外拖入折叠文件夹、紧邻同级拖入上一文件夹、tail/after 导轨语义、预览跳动等。
+- dev 下笔记增删后 Local Search 服务端索引重建（浏览器侧见 Known limitations）。
+- Footprints 图片布局异常（容器被撑高、无法三列网格）。
+
+### Known limitations
+
+- dev 下笔记新增或删除后，顶栏 Local Search **不会在浏览器内热更新**；需 **刷新页面（F5）** 后再 Ctrl+K 搜索，结果才与磁盘一致。根因：VitePress 内置搜索组件对虚拟索引模块的客户端缓存，暂无法在不 fork 组件的前提下可靠 HMR 同步。
+- **`init-toc` 为过渡命令**，仅 v0.2.x 提供，v0.3.x 将移除。
+- 旧 TOC link 行格式只读兼容一个版本周期，请尽快 `pnpm tn:update` 规范化。
+
+### Migration（0.1.x → 0.2.0，TNotes.xxx 宿主仓库）
+
+1. **升级依赖**
+   ```bash
+   pnpm add @tnotesjs/core@^0.2.0
+   pnpm install
+   ```
+2. **补充 scripts**（若缺失）
+   ```json
+   "tn:init-toc": "tnotes --init-toc"
+   ```
+3. **一次性生成 `TOC.md`**（已有 v0.1.x 笔记目录的仓库）
+   ```bash
+   pnpm tn:init-toc
+   ```
+   要求根 `README.md` 含 `<!-- endregion:toc -->` 及下方笔记列表；`##` 分区变为 folder，组内笔记缩进为子项。
+4. **规范化并刷新产物**
+   ```bash
+   pnpm tn:update
+   ```
+   输出 canonical `TOC.md`、`sidebar.json`、各笔记 README，以及当月 `completed_notes_count`。
+5. **提交** `TOC.md`、`sidebar.json`、`.tnotes.json`（统计字段）等变更；根 `README.md` 中的笔记目录区可手动精简（`update` 不再维护）。
+6. **配置检查**：若仍需深度限制，在 `.tnotes.json` 显式保留 `sidebarMaxDepth: 3`（默认已改为 `0` 不限制）。
+7. **使用习惯**：目录编辑优先改 `TOC.md` 或使用 Sidebar UI；`tn:dev` 下搜笔记前需刷新页面；设置中重新确认 **正文区域** 页宽（默认超宽）。
+8. **可选**：`pnpm tn:update-completed-count` 回填近 12 个月统计（TOC 引入前的月份仍读 Git 中的 `README.md`）。
+9. **新建子库**：使用 `pnpm tn:init-sub-repo`，无需手动复制模板。
+
+| 领域 | v0.1.x | v0.2.0 |
+|------|--------|--------|
+| 目录数据源 | 根 `README.md` `endregion:toc` 之后 | **`TOC.md`** |
+| `tn:update` 维护根 README 笔记列表 | 是 | **否** |
+| TOC 笔记行格式 | 带 link 的 markdown 列表 | **checkbox + 编号，无 link** |
+| `sidebarMaxDepth` 默认 | `3` | **`0`（不限）** |
+| 首页 SidebarCard | 文件夹 + 思维导图 | **文件夹 + 搜索** |
+| 设置面板 | 代码块行号/换行、目录风格、MarkMap 主题 | **正文页宽** + MarkMap 展开层级 |
 
 ## [0.1.28] - 2026-06-02
 
@@ -277,7 +416,8 @@
 - `tsup` 构建配置，`onSuccess` 钩子为 CLI 入口注入 shebang
 - 发版脚本 `scripts/release.mjs`，规范化发布流程
 
-[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.27...HEAD
+[Unreleased]: https://github.com/tnotesjs/core/compare/v0.1.28...HEAD
+[0.1.28]: https://github.com/tnotesjs/core/compare/v0.1.27...v0.1.28
 [0.1.27]: https://github.com/tnotesjs/core/compare/v0.1.26...v0.1.27
 [0.1.26]: https://github.com/tnotesjs/core/compare/v0.1.25...v0.1.26
 [0.1.25]: https://github.com/tnotesjs/core/compare/v0.1.24...v0.1.25

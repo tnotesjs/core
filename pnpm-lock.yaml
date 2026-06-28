@@ -44,6 +44,9 @@ importers:
       mermaid:
         specifier: ^11.5.0
         version: 11.13.0
+      minisearch:
+        specifier: ^7.2.0
+        version: 7.2.0
       sass-embedded:
         specifier: ^1.90.0
         version: 1.98.0

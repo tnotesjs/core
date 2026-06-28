@@ -8,6 +8,7 @@ import { Transformer } from 'markmap-lib'
 import { Toolbar } from 'markmap-toolbar'
 import 'markmap-toolbar/dist/style.css'
 import { Markmap, IMarkmapOptions } from 'markmap-view'
+import { onContentUpdated } from 'vitepress'
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { icon__fullscreen, icon__fullscreen_exit, icon__confirm } from '../../assets/icons'
@@ -30,6 +31,10 @@ const containerRef = ref<HTMLDivElement | null>(null)
 let markmapInstance: Markmap | null = null
 let observer: MutationObserver | null = null
 let toolbarEl: HTMLElement | null = null
+let toolbarReinitTimer: ReturnType<typeof setTimeout> | null = null
+let darkClassObserver: MutationObserver | null = null
+
+const isMarkmapDark = ref(false)
 
 // 从 localStorage 读取配置，如果没有则使用 props 或默认值
 const getInitialExpandLevel = () => {
@@ -42,6 +47,9 @@ const getInitialExpandLevel = () => {
 
 const getThemeColorFn = () => {
   if (typeof window !== 'undefined') {
+    if (document.documentElement.classList.contains('markmap-dark')) {
+      return scaleOrdinal(schemeSet3)
+    }
     const theme = localStorage.getItem(MARKMAP_THEME_KEY) || 'default'
     switch (theme) {
       case 'colorful':
@@ -131,6 +139,7 @@ function initToolbar() {
   toolbarEl.style.position = 'absolute'
   toolbarEl.style.top = '1rem'
   toolbarEl.style.right = '.5rem'
+  toolbarEl.style.zIndex = '10'
   toolbarEl.style.scale = '.8'
   const brand = toolbarEl.querySelector('.mm-toolbar-brand')
   if (brand) toolbarEl.removeChild(brand)
@@ -367,7 +376,43 @@ function onUpdateClick() {
   renderMarkmap(decodeURIComponent(props.content || ''), expandLevel.value)
 }
 
+function syncMarkmapDarkState(reRender = false) {
+  const dark = document.documentElement.classList.contains('markmap-dark')
+  const changed = isMarkmapDark.value !== dark
+  isMarkmapDark.value = dark
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(MARKMAP_THEME_KEY, dark ? 'dark' : 'default')
+  }
+  if (reRender && changed && markmapInstance && props.content) {
+    renderMarkmap(decodeURIComponent(props.content || ''), expandLevel.value)
+  }
+}
+
+function ensureToolbarAfterContentUpdate() {
+  if (toolbarReinitTimer) clearTimeout(toolbarReinitTimer)
+  // ContentCollapse.onContentUpdated 会在 ~150ms 后重组 DOM，稍晚再补挂工具栏
+  toolbarReinitTimer = setTimeout(() => {
+    toolbarReinitTimer = null
+    if (!containerRef.value || !markmapInstance) return
+    if (!containerRef.value.querySelector('.mm-toolbar')) {
+      initToolbar()
+    }
+  }, 350)
+}
+
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    if (localStorage.getItem(MARKMAP_THEME_KEY) === 'dark') {
+      document.documentElement.classList.add('markmap-dark')
+    }
+    syncMarkmapDarkState(false)
+    darkClassObserver = new MutationObserver(() => syncMarkmapDarkState(true))
+    darkClassObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+  }
+
   renderMarkmap(decodeURIComponent(props.content || ''))
 
   // 添加全屏事件监听
@@ -376,7 +421,24 @@ onMounted(() => {
   document.addEventListener('MSFullscreenChange', handleFullscreenChange)
 })
 
+onContentUpdated(() => {
+  ensureToolbarAfterContentUpdate()
+})
+
 onBeforeUnmount(() => {
+  if (darkClassObserver) {
+    darkClassObserver.disconnect()
+    darkClassObserver = null
+  }
+  if (toolbarReinitTimer) {
+    clearTimeout(toolbarReinitTimer)
+    toolbarReinitTimer = null
+  }
+  if (toolbarEl) {
+    toolbarEl.remove()
+    toolbarEl = null
+    toolbarLevelInput = null
+  }
   if (markmapInstance) {
     try {
       markmapInstance.destroy()
@@ -398,6 +460,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="markmapContainer"
+    :class="{ 'is-markmap-dark': isMarkmapDark }"
     ref="containerRef"
     style="position: relative"
   >
@@ -434,16 +497,10 @@ onBeforeUnmount(() => {
       animation: pulse 1.5s ease-in-out infinite;
     }
   }
-
-  /* 鼠标悬停显示 toolbar */
-  &:hover :global(.mm-toolbar) {
-    opacity: 1;
-    pointer-events: auto;
-  }
 }
 
 /* dark background */
-:global(.markmap-dark) .markmapContainer {
+.markmapContainer.is-markmap-dark {
   background-color: #1d1d1d;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 
@@ -534,9 +591,9 @@ onBeforeUnmount(() => {
   box-shadow: none;
 }
 
-:global(.markmap-dark) .markmapContainer:fullscreen,
-:global(.markmap-dark) .markmapContainer:-ms-fullscreen,
-:global(.markmap-dark) .markmapContainer:-webkit-full-screen {
+.markmapContainer.is-markmap-dark:fullscreen,
+.markmapContainer.is-markmap-dark:-ms-fullscreen,
+.markmapContainer.is-markmap-dark:-webkit-full-screen {
   background: #1d1d1d;
 }
 

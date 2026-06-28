@@ -47,7 +47,7 @@ vitepress/components/Settings/Settings.vue
             <span class="infoWrap">
               <span class="infoIcon">?</span>
               <span class="tooltip">
-                控制侧边栏笔记编号显示，以及目录行距密度。保存后会刷新页面以应用侧边栏配置。
+                控制侧边栏笔记编号显示，以及已完成/未完成笔记前缀。保存后会刷新页面以应用侧边栏配置。
               </span>
             </span>
           </div>
@@ -63,28 +63,6 @@ vitepress/components/Settings/Settings.vue
             />
             <span>显示笔记编号</span>
           </label>
-
-          <div class="controlRow">
-            <span class="controlLabel">目录风格</span>
-            <div class="segmented">
-              <label
-                v-for="option in sidebarDensityOptions"
-                :key="option.value"
-                :class="[
-                  'segment',
-                  { activeSegment: sidebarDensity === option.value },
-                ]"
-              >
-                <input
-                  v-model="sidebarDensity"
-                  type="radio"
-                  name="sidebar-density"
-                  :value="option.value"
-                />
-                <span>{{ option.label }}</span>
-              </label>
-            </div>
-          </div>
 
           <div class="prefixGrid">
             <label class="field">
@@ -113,26 +91,58 @@ vitepress/components/Settings/Settings.vue
       <div class="settingItem">
         <div class="settingMeta">
           <div class="labelLine">
-            <span class="itemName">MarkMap 思维导图</span>
+            <span class="itemName">正文区域</span>
             <span class="infoWrap">
               <span class="infoIcon">?</span>
               <span class="tooltip">
-                配置 MarkMap 的默认分支配色和初始展开层级。
+                控制笔记正文在中间栏的显示宽度。保存后会刷新页面以应用页宽变更。
+              </span>
+            </span>
+          </div>
+          <span class="statusText">{{
+            contentWidthMode === 'wide' ? '超宽显示' : '标准页宽'
+          }}</span>
+        </div>
+
+        <div class="fieldStack">
+          <div class="controlRow">
+            <span class="controlLabel">页宽模式</span>
+            <div class="segmented segmented-two">
+              <label
+                v-for="option in contentWidthModeOptions"
+                :key="option.value"
+                :class="[
+                  'segment',
+                  { activeSegment: contentWidthMode === option.value },
+                ]"
+              >
+                <input
+                  v-model="contentWidthMode"
+                  type="radio"
+                  name="content-width-mode"
+                  :value="option.value"
+                />
+                <span>{{ option.label }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settingItem">
+        <div class="settingMeta">
+          <div class="labelLine">
+            <span class="itemName">笔记内 MarkMap</span>
+            <span class="infoWrap">
+              <span class="infoIcon">?</span>
+              <span class="tooltip">
+                配置笔记中 markmap 代码块的初始展开层级。
               </span>
             </span>
           </div>
         </div>
 
         <div class="inlineGrid">
-          <label class="field">
-            <span class="controlLabel">分支主题</span>
-            <select v-model="markmapTheme" class="select">
-              <option value="default">默认</option>
-              <option value="colorful">多彩</option>
-              <option value="dark">深色</option>
-            </select>
-          </label>
-
           <label class="field">
             <span class="controlLabel">展开层级</span>
             <div class="inputWithUnit">
@@ -175,55 +185,53 @@ import { ref, computed, onMounted } from 'vue'
 
 import {
   NOTES_DIR_KEY,
-  MARKMAP_THEME_KEY,
   MARKMAP_EXPAND_LEVEL_KEY,
   SIDEBAR_SHOW_NOTE_ID_KEY,
-  SIDEBAR_DENSITY_KEY,
   SIDEBAR_DONE_PREFIX_KEY,
   SIDEBAR_UNDONE_PREFIX_KEY,
+  CONTENT_WIDTH_MODE_KEY,
 } from '../constants'
 // @ts-expect-error - VitePress Data Loader
 import { data as tnotesConfig } from '../tnotes-config.data'
 
-type SidebarDensity = 'compact' | 'default' | 'loose'
+type ContentWidthMode = 'wide' | 'standard'
 
-const DEFAULT_SIDEBAR_DENSITY: SidebarDensity = 'default'
+const DEFAULT_CONTENT_WIDTH_MODE: ContentWidthMode = 'wide'
 const DEFAULT_DONE_PREFIX = '✅'
 const DEFAULT_UNDONE_PREFIX = '⏰'
-const sidebarDensityOptions: Array<{
+
+const contentWidthModeOptions: Array<{
   label: string
-  value: SidebarDensity
+  value: ContentWidthMode
 }> = [
-  { label: '紧凑', value: 'compact' },
-  { label: '默认', value: 'default' },
-  { label: '宽松', value: 'loose' },
+  { label: '超宽显示', value: 'wide' },
+  { label: '标准页宽', value: 'standard' },
 ]
 
 const path = ref('')
 const originalPath = ref('')
-const markmapTheme = ref('default')
-const originalMarkmapTheme = ref('default')
 const markmapExpandLevel = ref(5)
 const originalMarkmapExpandLevel = ref(5)
 const showNoteId = ref(false)
 const originalShowNoteId = ref(false)
-const sidebarDensity = ref<SidebarDensity>(DEFAULT_SIDEBAR_DENSITY)
-const originalSidebarDensity = ref<SidebarDensity>(DEFAULT_SIDEBAR_DENSITY)
 const donePrefix = ref(DEFAULT_DONE_PREFIX)
 const originalDonePrefix = ref(DEFAULT_DONE_PREFIX)
 const undonePrefix = ref(DEFAULT_UNDONE_PREFIX)
 const originalUndonePrefix = ref(DEFAULT_UNDONE_PREFIX)
+const contentWidthMode = ref<ContentWidthMode>(DEFAULT_CONTENT_WIDTH_MODE)
+const originalContentWidthMode = ref<ContentWidthMode>(
+  DEFAULT_CONTENT_WIDTH_MODE,
+)
 const showSuccessToast = ref(false)
 
 const hasChanges = computed(
   () =>
     path.value !== originalPath.value ||
-    markmapTheme.value !== originalMarkmapTheme.value ||
     markmapExpandLevel.value !== originalMarkmapExpandLevel.value ||
     showNoteId.value !== originalShowNoteId.value ||
-    sidebarDensity.value !== originalSidebarDensity.value ||
     donePrefix.value !== originalDonePrefix.value ||
-    undonePrefix.value !== originalUndonePrefix.value,
+    undonePrefix.value !== originalUndonePrefix.value ||
+    contentWidthMode.value !== originalContentWidthMode.value,
 )
 
 const saveText = computed(() => {
@@ -238,10 +246,6 @@ onMounted(() => {
   path.value = savedPath
   originalPath.value = savedPath
 
-  const savedTheme = localStorage.getItem(MARKMAP_THEME_KEY) || 'default'
-  markmapTheme.value = savedTheme
-  originalMarkmapTheme.value = savedTheme
-
   const savedLevel = localStorage.getItem(MARKMAP_EXPAND_LEVEL_KEY) || '5'
   markmapExpandLevel.value = parseInt(savedLevel, 10)
   originalMarkmapExpandLevel.value = markmapExpandLevel.value
@@ -253,12 +257,6 @@ onMounted(() => {
       : tnotesConfig?.sidebarShowNoteId ?? false
   originalShowNoteId.value = showNoteId.value
 
-  const savedSidebarDensity = normalizeSidebarDensity(
-    localStorage.getItem(SIDEBAR_DENSITY_KEY),
-  )
-  sidebarDensity.value = savedSidebarDensity
-  originalSidebarDensity.value = savedSidebarDensity
-
   const savedDonePrefix = localStorage.getItem(SIDEBAR_DONE_PREFIX_KEY)
   donePrefix.value =
     savedDonePrefix !== null ? savedDonePrefix : DEFAULT_DONE_PREFIX
@@ -268,14 +266,16 @@ onMounted(() => {
   undonePrefix.value =
     savedUndonePrefix !== null ? savedUndonePrefix : DEFAULT_UNDONE_PREFIX
   originalUndonePrefix.value = undonePrefix.value
+
+  const savedContentWidthMode = normalizeContentWidthMode(
+    localStorage.getItem(CONTENT_WIDTH_MODE_KEY),
+  )
+  contentWidthMode.value = savedContentWidthMode
+  originalContentWidthMode.value = savedContentWidthMode
 })
 
-function normalizeSidebarDensity(value: string | null): SidebarDensity {
-  if (value === 'compact' || value === 'default' || value === 'loose') {
-    return value
-  }
-
-  return DEFAULT_SIDEBAR_DENSITY
+function normalizeContentWidthMode(value: string | null): ContentWidthMode {
+  return value === 'standard' ? 'standard' : 'wide'
 }
 
 function clearPath() {
@@ -288,28 +288,26 @@ function save() {
   try {
     const needReload =
       showNoteId.value !== originalShowNoteId.value ||
-      sidebarDensity.value !== originalSidebarDensity.value ||
       donePrefix.value !== originalDonePrefix.value ||
-      undonePrefix.value !== originalUndonePrefix.value
+      undonePrefix.value !== originalUndonePrefix.value ||
+      contentWidthMode.value !== originalContentWidthMode.value
 
     localStorage.setItem(NOTES_DIR_KEY, path.value)
-    localStorage.setItem(MARKMAP_THEME_KEY, markmapTheme.value)
     localStorage.setItem(
       MARKMAP_EXPAND_LEVEL_KEY,
       markmapExpandLevel.value.toString(),
     )
     localStorage.setItem(SIDEBAR_SHOW_NOTE_ID_KEY, showNoteId.value.toString())
-    localStorage.setItem(SIDEBAR_DENSITY_KEY, sidebarDensity.value)
     localStorage.setItem(SIDEBAR_DONE_PREFIX_KEY, donePrefix.value)
     localStorage.setItem(SIDEBAR_UNDONE_PREFIX_KEY, undonePrefix.value)
+    localStorage.setItem(CONTENT_WIDTH_MODE_KEY, contentWidthMode.value)
 
     originalPath.value = path.value
-    originalMarkmapTheme.value = markmapTheme.value
     originalMarkmapExpandLevel.value = markmapExpandLevel.value
     originalShowNoteId.value = showNoteId.value
-    originalSidebarDensity.value = sidebarDensity.value
     originalDonePrefix.value = donePrefix.value
     originalUndonePrefix.value = undonePrefix.value
+    originalContentWidthMode.value = contentWidthMode.value
 
     showSuccessToast.value = true
     setTimeout(() => {
@@ -329,12 +327,11 @@ function save() {
 
 function reset() {
   path.value = originalPath.value
-  markmapTheme.value = originalMarkmapTheme.value
   markmapExpandLevel.value = originalMarkmapExpandLevel.value
   showNoteId.value = originalShowNoteId.value
-  sidebarDensity.value = originalSidebarDensity.value
   donePrefix.value = originalDonePrefix.value
   undonePrefix.value = originalUndonePrefix.value
+  contentWidthMode.value = originalContentWidthMode.value
 }
 </script>
 
@@ -431,6 +428,8 @@ function reset() {
 
 .inputGroup {
   position: relative;
+  align-self: start;
+  width: 100%;
 }
 
 .input,
@@ -475,6 +474,7 @@ function reset() {
   width: 20px;
   height: 20px;
   padding: 0;
+  line-height: 1;
   color: var(--vp-c-text-3);
   background: transparent;
   border: none;
@@ -534,6 +534,10 @@ function reset() {
   overflow: hidden;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
+}
+
+.segmented-two {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .segment {

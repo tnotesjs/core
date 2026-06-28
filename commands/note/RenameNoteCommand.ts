@@ -9,7 +9,7 @@ import { join } from 'path'
 
 import { NOTES_PATH, REPO_NOTES_URL } from '../../config/constants'
 import { generateNoteTitle } from '../../config/templates'
-import { ReadmeService, NoteService, FileWatcherService } from '../../services'
+import { NoteService, FileWatcherService, TocService } from '../../services'
 import { validateNoteTitle } from '../../utils'
 import { BaseCommand } from '../BaseCommand'
 
@@ -20,12 +20,12 @@ interface RenameNoteParams {
 
 export class RenameNoteCommand extends BaseCommand {
   private noteService: NoteService
-  private readmeService: ReadmeService
+  private tocService: TocService
 
   constructor() {
     super('rename-note')
     this.noteService = NoteService.getInstance()
-    this.readmeService = ReadmeService.getInstance()
+    this.tocService = TocService.getInstance()
   }
 
   protected async run(): Promise<void> {
@@ -132,12 +132,12 @@ export class RenameNoteCommand extends BaseCommand {
       this.logger.warn('⚠️  更新笔记标题时出错:', error)
     }
 
-    // 重命名成功后,更新全局 README.md 和 sidebar.json
+    // 重命名成功后，更新 TOC.md 和 sidebar.json
     try {
-      this.logger.info('正在更新全局 README.md 和 sidebar.json...')
+      this.logger.info('正在更新 TOC.md 和 sidebar.json...')
 
-      // 更新 README.md 和 sidebar.json
-      await this.readmeService.updateAllReadmes()
+      await this.tocService.renameNoteInToc(noteIndex, newDirName)
+      await this.tocService.regenerateSidebar()
 
       this.logger.success('✅ 全局文件已更新')
     } catch (error) {

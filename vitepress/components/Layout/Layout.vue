@@ -215,6 +215,7 @@ import AboutPanel from "./AboutPanel.vue";
 import Discussions from "../Discussions/Discussions.vue";
 import LoadingPage from "../LoadingPage/LoadingPage.vue";
 import { useCollapseControl } from "./composables/useCollapseControl";
+import { useDocLayout } from "./composables/useDocLayout";
 import { useNoteConfig } from "./composables/useNoteConfig";
 import { useNoteSave } from "./composables/useNoteSave";
 import { useNoteValidation } from "./composables/useNoteValidation";
@@ -241,6 +242,8 @@ const route = useRoute();
 
 // 启用代码块全屏功能
 useCodeBlockFullscreen();
+
+const { initDocLayout, updateResponsiveLayout } = useDocLayout();
 
 // 全局重命名遮罩状态（由 useRenameRedirect 控制 show/hide）
 const { state: renameOverlayState } = useRenameOverlay();
@@ -574,6 +577,7 @@ function checkFullContentMode() {
 
 // 生命周期钩子
 onMounted(() => {
+  initDocLayout();
   updateVscodeNoteDir();
   interceptHomeReadmeLinks(isHomeReadme, router);
   initRedirectCheck();
@@ -608,6 +612,7 @@ watch(
   () => route.path,
   () => {
     setTimeout(checkFullContentMode, 100);
+    setTimeout(updateResponsiveLayout, 150);
   },
 );
 </script>

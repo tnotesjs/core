@@ -8,6 +8,10 @@ import { useData } from 'vitepress'
 import { ref } from 'vue'
 
 import { NOTES_DIR_KEY } from '../../constants'
+import {
+  resolveNoteReadmePath,
+  toVscodeFileUrl,
+} from '../../utils/vscodePaths'
 
 import type { Router } from 'vitepress'
 import type { Ref, ComputedRef } from 'vue'
@@ -24,9 +28,10 @@ export function useVSCodeIntegration() {
   const updateVscodeNoteDir = () => {
     if (typeof window !== 'undefined') {
       const notesDir = localStorage.getItem(NOTES_DIR_KEY)
-      vscodeNotesDir.value = notesDir
-        ? `vscode://file/${notesDir}/${vpData.page.value.relativePath}`
-        : ''
+      const notePath = notesDir
+        ? resolveNoteReadmePath(notesDir, vpData.page.value.relativePath)
+        : null
+      vscodeNotesDir.value = notePath ? toVscodeFileUrl(notePath) : ''
     }
   }
 

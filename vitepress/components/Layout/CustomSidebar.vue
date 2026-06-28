@@ -4,29 +4,80 @@ vitepress/components/Layout/CustomSidebar.vue
 
 <template>
   <div class="custom-sidebar-wrapper">
-    <nav class="nav" ref="navRef">
+    <nav class="nav sidebar-nav" ref="navRef">
+      <a
+        :href="readmeLink"
+        class="nav-item readme-nav-item"
+        :class="{ active: isReadmeActive }"
+      >
+        README
+      </a>
+
       <!-- 使用递归组件渲染侧边栏，支持任意层级嵌套 -->
       <SidebarItems
-        :items="sidebarGroups"
+        :items="displaySidebarGroups"
         :depth="0"
         :max-depth="maxDepth"
         :show-note-id="showNoteId"
         :base="base"
         :current-path="route.path"
         :is-dev="isDev"
-        :sidebar-density="sidebarDensity"
         :done-prefix="donePrefix"
         :undone-prefix="undonePrefix"
-        @rename-group="renameGroup"
-        @delete-group="deleteGroup"
+        :drag-context="sidebarDrag"
         @create-note-in-group="createNoteInGroup"
         @create-notes-in-group="createNotesInGroup"
+        @create-folder-in-group="createFolderInGroup"
+        @rename-folder="renameFolder"
+        @delete-entry="deleteEntry"
         @rename-note="renameNote"
         @delete-note="deleteNote"
         @create-note-around="createNoteAround"
         @open-note-about="openNoteAbout"
-        @reorder-sidebar="reorderSidebar"
       />
+
+      <div
+        v-if="dropSlot.visible"
+        class="sidebar-drop-slot"
+        :style="{
+          top: `${dropSlot.top}px`,
+          left: `${dropSlot.left}px`,
+          width: `${dropSlot.width}px`,
+          height: `${dropSlot.height}px`,
+        }"
+      />
+
+      <div
+        v-if="dropIndicator.visible"
+        class="sidebar-drop-layer"
+        :style="{ top: `${dropIndicator.top}px` }"
+      >
+        <template v-if="dropIndicator.mode === 'tail-rail'">
+          <div
+            v-for="depth in dropIndicator.depthLevels"
+            :key="depth"
+            class="sidebar-drop-rail-segment"
+            :class="{ 'is-active': depth === dropIndicator.activeDepth }"
+            :style="{
+              left: `${getDropRailLeft(depth)}px`,
+              width: `${getDropRailWidth(depth)}px`,
+            }"
+          />
+        </template>
+        <div
+          v-else
+          class="sidebar-drop-indicator"
+          :class="{ 'is-inside': dropIndicator.mode === 'inside' }"
+          :style="{
+            left: `${dropIndicator.left}px`,
+            width: `${dropIndicator.width}px`,
+            height:
+              dropIndicator.mode === 'inside'
+                ? `${getDropInsideHeight()}px`
+                : undefined,
+          }"
+        />
+      </div>
     </nav>
   </div>
 </template>
@@ -35,13 +86,33 @@ vitepress/components/Layout/CustomSidebar.vue
 import { useRoute, useData } from 'vitepress'
 import { ref, onMounted, watch, computed } from 'vue'
 
+import {
+  useSidebarDrag,
+  getDropRailLeft as calcDropRailLeft,
+  type DragReorderMeta,
+  type YuqueReorderPayload,
+} from './composables/useSidebarDrag'
+import {
+  applySidebarCollapsedState,
+  saveSidebarCollapsedState,
+  loadSidebarCollapsedState,
+  mergeCollapseStore,
+  saveCollapseEntries,
+  buildPostDropCollapsePatch,
+  shouldSuppressActiveItemScroll,
+  suppressActiveItemScroll,
+  getCollapseKeyForTreeItem,
+} from './sidebarCollapsedState'
+import { SIDEBAR_ROW_HEIGHT } from './sidebarDragLogic'
 import SidebarItems from './SidebarItems.vue'
+import { enrichSidebarNodeIds, computeSidebarNodeId } from '../../../utils/tocNodeId'
 import {
   SIDEBAR_SHOW_NOTE_ID_KEY,
   SIDEBAR_MAX_DEPTH_KEY,
-  SIDEBAR_DENSITY_KEY,
   SIDEBAR_DONE_PREFIX_KEY,
   SIDEBAR_UNDONE_PREFIX_KEY,
+  SIDEBAR_COLLAPSED_STATE_KEY,
+  SIDEBAR_SUPPRESS_ACTIVE_SCROLL_KEY,
 } from '../constants'
 // @ts-expect-error - VitePress Data Loader
 import { data as sidebarConfig } from '../sidebar.data'
@@ -54,6 +125,9 @@ interface SidebarItem {
   link?: string
   items?: SidebarItem[]
   collapsed?: boolean
+  tocLineIndex?: number
+  folderPath?: string[]
+  nodeId?: string
 }
 
 const route = useRoute()
@@ -62,12 +136,32 @@ const sidebarGroups = ref<SidebarItem[]>([])
 const navRef = ref<HTMLElement | null>(null)
 const currentFocusIndex = ref(0)
 
+const base = computed(() => site.value.base || '/')
+const readmeLink = computed(() => `${base.value}README`)
+
+function normalizeRoutePath(path: string): string {
+  const normalizedPath = path.split(/[?#]/)[0].replace(/\.html$/, '')
+
+  return normalizedPath.length > 1
+    ? normalizedPath.replace(/\/$/, '')
+    : normalizedPath
+}
+
+const isReadmeActive = computed(() => {
+  const currentPath = normalizeRoutePath(route.path)
+  const readmePath = normalizeRoutePath(readmeLink.value)
+
+  return currentPath === readmePath || currentPath === '/README'
+})
+
 const emit = defineEmits<{
   'open-note-about': [noteIndex: string]
 }>()
 
-interface GroupActionPayload {
-  groupPath: string[]
+interface ParentNoteActionPayload {
+  parentNoteIndex?: string
+  parentFolderPath?: string[]
+  parentTocLineIndex?: number
   text: string
 }
 
@@ -83,36 +177,47 @@ interface SidebarActionResult {
   message?: string
   redirectUrl?: string
   newUrl?: string
+  deletedNoteIndexes?: string[]
 }
 
 interface ReorderPayload {
-  dragType: 'group' | 'note'
-  groupPath?: string[]
+  dragType: 'note' | 'folder'
+  dragTocLineIndex?: number
   noteIndex?: string
   targetType: 'group' | 'note'
-  targetGroupPath?: string[]
   targetNoteIndex?: string
-  placement?: 'before' | 'after'
+  targetFolderPath?: string[]
+  targetTocLineIndex?: number
+  placement?: 'before' | 'after' | 'inside'
 }
 
-type SidebarDensity = 'compact' | 'default' | 'loose'
+interface FolderActionPayload {
+  tocLineIndex: number
+  text: string
+}
 
-const DEFAULT_SIDEBAR_DENSITY: SidebarDensity = 'default'
+interface EntryActionPayload {
+  tocLineIndex: number
+  text: string
+  noteIndex?: string
+}
+
 const DEFAULT_DONE_PREFIX = '✅'
 const DEFAULT_UNDONE_PREFIX = '⏰'
 
-// 最大解析层级（默认 3 层）
+// 最大解析层级（0 = 不限制）
 const maxDepth = computed(() => {
   if (typeof window === 'undefined') {
-    return tnotesConfig.sidebarMaxDepth ?? 3
+    return tnotesConfig.sidebarMaxDepth ?? 0
   }
 
   const savedMaxDepth = localStorage.getItem(SIDEBAR_MAX_DEPTH_KEY)
   if (savedMaxDepth !== null) {
-    return parseInt(savedMaxDepth, 10)
+    const parsed = parseInt(savedMaxDepth, 10)
+    return parsed > 0 ? parsed : 0
   }
 
-  return tnotesConfig.sidebarMaxDepth ?? 3
+  return tnotesConfig.sidebarMaxDepth ?? 0
 })
 
 // 获取配置：是否显示笔记 ID
@@ -129,12 +234,6 @@ const showNoteId = computed(() => {
   return tnotesConfig.sidebarShowNoteId ?? false
 })
 
-const sidebarDensity = computed<SidebarDensity>(() => {
-  if (typeof window === 'undefined') return DEFAULT_SIDEBAR_DENSITY
-
-  return normalizeSidebarDensity(localStorage.getItem(SIDEBAR_DENSITY_KEY))
-})
-
 const donePrefix = computed(() => {
   if (typeof window === 'undefined') return DEFAULT_DONE_PREFIX
 
@@ -149,16 +248,118 @@ const undonePrefix = computed(() => {
   return savedPrefix !== null ? savedPrefix : DEFAULT_UNDONE_PREFIX
 })
 
-// 获取 base 路径
-const base = computed(() => site.value.base || '/')
-
 const isDev = computed(() => {
+  if (import.meta.env.DEV) return true
   if (typeof window === 'undefined') return false
   return (
     window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
   )
 })
+
+function getDropInsideHeight(): number {
+  const nodeId = sidebarDrag.dropIndicator.value.targetNodeId
+  if (!nodeId || !navRef.value) return SIDEBAR_ROW_HEIGHT
+
+  const row = navRef.value.querySelector<HTMLElement>(
+    `.sidebar-row[data-node-id="${nodeId}"]`,
+  )
+  return row?.getBoundingClientRect().height ?? SIDEBAR_ROW_HEIGHT
+}
+
+function findSidebarItemByNodeId(
+  items: SidebarItem[],
+  nodeId: string,
+): SidebarItem | null {
+  for (const item of items) {
+    const id = item.nodeId ?? computeSidebarNodeId(item)
+    if (id === nodeId) return item
+    if (item.items?.length) {
+      const found = findSidebarItemByNodeId(item.items, nodeId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function resolveTargetCollapseKey(
+  targetNodeId: string | null | undefined,
+): string | null {
+  if (!targetNodeId) return null
+  const item = findSidebarItemByNodeId(sidebarGroups.value, targetNodeId)
+  return item ? resolveCollapseKey(item) : null
+}
+
+function applyPostDropCollapsePatch(patch: Record<string, boolean>) {
+  if (!Object.keys(patch).length) return
+
+  const merged = mergeCollapseStore(
+    loadSidebarCollapsedState(SIDEBAR_COLLAPSED_STATE_KEY),
+    patch,
+  )
+  saveCollapseEntries(SIDEBAR_COLLAPSED_STATE_KEY, merged)
+}
+
+function reorderSidebarOptimistic(
+  payload: YuqueReorderPayload,
+  meta: DragReorderMeta,
+) {
+  if (!payload.node_uuid || !payload.action) return
+  const isRootPrepend =
+    payload.action === 'prependChild' && !payload.target_uuid
+  if (!isRootPrepend && !payload.target_uuid) return
+
+  suppressActiveItemScroll(SIDEBAR_SUPPRESS_ACTIVE_SCROLL_KEY)
+  persistSidebarCollapsedState()
+  applyPostDropCollapsePatch(
+    buildPostDropCollapsePatch(payload, {
+      ...meta,
+      targetCollapseKey: resolveTargetCollapseKey(
+        meta.targetNodeId ?? payload.target_uuid,
+      ),
+    }),
+  )
+
+  void runSidebarAction(async () => {
+    await requestSidebarAction('/__tnotes_sidebar_reorder', payload)
+  })
+}
+
+function resolveCollapseKey(item: SidebarItem): string | null {
+  return getCollapseKeyForTreeItem(item)
+}
+
+const sidebarDrag = useSidebarDrag({
+  items: sidebarGroups,
+  navRef,
+  maxDepth,
+  isDev,
+  resolveCollapseKey,
+  onReorder: reorderSidebarOptimistic,
+})
+
+const displaySidebarGroups = computed(
+  () => sidebarDrag.previewItems.value ?? sidebarGroups.value,
+)
+
+const dropIndicator = computed(() => sidebarDrag.dropIndicator.value)
+const dropSlot = computed(() => sidebarDrag.dropSlot.value)
+
+function getDropRailLeft(depth: number): number {
+  const indentSize = dropIndicator.value.indentSize
+  return calcDropRailLeft(depth, indentSize)
+}
+
+function getDropRailWidth(depth: number): number {
+  const nav = navRef.value
+  if (!nav) return 24
+
+  if (depth === dropIndicator.value.activeDepth) {
+    return Math.max(nav.clientWidth - getDropRailLeft(depth) - 8, 24)
+  }
+
+  return 12
+}
 
 // 加载 sidebar 数据
 function loadSidebar() {
@@ -167,13 +368,24 @@ function loadSidebar() {
   }
 }
 
-// 递归处理侧边栏项，添加 collapsed 状态
+function persistSidebarCollapsedState() {
+  saveSidebarCollapsedState(SIDEBAR_COLLAPSED_STATE_KEY, sidebarGroups.value)
+}
+
+// 递归处理侧边栏项，合并 localStorage 中的展开/折叠状态
 function processItems(items: any[]): SidebarItem[] {
-  return items.map((item) => ({
+  const normalized = items.map((item) => ({
     ...item,
     collapsed: item.collapsed ?? true,
-    items: item.items ? processItems(item.items) : undefined,
+    items: item.items as SidebarItem[] | undefined,
   }))
+
+  return enrichSidebarNodeIds(
+    applySidebarCollapsedState(
+      normalized,
+      loadSidebarCollapsedState(SIDEBAR_COLLAPSED_STATE_KEY),
+    ) as SidebarItem[],
+  )
 }
 
 function stripHeadingNumber(text: string): string {
@@ -187,17 +399,15 @@ function stripNoteTitlePrefix(text: string): string {
     .trim()
 }
 
-function normalizeSidebarDensity(value: string | null): SidebarDensity {
-  if (value === 'compact' || value === 'default' || value === 'loose') {
-    return value
-  }
-
-  return DEFAULT_SIDEBAR_DENSITY
-}
-
 function isCurrentNote(noteIndex: string): boolean {
   const decodedRoutePath = decodeURIComponent(route.path)
   return decodedRoutePath.includes(`/notes/${noteIndex}.`)
+}
+
+function getCurrentNoteIndex(): string | null {
+  const decodedRoutePath = decodeURIComponent(route.path)
+  const match = decodedRoutePath.match(/\/notes\/(\d{4})\./)
+  return match ? match[1] : null
 }
 
 function resolveUrl(path: string): string {
@@ -208,6 +418,7 @@ function resolveUrl(path: string): string {
 async function requestSidebarAction(
   path: string,
   body: unknown,
+  options?: { skipReload?: boolean },
 ): Promise<SidebarActionResult> {
   const response = await fetch(path, {
     method: 'POST',
@@ -225,9 +436,11 @@ async function requestSidebarAction(
     throw new Error(result?.message || response.statusText || '操作失败')
   }
 
-  setTimeout(() => {
-    loadSidebar()
-  }, 150)
+  if (!options?.skipReload) {
+    setTimeout(() => {
+      loadSidebar()
+    }, 150)
+  }
 
   return result
 }
@@ -242,45 +455,18 @@ async function runSidebarAction(action: () => Promise<void>) {
   }
 }
 
-function renameGroup(payload: GroupActionPayload) {
-  void runSidebarAction(async () => {
-    const newTitle = window.prompt('请输入新的目录名称', stripHeadingNumber(payload.text))
-    if (newTitle === null) return
-
-    await requestSidebarAction('/__tnotes_sidebar_rename_group', {
-      groupPath: payload.groupPath,
-      newTitle,
-    })
-  })
-}
-
-function deleteGroup(payload: GroupActionPayload) {
-  void runSidebarAction(async () => {
-    const confirmed = window.confirm(
-      `确定删除目录「${payload.groupPath.join(' / ')}」及其下所有笔记吗？`,
-    )
-    if (!confirmed) return
-
-    const result = await requestSidebarAction('/__tnotes_sidebar_delete_group', {
-      groupPath: payload.groupPath,
-    })
-
-    if (result.redirectUrl) {
-      window.location.replace(resolveUrl(result.redirectUrl))
-    }
-  })
-}
-
-function createNoteInGroup(payload: GroupActionPayload) {
+function createNoteInGroup(payload: ParentNoteActionPayload) {
   void runSidebarAction(async () => {
     await requestSidebarAction('/__tnotes_sidebar_create_note', {
-      groupPath: payload.groupPath,
+      parentNoteIndex: payload.parentNoteIndex,
+      parentFolderPath: payload.parentFolderPath,
+      parentTocLineIndex: payload.parentTocLineIndex,
       count: 1,
     })
   })
 }
 
-function createNotesInGroup(payload: GroupActionPayload) {
+function createNotesInGroup(payload: ParentNoteActionPayload) {
   void runSidebarAction(async () => {
     const input = window.prompt('请输入新增笔记数量（1-100）', '1')
     if (input === null) return
@@ -291,8 +477,31 @@ function createNotesInGroup(payload: GroupActionPayload) {
     }
 
     await requestSidebarAction('/__tnotes_sidebar_create_notes', {
-      groupPath: payload.groupPath,
+      parentNoteIndex: payload.parentNoteIndex,
+      parentFolderPath: payload.parentFolderPath,
+      parentTocLineIndex: payload.parentTocLineIndex,
       count,
+    })
+  })
+}
+
+function createFolderInGroup(payload: ParentNoteActionPayload) {
+  void runSidebarAction(async () => {
+    if (payload.parentTocLineIndex === undefined) {
+      throw new Error('无法定位父节点（缺少 tocLineIndex，请刷新侧边栏后重试）')
+    }
+
+    const title = window.prompt('请输入子目录名称')
+    if (title === null) return
+
+    const trimmed = title.trim()
+    if (!trimmed) {
+      throw new Error('目录标题不能为空')
+    }
+
+    await requestSidebarAction('/__tnotes_sidebar_create_folder', {
+      parentTocLineIndex: payload.parentTocLineIndex,
+      title: trimmed,
     })
   })
 }
@@ -314,6 +523,48 @@ function renameNote(payload: NoteActionPayload) {
 
     if (result.newUrl && isCurrentNote(payload.noteIndex)) {
       window.location.replace(resolveUrl(result.newUrl))
+    }
+  })
+}
+
+function renameFolder(payload: FolderActionPayload) {
+  void runSidebarAction(async () => {
+    if (payload.tocLineIndex < 0) return
+
+    const newTitle = window.prompt(
+      '请输入新的目录名称',
+      stripHeadingNumber(payload.text),
+    )
+    if (newTitle === null) return
+
+    const trimmed = newTitle.trim()
+    if (!trimmed) {
+      throw new Error('目录标题不能为空')
+    }
+
+    await requestSidebarAction('/__tnotes_sidebar_rename_folder', {
+      tocLineIndex: payload.tocLineIndex,
+      newTitle: trimmed,
+    })
+  })
+}
+
+function deleteEntry(payload: EntryActionPayload) {
+  void runSidebarAction(async () => {
+    if (payload.tocLineIndex < 0) return
+
+    const confirmed = window.confirm(
+      `确定删除「${stripHeadingNumber(payload.text)}」及其所有子项吗？子树内的笔记将从磁盘删除。`,
+    )
+    if (!confirmed) return
+
+    const result = await requestSidebarAction('/__tnotes_sidebar_delete_entry', {
+      tocLineIndex: payload.tocLineIndex,
+      currentNoteIndex: getCurrentNoteIndex() ?? '',
+    })
+
+    if (result.redirectUrl) {
+      window.location.replace(resolveUrl(result.redirectUrl))
     }
   })
 }
@@ -352,12 +603,6 @@ function createNoteAround(payload: NoteActionPayload) {
 function openNoteAbout(payload: NoteActionPayload) {
   if (!payload.noteIndex) return
   emit('open-note-about', payload.noteIndex)
-}
-
-function reorderSidebar(payload: ReorderPayload) {
-  void runSidebarAction(async () => {
-    await requestSidebarAction('/__tnotes_sidebar_reorder', payload)
-  })
 }
 
 // 判断项是否有子项
@@ -457,7 +702,7 @@ function expandParentGroup(element: HTMLElement) {
       currentElement.closest<HTMLElement>('.group')
     if (!groupElement) break
 
-    const groupTitleText = groupElement.querySelector('.group-title-text')
+    const groupTitleText = groupElement.querySelector('.parent-note-link, .group-title-text')
     if (groupTitleText) {
       const groupText = groupTitleText.textContent?.trim()
       if (groupText) {
@@ -611,6 +856,9 @@ function focusCurrentNote() {
 
 // 展开当前激活笔记的所有父级分组
 function expandActiveItemParents() {
+  if (shouldSuppressActiveItemScroll(SIDEBAR_SUPPRESS_ACTIVE_SCROLL_KEY)) {
+    return
+  }
   expandActiveItemParentsRecursive(sidebarGroups.value)
 }
 
@@ -620,7 +868,6 @@ function expandActiveItemParentsRecursive(items: SidebarItem[]): boolean {
 
   for (const item of items) {
     if (item.link) {
-      // 检查当前项是否激活
       const fullLink = getFullLink(item.link)
       const decodedRoutePath = decodeURIComponent(route.path)
       const decodedFullLink = decodeURIComponent(fullLink)
@@ -631,7 +878,9 @@ function expandActiveItemParentsRecursive(items: SidebarItem[]): boolean {
       if (itemActive) {
         hasActive = true
       }
-    } else if (item.items) {
+    }
+
+    if (item.items?.length) {
       const childHasActive = expandActiveItemParentsRecursive(item.items)
       if (childHasActive) {
         item.collapsed = false
@@ -651,18 +900,24 @@ function getFullLink(link: string) {
 
 // 滚动到当前激活的笔记
 function scrollToActiveItem() {
+  if (shouldSuppressActiveItemScroll(SIDEBAR_SUPPRESS_ACTIVE_SCROLL_KEY)) {
+    return
+  }
+
   // 等待 DOM 更新
   setTimeout(() => {
-    const positions = getCurrentNotePositions()
-    if (positions.length > 0) {
-      // 展开所有包含当前笔记的分组
-      expandActiveItemParents()
+    expandActiveItemParents()
 
-      // 滚动到第一个位置
-      setTimeout(() => {
-        scrollToElement(positions[0])
-      }, 100)
-    }
+    setTimeout(() => {
+      const positions = getCurrentNotePositions()
+
+      if (positions.length > 0) {
+        expandParentGroup(positions[0])
+        setTimeout(() => {
+          scrollToElement(positions[0])
+        }, 100)
+      }
+    }, 100)
   }, 300)
 }
 
@@ -677,29 +932,19 @@ defineExpose({
 
 onMounted(() => {
   loadSidebar()
-
-  // 调试：打印配置信息
-  // console.log('🔧 [CustomSidebar] showNoteId:', showNoteId.value)
-  // if (typeof window !== 'undefined') {
-  //   console.log(
-  //     '🔧 [CustomSidebar] localStorage value:',
-  //     localStorage.getItem(SIDEBAR_SHOW_NOTE_ID_KEY)
-  //   )
-  // }
-  // console.log(
-  //   '🔧 [CustomSidebar] tnotesConfig value:',
-  //   tnotesConfig.sidebarShowNoteId
-  // )
-
-  // 自动滚动到当前激活的笔记
   scrollToActiveItem()
 })
+
+watch(
+  sidebarGroups,
+  () => persistSidebarCollapsedState(),
+  { deep: true, flush: 'post' },
+)
 
 // 监听 sidebarConfig 的变化（HMR 会更新这个导入的数据）
 watch(
   () => sidebarConfig,
   () => {
-    // console.log('🔄 [CustomSidebar] Sidebar config changed, reloading...')
     loadSidebar()
   },
   { deep: true }
@@ -734,16 +979,101 @@ watch(
 <style scoped>
 /* 自定义 sidebar 容器，适配 VitePress 的 sidebar-nav-before 插槽 */
 .custom-sidebar-wrapper {
-  /* 不需要设置 position 和尺寸，因为它在 VitePress 的 sidebar 容器内 */
+  width: 100%;
+  min-width: 0;
 }
 
 .nav {
+  position: relative;
   font-size: 14px;
   line-height: 2;
 }
 
+.sidebar-nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+
+.sidebar-drop-slot {
+  position: absolute;
+  z-index: 45;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px dashed var(--vp-c-brand-1);
+  border-radius: 6px;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.sidebar-drop-layer {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 50;
+  height: 0;
+  pointer-events: none;
+}
+
+.sidebar-drop-rail-segment {
+  position: absolute;
+  top: -2px;
+  height: 3px;
+  background: var(--vp-c-text-2);
+  border-radius: 999px;
+  opacity: 0.65;
+}
+
+.sidebar-drop-rail-segment.is-active {
+  top: -2px;
+  height: 4px;
+  background: var(--vp-c-brand-1);
+  opacity: 1;
+  box-shadow:
+    0 0 0 1px var(--vp-c-brand-soft),
+    0 0 10px color-mix(in srgb, var(--vp-c-brand-1) 70%, transparent);
+}
+
+.sidebar-drop-rail-segment.is-active::before {
+  position: absolute;
+  top: -4px;
+  left: -1px;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid var(--vp-c-brand-1);
+  content: '';
+}
+
+.sidebar-drop-indicator {
+  position: absolute;
+  top: -1px;
+  z-index: 50;
+  height: 3px;
+  background: var(--vp-c-brand-1);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1px var(--vp-c-brand-soft),
+    0 0 8px color-mix(in srgb, var(--vp-c-brand-1) 65%, transparent);
+  pointer-events: none;
+}
+
+.sidebar-drop-indicator.is-inside {
+  height: auto;
+  min-height: 28px;
+  background: var(--vp-c-brand-soft);
+  border: 1px solid var(--vp-c-brand-1);
+  border-radius: 6px;
+}
+
 .group {
   margin-bottom: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
 .group-title {
@@ -777,12 +1107,15 @@ watch(
 
 .nav-item {
   display: block;
-  padding: 4px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
   color: var(--vp-c-text-2);
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 14px;
-  line-height: 24px;
+  line-height: 22px;
   transition: all 0.25s;
 }
 
@@ -793,6 +1126,12 @@ watch(
 
 .nav-item.active {
   color: var(--vp-c-brand-1);
+  font-weight: 600;
+}
+
+.readme-nav-item {
+  display: block;
+  margin-bottom: 8px;
   font-weight: 600;
 }
 
@@ -812,10 +1151,43 @@ watch(
 }
 </style>
 
-<!-- 全局样式：隐藏 VitePress 默认的 sidebar nav -->
+<!-- 全局样式：侧边栏拖拽与默认导航隐藏 -->
 <style>
-/* 隐藏 VitePress 默认的 sidebar 导航内容（保留容器） */
-.VPSidebarNav {
+/* 隐藏 VitePress 默认 sidebar 分组（自定义目录在 sidebar-nav-after 插槽） */
+#VPSidebarNav > .group {
   display: none !important;
+}
+
+body.sidebar-drag-active {
+  cursor: grabbing;
+  user-select: none;
+}
+
+body.sidebar-drag-active .sidebar-row {
+  cursor: grabbing;
+}
+
+.sidebar-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 8px;
+  opacity: 0.92;
+  background: var(--vp-c-bg-elv);
+  border: 1px solid var(--vp-c-brand-1);
+  border-radius: 6px;
+  box-shadow: var(--vp-shadow-3);
+  pointer-events: none;
+}
+
+.sidebar-drag-ghost .ghost-title-text {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

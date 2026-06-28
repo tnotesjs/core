@@ -5,11 +5,10 @@
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'fs'
-import { resolve } from 'path'
 
-import { ROOT_DIR_PATH, ROOT_CONFIG_PATH } from '../../config'
+import { ROOT_CONFIG_PATH, ROOT_TOC_PATH } from '../../config'
 import { ReadmeService, NoteService } from '../../services'
-import { logger, LogLevel, parseReadmeCompletedNotes } from '../../utils'
+import { logger, LogLevel, parseTocCompletedNotes } from '../../utils'
 import { BaseCommand } from '../BaseCommand'
 
 import type { TNotesConfig } from '../../types'
@@ -87,17 +86,16 @@ export class UpdateCommand extends BaseCommand {
       const configContent = readFileSync(ROOT_CONFIG_PATH, 'utf-8')
       const config: TNotesConfig = JSON.parse(configContent)
 
-      // 1. 读取根目录 README.md
-      const readmePath = resolve(ROOT_DIR_PATH, 'README.md')
-      if (!existsSync(readmePath)) {
-        throw new Error('根目录 README.md 不存在')
+      // 1. 读取根目录 TOC.md
+      if (!existsSync(ROOT_TOC_PATH)) {
+        throw new Error('根目录 TOC.md 不存在')
       }
 
-      const readmeContent = readFileSync(readmePath, 'utf-8')
+      const tocContent = readFileSync(ROOT_TOC_PATH, 'utf-8')
 
       // 2. 解析完成笔记数量
 
-      const { completedCount } = parseReadmeCompletedNotes(readmeContent)
+      const { completedCount } = parseTocCompletedNotes(tocContent)
 
       // 3. 生成当前月份的键名（如 '25.12'）
       const now = new Date()

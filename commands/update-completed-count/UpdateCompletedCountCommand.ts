@@ -9,7 +9,7 @@ import { execSync } from 'child_process'
 import { readFileSync, writeFileSync } from 'fs'
 
 import { ROOT_DIR_PATH, ROOT_CONFIG_PATH } from '../../config'
-import { parseReadmeCompletedNotes } from '../../utils'
+import { parseReadmeCompletedNotes, parseTocCompletedNotes } from '../../utils'
 import { BaseCommand } from '../BaseCommand'
 
 import type { TNotesConfig } from '../../types'
@@ -74,8 +74,8 @@ export class UpdateCompletedCountCommand extends BaseCommand {
    *
    * 逻辑:
    * 1. 计算最近12个月的范围（当前月份往前推11个月）
-   * 2. 遍历这12个月，从 Git 历史中读取 README.md
-   * 3. 解析 README.md 获取完成笔记数量
+   * 2. 遍历这12个月，从 Git 历史中读取 TOC.md（回退 README.md）
+   * 3. 解析获取完成笔记数量
    * 4. 如果知识库创建时间在这12个月内，之前的月份补0
    * 5. 返回对象 { '25.01': 0, '25.02': 1, ..., '25.12': 15 }
    */
@@ -175,34 +175,50 @@ export class UpdateCompletedCountCommand extends BaseCommand {
     const dayStr = String(lastDayOfMonth.getDate()).padStart(2, '0')
     const untilDate = `${yearStr}-${monthStr}-${dayStr} 23:59:59 +0800`
 
-    // 查找该月最后一次修改 README.md 的提交
-    const commitHash = execSync(
-      `git log --until="${untilDate}" --format=%H -1 -- README.md`,
+    // 查找该月最后一次修改 TOC.md 或 README.md 的提交
+    let commitHash = execSync(
+      `git log --until="${untilDate}" --format=%H -1 -- TOC.md`,
       {
         cwd: ROOT_DIR_PATH,
         encoding: 'utf-8',
       },
     ).trim()
 
+    let filePath = 'TOC.md'
+
+    if (!commitHash) {
+      commitHash = execSync(
+        `git log --until="${untilDate}" --format=%H -1 -- README.md`,
+        {
+          cwd: ROOT_DIR_PATH,
+          encoding: 'utf-8',
+        },
+      ).trim()
+      filePath = 'README.md'
+    }
+
     if (!commitHash) {
       // 该月没有提交，返回回退值
       return fallbackCount
     }
 
-    // 读取该提交中的 README.md 内容
-    let readmeContent: string
+    // 读取该提交中的文件内容
+    let fileContent: string
     try {
-      readmeContent = execSync(`git show ${commitHash}:README.md`, {
+      fileContent = execSync(`git show ${commitHash}:${filePath}`, {
         cwd: ROOT_DIR_PATH,
         encoding: 'utf-8',
       })
     } catch (error) {
-      // README.md 在该提交中不存在
+      // 文件在该提交中不存在
       return fallbackCount
     }
 
-    // 解析 README.md
-    const { completedCount } = parseReadmeCompletedNotes(readmeContent)
+    // 解析完成笔记数量
+    const { completedCount } =
+      filePath === 'TOC.md'
+        ? parseTocCompletedNotes(fileContent)
+        : parseReadmeCompletedNotes(fileContent)
     return completedCount
   }
 }

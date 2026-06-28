@@ -17,6 +17,7 @@ import type { NoteIndexCache } from '../../core/NoteIndexCache'
 import type { Logger } from '../../utils'
 import type { NoteService } from '../note/service'
 import type { ReadmeService } from '../readme/service'
+import type { TocService } from '../toc/service'
 
 const RENAME_REVERT_DELAY_MS = 2000
 
@@ -40,6 +41,8 @@ interface FolderChangeHandlerConfig {
   noteService: NoteService
   /** README 服务实例 */
   readmeService: ReadmeService
+  /** TOC 服务实例 */
+  tocService: TocService
   /** 笔记索引缓存实例 */
   noteIndexCache: NoteIndexCache
   /** 日志记录器 */
@@ -55,6 +58,8 @@ interface FolderChangeHandlerConfig {
     newFolder: string
     noteIndex: string
   }) => void
+  /** 笔记结构变更（增删改目录）后触发 dev 搜索索引重建 */
+  onNoteStructureChanged?: (reason: string) => void
 }
 
 export class FolderChangeHandler {
@@ -84,7 +89,7 @@ export class FolderChangeHandler {
   }
 
   async handleFolderDeletion(deletedFolderName: string): Promise<void> {
-    const { scheduler, watchState, noteIndexCache, readmeService, logger } =
+    const { scheduler, watchState, noteIndexCache, tocService, logger } =
       this.config
 
     if (scheduler.getUpdating()) return
@@ -105,8 +110,9 @@ export class FolderChangeHandler {
       await safeExecute(
         `删除笔记 ${noteIndex}`,
         async () => {
-          await readmeService.deleteNoteFromReadme(noteIndex)
-          await readmeService.regenerateSidebar()
+          await tocService.deleteNoteFromToc(noteIndex)
+          await tocService.regenerateSidebar()
+          this.config.onNoteStructureChanged?.(`watcher:delete:${noteIndex}`)
         },
         logger,
       )
@@ -196,7 +202,7 @@ export class FolderChangeHandler {
     noteIndex: string,
     newName: string,
   ): Promise<void> {
-    const { noteIndexCache, readmeService, logger, notesDir } = this.config
+    const { noteIndexCache, tocService, logger, notesDir } = this.config
 
     logger.info(`笔记索引未变 (${noteIndex})，只更新标题`)
     noteIndexCache.updateFolderName(noteIndex, newName)
@@ -208,11 +214,9 @@ export class FolderChangeHandler {
       logger,
     )
 
-    const item = noteIndexCache.getByNoteIndex(noteIndex)
-    if (item) {
-      await readmeService.updateNoteInReadme(noteIndex, item.noteConfig)
-    }
-    await readmeService.regenerateSidebar()
+    await tocService.renameNoteInToc(noteIndex, newName)
+    await tocService.regenerateSidebar()
+    this.config.onNoteStructureChanged?.(`watcher:rename-title:${noteIndex}`)
     logger.success(`标题更新完成`)
   }
 
@@ -262,11 +266,11 @@ export class FolderChangeHandler {
     oldNoteIndex: string,
     newNoteIndex: string,
   ): Promise<void> {
-    const { noteService, noteIndexCache, readmeService, logger } = this.config
+    const { noteService, noteIndexCache, tocService, logger } = this.config
 
     logger.info(`笔记索引变更: ${oldNoteIndex} → ${newNoteIndex}`)
 
-    await readmeService.deleteNoteFromReadme(oldNoteIndex)
+    await tocService.deleteNoteFromToc(oldNoteIndex)
 
     const newNote = noteService.getNoteByIndex(newNoteIndex)
 
@@ -274,8 +278,11 @@ export class FolderChangeHandler {
       noteIndexCache.delete(oldNoteIndex)
       noteIndexCache.add(newNote)
 
-      await readmeService.appendNoteToReadme(newNoteIndex)
-      await readmeService.regenerateSidebar()
+      await tocService.appendNoteToToc(newNoteIndex)
+      await tocService.regenerateSidebar()
+      this.config.onNoteStructureChanged?.(
+        `watcher:rename-index:${oldNoteIndex}->${newNoteIndex}`,
+      )
       logger.success(`笔记索引变更处理完成`)
     } else {
       logger.error(`未找到新笔记: ${newNoteIndex}`)

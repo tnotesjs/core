@@ -1,0 +1,110 @@
+{
+  // Place your TNotes.react 工作区 snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
+  // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
+  // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
+  // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+  // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
+  // Placeholders with the same ids are connected.
+  // Example:
+  // "Print to console": {
+  // 	"scope": "javascript,typescript",
+  // 	"prefix": "log",
+  // 	"body": [
+  // 		"console.log('$1');",
+  // 		"$2"
+  // 	],
+  // 	"description": "Log output to console"
+  // }
+  //
+  // You can also restrict snippets to specific files using include/exclude patterns:
+  // "Test snippet": {
+  // 	"scope": "javascript,typescript",
+  // 	"prefix": "test",
+  // 	"body": "test('$1', () => {\n\t$0\n});",
+  // 	"include": ["**/*.test.ts", "*.spec.ts"],
+  // 	"exclude": ["**/temp/*.ts"],
+  // 	"description": "Insert test block"
+  // }
+
+  // TNotes 中支持的一些推荐写法
+
+  "TNotes Tip": {
+    "scope": "markdown",
+    "prefix": [":::tip"],
+    "body": ["::: tip 💡 ${1:TIP}", "", "$2", "", ":::", "$0"],
+    "description": "插入 TNotes 提示块（Tip）",
+  },
+
+  "TNotes Warning": {
+    "scope": "markdown",
+    "prefix": [":::warning"],
+    "body": ["::: warning ⚠️ ${1:WARNING}", "", "$2", "", ":::", "$0"],
+    "description": "插入 TNotes 警告块（Warning）",
+  },
+
+  "TNotes Error": {
+    "scope": "markdown",
+    "prefix": [":::error"],
+    "body": ["::: error ❌ ${1:ERROR}", "", "$2", "", ":::", "$0"],
+    "description": "插入 TNotes 错误块（Error）",
+  },
+
+  "TNotes Details": {
+    "scope": "markdown",
+    "prefix": [":::details"],
+    "body": ["::: details 🔍 ${1:DETAILS}", "", "$2", "", ":::", "$0"],
+    "description": "插入 TNotes 细节块（Details）",
+  },
+
+  "TNotes Code": {
+    "scope": "markdown",
+    "prefix": [":::code"],
+    "body": ["", "```${1:js}", "$2", "```", "", "$0"],
+    "description": "插入 TNotes 代码块（Code）",
+  },
+
+  "TNotes Code Group": {
+    "scope": "markdown",
+    "prefix": [":::code-group"],
+    "body": [
+      "::: code-group",
+      "",
+      "```${1:js} [${2:1}]",
+      "$3",
+      "```",
+      "",
+      "```${4:js} [${5:2}]",
+      "$6",
+      "```",
+      "",
+      ":::",
+      "",
+      "$0",
+    ],
+    "description": "插入 TNotes 代码组（Code Group）",
+  },
+
+  "TNotes Swiper": {
+    "scope": "markdown",
+    "prefix": [":::swiper"],
+    "body": [
+      "::: swiper",
+      "",
+      "<!-- 图片 1 -->$1",
+      "",
+      "<!-- 图片 2 -->$2",
+      "",
+      ":::",
+      "",
+      "$0",
+    ],
+    "description": "插入 TNotes 图片轮播组（Swiper）",
+  },
+
+  "TNotes NotesTable": {
+    "scope": "markdown",
+    "prefix": [":::notestable"],
+    "body": ["<N :ids=\"[", "  '$1',", "]\" />", "$0"],
+    "description": "插入 TNotes 笔记表格",
+  },
+}

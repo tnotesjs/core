@@ -1,0 +1,212 @@
+/**
+ * 文档三栏布局（语雀式）
+ * - 左目录 / 右正文目录贴齐视口左右两侧
+ * - 中间正文：超宽 / 标准 750px
+ * - 视口不足时 aside-auto-hidden / sidebar-auto-hidden
+ */
+
+:root {
+  --tn-aside-width: 300px;
+  --tn-content-standard-width: 750px;
+  --tn-content-min-width: 640px;
+  --tn-doc-layout-padding: 16px;
+}
+
+/* 取消 VitePress 1440px 居中壳：顶栏与正文区贴齐左目录、右目录 */
+@media (min-width: 960px) {
+  .VPNavBar.has-sidebar .container {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* 站点标题固定在视口左上方，宽度与左目录一致 */
+  .VPNavBar.has-sidebar .title {
+    left: 0 !important;
+    padding-left: var(--tn-sidebar-inset-x, 8px) !important;
+    padding-right: var(--tn-sidebar-inset-x, 8px) !important;
+    width: var(--vp-sidebar-width) !important;
+    box-sizing: border-box;
+  }
+
+  .VPNavBar.has-sidebar .divider {
+    padding-left: var(--vp-sidebar-width) !important;
+  }
+
+  .VPNavBar.has-sidebar .content {
+    padding-left: var(--vp-sidebar-width) !important;
+    padding-right: var(--tn-sidebar-inset-x, 8px) !important;
+  }
+
+  .VPContent.has-sidebar {
+    padding-left: var(--vp-sidebar-width) !important;
+    padding-right: 0 !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPNavBar.has-sidebar .title {
+    padding-left: var(--tn-sidebar-inset-x, 8px) !important;
+    width: var(--vp-sidebar-width) !important;
+  }
+
+  .VPNavBar.has-sidebar .divider {
+    padding-left: var(--vp-sidebar-width) !important;
+  }
+
+  .VPNavBar.has-sidebar .content {
+    padding-left: var(--vp-sidebar-width) !important;
+    padding-right: var(--tn-sidebar-inset-x, 8px) !important;
+  }
+
+  .VPContent.has-sidebar {
+    padding-left: var(--vp-sidebar-width) !important;
+    padding-right: 0 !important;
+  }
+}
+
+/* 有右栏时为正文区预留 300px，右栏 fixed 贴视口右侧 */
+@media (min-width: 1280px) {
+  html:not(.aside-auto-hidden):not(.content-fullscreen)
+    .VPContent.has-sidebar:has(.VPDoc.has-aside) {
+    padding-right: var(--tn-aside-width) !important;
+  }
+
+  .VPDoc.has-aside .aside {
+    position: fixed !important;
+    top: var(--vp-nav-height) !important;
+    right: 0 !important;
+    left: auto !important;
+    bottom: 0 !important;
+    z-index: 10;
+    order: 0 !important;
+    flex: none !important;
+    width: var(--tn-aside-width) !important;
+    max-width: var(--tn-aside-width) !important;
+    padding: 0 var(--tn-sidebar-inset-x, 8px) !important;
+    box-sizing: border-box;
+  }
+
+  .VPDoc .aside-container {
+    position: relative !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding-top: 48px !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .VPDoc .aside-curtain {
+    width: 100% !important;
+  }
+
+  /* aside 已 fixed，container 不再为右栏预留 flex 列 */
+  .VPDoc.has-aside .container {
+    display: block !important;
+    max-width: none !important;
+  }
+
+  .VPDoc.has-aside .content {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 48px var(--tn-sidebar-inset-x, 8px) 128px !important;
+    box-sizing: border-box;
+  }
+}
+
+/* 正文页宽模式 */
+html.content-width-wide .VPDoc.has-aside .content-container {
+  max-width: none !important;
+}
+
+html.content-width-standard .VPDoc.has-aside .content-container {
+  max-width: var(--tn-content-standard-width) !important;
+  margin-inline: auto !important;
+}
+
+html.content-width-standard .VPDoc:not(.has-aside) .content-container {
+  max-width: var(--tn-content-standard-width) !important;
+  margin-inline: auto !important;
+}
+
+/* 视口不足：先隐藏右侧正文目录 */
+html.aside-auto-hidden .VPDoc .aside {
+  display: none !important;
+}
+
+html.aside-auto-hidden .VPDoc.has-aside .content {
+  max-width: none !important;
+}
+
+html.aside-auto-hidden .VPContent.has-sidebar {
+  padding-right: 0 !important;
+}
+
+/* 视口仍不足：自动折叠左目录（仅桌面；移动端由 VitePress 抽屉侧栏负责） */
+@media (min-width: 960px) {
+  html.sidebar-auto-hidden .VPSidebar {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: hidden;
+    transform: translateX(-100%);
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+
+  html.sidebar-auto-hidden .VPNavBar.has-sidebar .VPNavBarTitle {
+    display: none !important;
+  }
+
+  html.sidebar-auto-hidden .VPNavBar.has-sidebar {
+    background-color: var(--vp-nav-bg-color) !important;
+  }
+
+  html.sidebar-auto-hidden .VPNavBar.has-sidebar .divider {
+    padding-left: 0 !important;
+  }
+
+  html.sidebar-auto-hidden .VPNavBar.has-sidebar .content {
+    padding-left: 0 !important;
+  }
+
+  html.sidebar-auto-hidden .VPContent.has-sidebar {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+}
+
+/* 全屏内容模式：隐藏右栏，正文横向铺满视口（覆盖标准/超宽页宽） */
+html.content-fullscreen {
+  .VPDoc .aside {
+    display: none !important;
+  }
+
+  .VPContent.has-sidebar {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .VPDoc.has-aside .container,
+  .VPDoc .container {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .VPDoc.has-aside .content,
+  .VPDoc .content {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 48px var(--tn-sidebar-inset-x, 8px) 128px !important;
+    box-sizing: border-box;
+  }
+
+  &.content-width-standard .VPDoc .content-container,
+  &.content-width-wide .VPDoc .content-container {
+    max-width: none !important;
+    width: 100% !important;
+    margin-inline: 0 !important;
+  }
+}

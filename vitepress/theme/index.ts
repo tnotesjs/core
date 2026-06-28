@@ -14,6 +14,7 @@
 
 import DefaultTheme from 'vitepress/theme'
 
+import { initTnotesSearchIndexHmr } from '../client/localSearchIndexBridge'
 import BilibiliOutsidePlayer from '../components/BilibiliOutsidePlayer/BilibiliOutsidePlayer.vue'
 import Discussions from '../components/Discussions/Discussions.vue'
 import EnWordList from '../components/EnWordList/EnWordList.vue'
@@ -26,6 +27,7 @@ import Mermaid from '../components/Mermaid/Mermaid.vue'
 import NotesTable from '../components/NotesTable/NotesTable.vue'
 import SidebarCard from '../components/SidebarCard/SidebarCard.vue'
 import Tooltip from '../components/Tooltip/Tooltip.vue'
+
 
 import type { Theme, EnhanceAppContext } from 'vitepress'
 import './styles/index.scss'
@@ -88,6 +90,10 @@ function registerRenameHmrListener() {
   )
 }
 
+function registerSearchIndexHmrListener() {
+  initTnotesSearchIndexHmr()
+}
+
 /**
  * 覆盖选项
  */
@@ -116,6 +122,7 @@ export function defineNotesTheme(overrides: NotesThemeOverrides = {}): Theme {
     enhanceApp(ctx) {
       registerCoreComponents(ctx)
       registerRenameHmrListener()
+      registerSearchIndexHmrListener()
       overrides.enhanceApp?.(ctx)
     },
   }
@@ -130,5 +137,6 @@ export default {
   enhanceApp(ctx: EnhanceAppContext) {
     registerCoreComponents(ctx)
     registerRenameHmrListener()
+    registerSearchIndexHmrListener()
   },
 } satisfies Theme

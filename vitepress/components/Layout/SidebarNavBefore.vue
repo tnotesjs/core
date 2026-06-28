@@ -14,16 +14,6 @@ vitepress/components/Layout/SidebarNavBefore.vue
         >
           <img :src="icon__fold" class="toggle-icon" alt="切换展开折叠" />
         </button>
-        <a
-          :class="[
-            'group-label',
-            'group-label-link',
-            { 'is-active': isCatalogActive },
-          ]"
-          :href="catalogLink"
-        >
-          目录
-        </a>
       </div>
 
       <div class="group group-right">
@@ -54,9 +44,6 @@ vitepress/components/Layout/SidebarNavBefore.vue
 </template>
 
 <script setup lang="ts">
-import { useData, useRoute } from 'vitepress'
-import { computed } from 'vue'
-
 import {
   icon__fold,
   icon__number_purple,
@@ -74,26 +61,6 @@ defineEmits<{
   'toggle-note-id': []
   'focus-current': []
 }>()
-
-const { site } = useData()
-const route = useRoute()
-
-const base = computed(() => site.value.base || '/')
-const catalogLink = computed(() => `${base.value}README`)
-const catalogPath = computed(() => normalizeRoutePath(catalogLink.value))
-const isCatalogActive = computed(() => {
-  const currentPath = normalizeRoutePath(route.path)
-
-  return currentPath === catalogPath.value || currentPath === '/README'
-})
-
-function normalizeRoutePath(path: string): string {
-  const normalizedPath = path.split(/[?#]/)[0].replace(/\.html$/, '')
-
-  return normalizedPath.length > 1
-    ? normalizedPath.replace(/\/$/, '')
-    : normalizedPath
-}
 </script>
 
 <style scoped>
@@ -104,7 +71,7 @@ function normalizeRoutePath(path: string): string {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 8px 12px;
+  padding: 10px 0 12px;
   /* border-bottom: 1px solid var(--vp-c-divider); */
   margin-bottom: 10px;
   background: var(--vp-sidebar-bg-color, var(--vp-c-bg));
@@ -121,22 +88,6 @@ function normalizeRoutePath(path: string): string {
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.group-label {
-  font-size: 13px;
-  color: var(--vp-c-text-2);
-  text-decoration: none;
-  user-select: none;
-}
-
-.group-label-link:hover {
-  color: var(--vp-c-brand-1);
-}
-
-.group-label-link.is-active {
-  color: var(--vp-c-brand-1);
-  font-weight: 600;
 }
 
 .toggle-btn {

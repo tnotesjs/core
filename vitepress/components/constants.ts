@@ -73,12 +73,6 @@ export const SIDEBAR_MAX_DEPTH_KEY: string =
   'SIDEBAR_MAX_DEPTH_KEY__' + REPO_NAME
 
 /**
- * 侧边栏目录风格配置
- */
-export const SIDEBAR_DENSITY_KEY: string =
-  'SIDEBAR_DENSITY_KEY__' + REPO_NAME
-
-/**
  * 侧边栏已完成笔记前缀配置
  */
 export const SIDEBAR_DONE_PREFIX_KEY: string =
@@ -89,6 +83,24 @@ export const SIDEBAR_DONE_PREFIX_KEY: string =
  */
 export const SIDEBAR_UNDONE_PREFIX_KEY: string =
   'SIDEBAR_UNDONE_PREFIX_KEY__' + REPO_NAME
+
+/**
+ * 侧边栏文件夹展开/折叠状态（按 noteIndex 缓存）
+ */
+export const SIDEBAR_COLLAPSED_STATE_KEY: string =
+  'SIDEBAR_COLLAPSED_STATE_KEY__' + REPO_NAME
+
+/**
+ * 正文区域页宽模式：wide（超宽显示）| standard（标准 750px）
+ */
+export const CONTENT_WIDTH_MODE_KEY: string =
+  'CONTENT_WIDTH_MODE_KEY__' + REPO_NAME
+
+/**
+ * reorder 后短时抑制「展开当前路由父级 + 滚动到 active 项」
+ */
+export const SIDEBAR_SUPPRESS_ACTIVE_SCROLL_KEY: string =
+  'SIDEBAR_SUPPRESS_ACTIVE_SCROLL_KEY__' + REPO_NAME
 
 /**
  * VitePress HOME README 文件名

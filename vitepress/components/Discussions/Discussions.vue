@@ -148,7 +148,7 @@ const loadGiscusScript = () => {
   giscusScript.setAttribute('data-emit-metadata', '0')
   giscusScript.setAttribute('data-input-position', 'top')
   giscusScript.setAttribute('data-lang', 'zh-CN')
-  giscusScript.setAttribute('data-loading', 'lazy')
+  giscusScript.setAttribute('data-loading', 'eager')
   giscusScript.setAttribute(
     'data-theme',
     isDark.value ? GISCUS_DARK_THEME : GISCUS_LIGHT_THEME

@@ -3,6 +3,7 @@ vitepress/components/Footprints/Footprints.vue
 -->
 
 <script setup>
+import { onContentUpdated } from 'vitepress'
 import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 
 // ----------------------------------------------------------
@@ -12,6 +13,28 @@ import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
  * 获取图片容器的 DOM 引用
  */
 const imageContainer = ref(null)
+
+/**
+ * 图片数量，用于朋友圈式网格布局（1 / 2 / 4 / 3 列）
+ */
+const imageCount = ref(0)
+
+const imageLayoutClass = computed(() => {
+  const n = imageCount.value
+  if (n === 1) return 'fp-layout-1'
+  if (n === 2) return 'fp-layout-2'
+  if (n === 4) return 'fp-layout-4'
+  if (n >= 3) return 'fp-layout-grid'
+  return ''
+})
+
+function initImageList() {
+  if (!imageContainer.value) return
+
+  const imgElements = imageContainer.value.querySelectorAll('img')
+  imageCount.value = imgElements.length
+  images.value = Array.from(imgElements).map((img) => img.src)
+}
 
 /**
  * 动态存储图片路径的列表
@@ -169,27 +192,16 @@ const handleMouseUp = () => {
 }
 
 onMounted(() => {
-  const imgElements = imageContainer.value.querySelectorAll('img')
-  images.value = Array.from(imgElements).map((img) => img.src)
+  nextTick(() => {
+    initImageList()
+  })
 
   // 添加键盘事件监听器
   window.addEventListener('keydown', handleKeyDown)
+})
 
-  // 添加触摸事件监听器
-  const modalContent = document.querySelector(
-    `.__dynamic__modal-content-${instanceId}`
-  )
-  if (modalContent) {
-    modalContent.addEventListener('touchstart', handleTouchStart)
-    modalContent.addEventListener('touchmove', handleTouchMove) // 绑定 touchmove 事件
-    modalContent.addEventListener('touchend', (event) => {
-      touchEndX = event.changedTouches[0].clientX // 记录手指抬起的最终位置
-      handleTouchEnd()
-    })
-
-    // 添加鼠标事件监听器
-    modalContent.addEventListener('mousedown', handleMouseDown)
-  }
+onContentUpdated(() => {
+  nextTick(initImageList)
 })
 
 onBeforeUnmount(() => {
@@ -352,7 +364,11 @@ const formattedTime = computed(() => {
     </button>
   </div>
 
-  <div class="imageContainer" ref="imageContainer">
+  <div
+    class="imageContainer"
+    :class="imageLayoutClass"
+    ref="imageContainer"
+  >
     <slot
       name="image-list"
       :openModal="openModal"
@@ -422,18 +438,67 @@ const formattedTime = computed(() => {
   }
 }
 
-// 图片容器
+// 图片容器（朋友圈式网格：Markdown 图片常被包在 p/a 中，需 grid + :deep）
 .imageContainer {
-  display: flex;
+  display: grid;
+  gap: 4px;
   width: 100%;
-  flex-wrap: wrap;
 
-  img {
-    width: calc(33.33% - 10px);
-    aspect-ratio: 1; // 设置宽高比为 1:1
+  :deep(> *) {
+    margin: 0;
+    min-width: 0;
+  }
+
+  :deep(p) {
+    margin: 0;
+    line-height: 0;
+  }
+
+  :deep(a) {
+    display: block;
+    line-height: 0;
+  }
+
+  :deep(img) {
+    width: 100%;
+    aspect-ratio: 1;
     object-fit: cover;
+    display: block;
+    margin: 0;
     cursor: pointer;
-    margin: 0.3rem;
+    vertical-align: top;
+  }
+
+  /* 1 张：较大单图，不强制正方形 */
+  &.fp-layout-1 {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+
+    :deep(img) {
+      width: auto;
+      max-width: 100%;
+      max-height: 360px;
+      aspect-ratio: auto;
+      object-fit: cover;
+    }
+  }
+
+  /* 2 张：一行两列 */
+  &.fp-layout-2 {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 360px;
+  }
+
+  /* 4 张：2×2 */
+  &.fp-layout-4 {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 360px;
+  }
+
+  /* 3 / 5–9 张：三列网格 */
+  &.fp-layout-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 480px;
   }
 }
 

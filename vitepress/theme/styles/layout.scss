@@ -9,12 +9,56 @@
   --tn-sidebar-width: 260px;
   --tn-sidebar-layout-width: var(--tn-sidebar-width);
   --vp-sidebar-width: var(--tn-sidebar-width);
+  --tn-sidebar-inset-x: 8px;
+  --tn-sidebar-inset-total: calc(var(--tn-sidebar-inset-x) * 2);
 }
 
-// 保留 VitePress 对侧边栏宽屏居中的 left/width/padding-left 计算。
+// 语雀式：左目录贴齐视口左侧（不使用 1440px 居中壳偏移）
 .VPSidebar {
-  padding-top: var(--vp-nav-height) !important;
-  padding-bottom: 1rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: var(--tn-sidebar-inset-x) !important;
+  padding-right: var(--tn-sidebar-inset-x) !important;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 移动端抽屉：侧栏贴顶拉满视口，背景连续覆盖，避免导航栏下方留白 */
+@media (max-width: 959px) {
+  .VPSidebar {
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    /* 内容从顶栏下方开始，顶栏区域仍由侧栏背景填充 */
+    padding-top: var(--vp-nav-height) !important;
+  }
+
+  .VPSidebar .curtain {
+    display: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .VPSidebar {
+    top: var(--vp-nav-height) !important;
+    height: calc(100vh - var(--vp-nav-height)) !important;
+    left: 0 !important;
+    width: var(--vp-sidebar-width) !important;
+  }
+}
+
+#VPSidebarNav {
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+#VPSidebarNav .sidebar-toggle-wrapper,
+#VPSidebarNav .custom-sidebar-wrapper {
+  width: 100%;
+  min-width: 0;
 }
 
 /* ===================================== */
@@ -30,10 +74,6 @@
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 
-.hide-sidebar .VPNavBar.has-sidebar .VPNavBarTitle {
-  display: none !important;
-}
-
 .hide-sidebar .VPNavBar.has-sidebar {
   background-color: var(--vp-nav-bg-color) !important;
 }
@@ -42,10 +82,20 @@
   padding-left: 0 !important;
 }
 
-/* 主体内容往左补齐，与导航栏标题左对齐 */
+/* 主体内容左对齐视口（隐藏左栏时不保留 1440 居中空白） */
 .hide-sidebar .VPContent.has-sidebar {
   margin-left: 0 !important;
-  padding-left: calc((100vw - var(--vp-layout-max-width)) / 2) !important;
+  padding-left: 0 !important;
+}
+
+@media (min-width: 960px) {
+  .hide-sidebar .VPNavBar.has-sidebar .VPNavBarTitle {
+    display: none !important;
+  }
+
+  .hide-sidebar .VPNavBar.has-sidebar .content {
+    padding-left: 0 !important;
+  }
 }
 
 /* #endregion */
@@ -64,7 +114,7 @@
 
 .content-fullscreen .VPContent {
   margin: 0 !important;
-  padding: 0 2rem !important;
+  padding: 0 !important;
   max-width: 100% !important;
 }
 

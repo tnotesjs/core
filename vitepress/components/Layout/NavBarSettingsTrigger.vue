@@ -10,7 +10,7 @@ vitepress/components/Layout/NavBarSettingsTrigger.vue
     @click="open"
   >
     <img
-      :src="icon__setting"
+      :src="settingsIcon"
       class="tnotes-nav-settings-icon"
       alt=""
     />
@@ -18,10 +18,18 @@ vitepress/components/Layout/NavBarSettingsTrigger.vue
 </template>
 
 <script setup lang="ts">
-import { icon__setting } from '../../assets/icons'
+import { useData } from 'vitepress'
+import { computed } from 'vue'
+
+import { icon__setting_dark, icon__setting_light } from '../../assets/icons'
 import { useSettingsDialog } from '../Settings/composables/useSettingsDialog'
 
+const { isDark } = useData()
 const { open } = useSettingsDialog()
+
+const settingsIcon = computed(() =>
+  isDark.value ? icon__setting_dark : icon__setting_light,
+)
 </script>
 
 <style scoped>

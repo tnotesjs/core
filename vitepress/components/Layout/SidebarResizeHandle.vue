@@ -38,6 +38,7 @@ vitepress/components/Layout/SidebarResizeHandle.vue
 import { useRoute } from 'vitepress'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { updateResponsiveLayout } from './composables/useDocLayout'
 import { useSidebarLayout } from './composables/useSidebarLayout'
 import { icon__next, icon__prev } from '../../assets/icons'
 
@@ -57,13 +58,11 @@ const isDragging = ref(false)
 const isContentFullscreen = ref(false)
 const isSidebarAvailable = ref(false)
 const shortcutText = ref('Ctrl + Alt + ,')
-const WIDE_LAYOUT_MIN_WIDTH = 1440
 let fullscreenObserver: MutationObserver | null = null
-
-const toggleIcon = computed(() => (hidden.value ? icon__next : icon__prev))
 const toggleActionText = computed(() =>
   hidden.value ? '展开侧边栏' : '收起侧边栏',
 )
+const toggleIcon = computed(() => (hidden.value ? icon__next : icon__prev))
 const toggleTitle = computed(
   () => `${toggleActionText.value}\n${shortcutText.value}`,
 )
@@ -102,6 +101,7 @@ function resize(event: MouseEvent) {
   if (!isDragging.value) return
 
   setSidebarWidth(getSidebarWidthFromClientX(event.clientX))
+  updateResponsiveLayout()
 }
 
 function stopResize() {
@@ -112,6 +112,7 @@ function stopResize() {
   window.removeEventListener('mousemove', resize)
   window.removeEventListener('mouseup', stopResize)
   saveSidebarWidth()
+  updateResponsiveLayout()
 }
 
 function handleShortcut(event: KeyboardEvent) {
@@ -125,6 +126,7 @@ function handleShortcut(event: KeyboardEvent) {
 
   event.preventDefault()
   toggleSidebar()
+  updateResponsiveLayout()
 }
 
 watch(
@@ -155,18 +157,7 @@ function getSidebarWidthFromClientX(clientX: number): number {
 }
 
 function getSidebarLayoutOffset(): number {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return 0
-  if (window.innerWidth < WIDE_LAYOUT_MIN_WIDTH) return 0
-
-  const layoutMaxWidth = Number.parseFloat(
-    window
-      .getComputedStyle(document.documentElement)
-      .getPropertyValue('--vp-layout-max-width'),
-  )
-
-  if (!Number.isFinite(layoutMaxWidth)) return 0
-
-  return Math.max(0, (window.innerWidth - layoutMaxWidth) / 2)
+  return 0
 }
 
 function isToggleShortcut(event: KeyboardEvent): boolean {
@@ -359,14 +350,6 @@ function isEditableTarget(target: EventTarget | null): boolean {
 @media (max-width: 959px) {
   .sidebar-resize-handle {
     display: none;
-  }
-}
-
-@media (min-width: 1440px) {
-  .sidebar-resize-handle {
-    left: calc(
-      (100vw - var(--vp-layout-max-width)) / 2 + var(--tn-sidebar-width, 260px) - 5px
-    );
   }
 }
 </style>

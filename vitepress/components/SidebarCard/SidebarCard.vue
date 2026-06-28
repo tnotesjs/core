@@ -12,15 +12,25 @@ import {
   icon__vscode,
   icon__folder,
   icon__search,
-  icon__mindmap,
   icon__number_gray,
   icon__number_purple,
 } from '../../assets/icons'
 import { NOTES_DIR_KEY, REPO_NAME, AUTHOR, ROOT_ITEM } from '../constants.ts'
-import MindMapView from './MindMapView.vue'
+import FolderTreeItems from './FolderTreeItems.vue'
 import NotesTrendChart from './NotesTrendChart.vue'
 import { useSettingsDialog } from '../Settings/composables/useSettingsDialog'
 import { data as sidebarConfig } from '../sidebar.data'
+import {
+  buildSidebarTree,
+  collectParentKeys,
+  extractRealNumberFromLink,
+  extractTitleFromText,
+} from '../sidebarTreeHelpers'
+import {
+  getRepoRootPath,
+  resolveNoteReadmePath,
+  toVscodeFileUrl,
+} from '../utils/vscodePaths'
 import { formatDate } from '../utils.ts'
 
 // #region props
@@ -38,7 +48,7 @@ const props = defineProps({
 
 // #region data
 const viewMode = ref('folder')
-const expandedGroupsFolder = ref(new Set())
+const expandedTreeKeys = ref(new Set())
 const searchQuery = ref('')
 const debouncedQuery = ref('')
 const showAbout = ref(false)
@@ -50,54 +60,21 @@ let debounceTimer = null
 const searchResults = computed(() => {
   const query = debouncedQuery.value.trim().toLowerCase()
   if (!query) return []
-  return articles.filter((article) => {
+  return articles.value.filter((article) => {
     const fullTitle = `${article.realNumber}. ${article.text}`.toLowerCase()
     return fullTitle.includes(query)
   })
 })
 
-const folderViewData = computed(() => {
-  const result = {}
+const folderTree = computed(() =>
+  buildSidebarTree(sidebarData.value, {
+    showPending: props.pending,
+    showDone: props.done,
+    base: baseUrl,
+  }),
+)
 
-  // 按完整分组路径构建层级结构（平铺模式）
-  articles.forEach((article) => {
-    // 将所有层级铺出来，路径信息作为分组名
-    // eg. 1. 第一层级/第一个第二层级
-    //          article 1
-    //          article 2
-    //          ……
-    //     1. 第一层级/第二个第二层级
-    //          article 1
-    //          article 2
-    //          ……
-    //     1. 第一层级/第三个第二层级
-    //          article 1
-    //          article 2
-    //          ……
-    // const group = article.group
-    // if (!result[group]) {
-    //   result[group] = {
-    //     name: group,
-    //     articles: [],
-    //     fullPath: group,
-    //   }
-    // }
-    // result[group].articles.push(article)
-
-    // 只铺出第一层级
-    const firstLevelCategory = article.firstLevelCategory
-    if (!result[firstLevelCategory]) {
-      result[firstLevelCategory] = {
-        name: firstLevelCategory,
-        articles: [],
-        fullPath: firstLevelCategory,
-      }
-    }
-    result[firstLevelCategory].articles.push(article)
-  })
-
-  return result
-})
+const readmeLink = computed(() => `${site.value.base || '/'}README`)
 // #endregion
 
 const { open: openSettings } = useSettingsDialog()
@@ -111,10 +88,12 @@ const sidebarData = computed(() => {
     : []
 })
 
-const { articles, groups } = extractArticlesWithGroups(
-  sidebarData.value,
-  props.pending,
-  props.done,
+const articles = computed(() =>
+  extractArticlesWithGroups(
+    sidebarData.value,
+    props.pending,
+    props.done,
+  ).articles,
 )
 
 // 根据笔记数量动态计算防抖时间
@@ -123,24 +102,24 @@ const { articles, groups } = extractArticlesWithGroups(
 // ≤2000: 150ms
 // ≤5000: 200ms，3k+ 笔记场景（如 LeetCode 知识库）
 // >5000: 300ms，接近万篇上限时适当增加
-const searchDebounceDelay = (() => {
-  const count = articles.length
+const searchDebounceDelay = computed(() => {
+  const count = articles.value.length
   if (count <= 100) return 0
   if (count <= 500) return 100
   if (count <= 2000) return 150
   if (count <= 5000) return 200
   return 300
-})()
+})
 
 watch(searchQuery, (val) => {
   if (debounceTimer) clearTimeout(debounceTimer)
-  if (searchDebounceDelay === 0) {
+  if (searchDebounceDelay.value === 0) {
     debouncedQuery.value = val
     return
   }
   debounceTimer = setTimeout(() => {
     debouncedQuery.value = val
-  }, searchDebounceDelay)
+  }, searchDebounceDelay.value)
 })
 
 function extractArticlesWithGroups(sidebar, showPending, showDone) {
@@ -203,21 +182,6 @@ function extractArticlesWithGroups(sidebar, showPending, showDone) {
   return { articles, groups }
 }
 
-// 从 link 中提取真实编号
-function extractRealNumberFromLink(link) {
-  if (!link) return '0000'
-
-  const match = link.match(/\/notes\/(\d{4})/)
-  return match ? match[1] : '0000'
-}
-
-// 从文本中提取标题（去除开头的编号部分）
-function extractTitleFromText(text) {
-  if (!text) return ''
-
-  return text.replace(/^\d{4}\.?\s/, '')
-}
-
 function handleCardClick(link) {
   // open in new tab
   if (link) {
@@ -230,27 +194,22 @@ function handleCardClick(link) {
   // }
 }
 
-// 在文件夹视图中切换分组展开状态
-function toggleGroupFolder(groupName) {
-  if (expandedGroupsFolder.value.has(groupName)) {
-    expandedGroupsFolder.value.delete(groupName)
+function toggleTreeNode(key) {
+  const next = new Set(expandedTreeKeys.value)
+  if (next.has(key)) {
+    next.delete(key)
   } else {
-    expandedGroupsFolder.value.add(groupName)
+    next.add(key)
   }
+  expandedTreeKeys.value = next
 }
 
-// 切换所有折叠状态
 function toggleAllFold() {
+  const allKeys = collectParentKeys(folderTree.value)
   const isAllExpanded =
-    expandedGroupsFolder.value.size === Object.keys(folderViewData.value).length
+    allKeys.length > 0 && allKeys.every((key) => expandedTreeKeys.value.has(key))
 
-  if (isAllExpanded) {
-    expandedGroupsFolder.value.clear()
-  } else {
-    Object.keys(folderViewData.value).forEach((folderName) => {
-      expandedGroupsFolder.value.add(folderViewData.value[folderName].fullPath)
-    })
-  }
+  expandedTreeKeys.value = isAllExpanded ? new Set() : new Set(allKeys)
 }
 
 // 打开 GitHub 仓库
@@ -275,7 +234,7 @@ function openVSCodeRepo() {
   window.open('vscode://file/' + notesDir, '_blank')
 }
 
-// 打开 VS Code 中的笔记目录
+// 打开 VS Code 中的笔记 README.md
 function openVSCodeArticle(article) {
   const notesDir = localStorage.getItem(NOTES_DIR_KEY)
 
@@ -289,10 +248,27 @@ function openVSCodeArticle(article) {
     return
   }
 
-  // 构建笔记目录路径
-  const notePath = `${notesDir}/${article.relativePath.replace('/README', '')}`
-  // console.log(notePath, encodeURI(notePath))
-  window.open('vscode://file/' + encodeURI(notePath), '_blank')
+  const notePath = resolveNoteReadmePath(notesDir, article.relativePath)
+  if (!notePath) return
+
+  window.open(toVscodeFileUrl(notePath), '_blank')
+}
+
+function openVSCodeReadme() {
+  const notesDir = localStorage.getItem(NOTES_DIR_KEY)
+
+  if (!notesDir) {
+    const shouldRedirect = confirm(
+      '请先配置本地知识库所在位置，点击确定打开设置面板',
+    )
+    if (shouldRedirect) {
+      openSettings()
+    }
+    return
+  }
+
+  const readmePath = `${getRepoRootPath(notesDir)}/README.md`
+  window.open(toVscodeFileUrl(readmePath), '_blank')
 }
 </script>
 
@@ -313,12 +289,6 @@ function openVSCodeArticle(article) {
           @click="viewMode = 'search'"
         >
           <img :src="icon__search" alt="搜索视图" />
-        </button>
-        <button
-          :class="{ active: viewMode === 'mindmap' }"
-          @click="viewMode = 'mindmap'"
-        >
-          <img :src="icon__mindmap" alt="思维导图" />
         </button>
       </div>
       <!-- 右侧控制按钮 -->
@@ -432,8 +402,6 @@ function openVSCodeArticle(article) {
         </div>
       </div>
     </div>
-    <!-- 思维导图视图 -->
-    <MindMapView v-if="viewMode === 'mindmap'" :sidebarData="sidebarData" />
     <!-- 文件夹视图 -->
     <div class="folder-view" v-if="viewMode === 'folder'">
       <NotesTrendChart
@@ -441,65 +409,25 @@ function openVSCodeArticle(article) {
         :completedNotesCount="ROOT_ITEM.completed_notes_count"
       />
       <div class="folder-tree">
-        <div
-          v-for="(folder, folderName) in folderViewData"
-          :key="folderName"
-          class="folder-group"
-        >
-          <!-- 文件夹组 -->
-          <div
-            class="folder-header"
-            @click="toggleGroupFolder(folder.fullPath)"
+        <div class="tree-readme-row">
+          <span class="tree-readme-spacer" aria-hidden="true" />
+          <a :href="readmeLink" class="tree-readme-link">README</a>
+          <button
+            class="vscode-article"
+            type="button"
+            title="在 VS Code 中打开 README.md"
+            @click="openVSCodeReadme"
           >
-            <span class="folder-icon">
-              {{ expandedGroupsFolder.has(folder.fullPath) ? '📂' : '📁' }}
-            </span>
-            <span class="folder-name">{{ folderName }}</span>
-            <span class="folder-count">{{ folder.articles.length }}</span>
-          </div>
-
-          <!-- 展开的文章 -->
-          <div
-            class="folder-content"
-            v-if="expandedGroupsFolder.has(folder.fullPath)"
-          >
-            <!-- 当前文件夹中的文章 -->
-            <div
-              v-for="article in folder.articles"
-              :key="article.link"
-              class="folder-article"
-            >
-              <div class="article-info" @click="handleCardClick(article.link)">
-                <span
-                  class="article-status"
-                  :class="`status-${article.status}`"
-                >
-                  {{
-                    article.status === 'done'
-                      ? '✅'
-                      : article.status === 'pending'
-                        ? '⏰'
-                        : '📄'
-                  }}
-                </span>
-                <!-- <span class="article-number">{{ article.realNumber }}</span> -->
-                <span class="article-title">{{
-                  showNumber
-                    ? `${article.realNumber}. ${article.text}`
-                    : article.text
-                }}</span>
-              </div>
-
-              <button
-                class="vscode-article"
-                @click.stop="openVSCodeArticle(article)"
-                title="在 VS Code 中打开笔记目录"
-              >
-                <img :src="icon__vscode" alt="打开笔记目录" />
-              </button>
-            </div>
-          </div>
+            <img :src="icon__vscode" alt="打开 README.md" />
+          </button>
         </div>
+        <FolderTreeItems
+          :nodes="folderTree"
+          :show-number="showNumber"
+          :expanded-keys="expandedTreeKeys"
+          @toggle-node="toggleTreeNode"
+          @open-vscode="openVSCodeArticle"
+        />
       </div>
     </div>
   </div>
@@ -611,138 +539,61 @@ function openVSCodeArticle(article) {
   padding: 1rem 0;
 
   .folder-tree {
-    // background-color: var(--vp-c-bg-soft);
     border-radius: 8px;
     padding: 1rem;
+  }
 
-    .folder-group {
-      margin-bottom: 1rem;
-      border: 1px solid var(--vp-c-divider);
-      border-radius: 8px;
-      overflow: hidden;
+  .tree-readme-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 48px;
+    padding: 3px 9px;
+    margin-bottom: 3px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
 
-      .folder-header {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        // background-color: var(--vp-c-bg-soft);
-        cursor: pointer;
-        transition: background-color 0.3s;
-
-        // &:hover {
-        //   background-color: var(--vp-c-bg-elv);
-        // }
-
-        .folder-icon {
-          margin-right: 0.75rem;
-          font-size: 1.1rem;
-        }
-
-        .folder-name {
-          flex: 1;
-          font-weight: 500;
-          font-size: 0.95rem;
-        }
-
-        .folder-count {
-          background-color: var(--vp-c-default-soft);
-          color: var(--vp-c-text-2);
-          font-size: 0.8rem;
-          padding: 0.2rem 0.5rem;
-          border-radius: 4px;
-        }
-      }
-
-      .folder-content {
-        padding: 0.5rem 1rem;
-        background-color: var(--vp-c-bg);
-
-        .folder-article {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0.6rem 0.8rem;
-          margin: 0.4rem 0;
-          border-radius: 6px;
-          transition: background-color 0.3s;
-
-          &:hover {
-            background-color: var(--vp-c-bg-soft);
-          }
-
-          .article-info {
-            display: flex;
-            align-items: center;
-            flex: 1;
-            cursor: pointer;
-            overflow: hidden;
-
-            .article-status {
-              margin-right: 0.8rem;
-              font-size: 0.9rem;
-              width: 1.2rem;
-              text-align: center;
-              flex-shrink: 0;
-
-              &.status-done {
-                color: var(--vp-c-green-1);
-              }
-
-              &.status-pending {
-                color: var(--vp-c-yellow-1);
-              }
-            }
-
-            .article-number {
-              background-color: var(--vp-c-default-soft);
-              color: var(--vp-c-text-2);
-              font-size: 0.75rem;
-              padding: 0.2rem 0.5rem;
-              border-radius: 4px;
-              font-family: var(--vp-font-family-mono);
-              flex-shrink: 0;
-              margin-right: 0.8rem;
-            }
-
-            .article-title {
-              font-size: 0.9rem;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-          }
-
-          .vscode-article {
-            background: none;
-            border: none;
-            padding: 0.3rem;
-            cursor: pointer;
-            border-radius: 4px;
-            flex-shrink: 0;
-            opacity: 0.5;
-            transition: opacity 0.3s ease;
-
-            &:hover {
-              opacity: 1;
-              background-color: var(--vp-c-bg-soft-down);
-            }
-
-            img {
-              display: block;
-              height: 1rem;
-              width: 1rem;
-            }
-          }
-        }
-      }
+    &:hover {
+      background-color: var(--vp-c-bg-soft);
     }
   }
 
-  /* 响应式调整 */
-  @media (max-width: 768px) {
-    .folder-content {
-      padding-left: 1rem !important;
-      padding-right: 1rem !important;
+  .tree-readme-spacer {
+    flex: 0 0 20px;
+    width: 20px;
+  }
+
+  .tree-readme-link {
+    flex: 1;
+    color: var(--vp-c-text-1);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    &:hover {
+      color: var(--vp-c-brand-1);
+    }
+  }
+
+  .vscode-article {
+    background: none;
+    border: none;
+    padding: 0.3rem;
+    cursor: pointer;
+    border-radius: 4px;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+      background-color: var(--vp-c-bg-soft-down);
+    }
+
+    img {
+      display: block;
+      height: 1rem;
+      width: 1rem;
     }
   }
 }

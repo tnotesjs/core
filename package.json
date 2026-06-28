@@ -24,6 +24,7 @@
   "files": [
     "config/defaultConfig.ts",
     "dist/",
+    "templates/",
     "vitepress/",
     "types/"
   ],
@@ -52,6 +53,7 @@
     "markdown-it-mathjax3": "^4.3.2",
     "markdown-it-task-lists": "^2.1.1",
     "marked": "^15.0.11",
+    "minisearch": "^7.2.0",
     "markmap-lib": "^0.18.12",
     "markmap-toolbar": "^0.18.12",
     "markmap-view": "^0.18.12",

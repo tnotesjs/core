@@ -70,7 +70,8 @@ export { default } from '@tnotesjs/core/vitepress/theme'
     "tn:pull": "tnotes --pull",
     "tn:create-notes": "tnotes --create-notes",
     "tn:fix-timestamps": "tnotes --fix-timestamps",
-    "tn:help": "tnotes --help"
+    "tn:help": "tnotes --help",
+    "tn:init-sub-repo": "tnotes --init-sub-repo"
   }
 }
 ```

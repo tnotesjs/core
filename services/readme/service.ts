@@ -24,6 +24,7 @@ import {
   genHierarchicalSidebar,
   processEmptyLines,
 } from '../../utils'
+import { TocService } from '../toc/service'
 
 import type { NoteInfo, NoteConfig } from '../../types'
 
@@ -59,12 +60,14 @@ export class ReadmeService {
   private readmeGenerator: ReadmeGenerator
   private configManager: ConfigManager
   private noteIndexCache: NoteIndexCache
+  private tocService: TocService
 
   private constructor() {
     this.noteManager = NoteManager.getInstance()
     this.readmeGenerator = new ReadmeGenerator()
     this.configManager = ConfigManager.getInstance()
     this.noteIndexCache = NoteIndexCache.getInstance()
+    this.tocService = TocService.getInstance()
   }
 
   static getInstance(): ReadmeService {
@@ -81,7 +84,7 @@ export class ReadmeService {
   async updateAllReadmes(options: UpdateReadmeOptions = {}): Promise<void> {
     const {
       updateSidebar = true,
-      updateHome = true,
+      updateHome = false,
       notes: providedNotes,
     } = options
 
@@ -113,14 +116,15 @@ export class ReadmeService {
 
     logger.info(`更新了 ${notesToUpdate.length} 篇笔记 (耗时 ${updateTime}ms)`)
 
-    // 更新首页 README（必须先更新，因为侧边目录 sidebar.json 数据是通过解析 README 中的内容来生成的）
+    // 更新首页 README（可选，目录已迁移至 TOC.md）
     if (updateHome) {
       await this.updateHomeReadme(notes)
     }
 
-    // 更新侧边栏配置（必须在 README 更新后执行）
+    // 规范化 TOC.md 并更新 sidebar.json
     if (updateSidebar) {
-      await this.updateSidebar(notes)
+      await this.tocService.normalizeToc(notes)
+      await this.tocService.regenerateSidebar(notes)
     }
 
     logger.info('知识库更新完成！')
@@ -612,7 +616,7 @@ export class ReadmeService {
   }
 
   /**
-   * 更新根 README 和 sidebar，不重写每篇笔记 README
+   * 更新 TOC.md 和 sidebar，不重写每篇笔记 README
    */
   async refreshHomeReadmeAndSidebar(notes?: NoteInfo[]): Promise<void> {
     const allNotes =
@@ -621,21 +625,16 @@ export class ReadmeService {
         ? this.noteIndexCache.toNoteInfoList()
         : this.noteManager.scanNotes())
 
-    await this.updateHomeReadme(allNotes)
-    await this.updateSidebar(allNotes)
+    await this.tocService.normalizeToc(allNotes)
+    await this.tocService.regenerateSidebar(allNotes)
   }
 
   /**
-   * 重新生成 sidebar.json（基于当前 README.md）
+   * 重新生成 sidebar.json（基于当前 TOC.md）
    * @param notes - 可选的笔记列表，不传则内部扫描
    */
   async regenerateSidebar(notes?: NoteInfo[]): Promise<void> {
-    const allNotes =
-      notes ??
-      (this.noteIndexCache.isInitialized()
-        ? this.noteIndexCache.toNoteInfoList()
-        : this.noteManager.scanNotes())
-    await this.updateSidebar(allNotes)
+    await this.tocService.regenerateSidebar(notes)
     logger.info('重新生成 sidebar.json')
   }
 

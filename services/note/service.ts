@@ -9,35 +9,16 @@ import { join } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
 import { NOTES_PATH, CONSTANTS, REPO_NOTES_URL } from '../../config/constants'
-import { generateNoteTitle } from '../../config/templates'
+import {
+  generateNoteTitle,
+  getNewNoteReadmeBody,
+} from '../../config/templates'
 import { NoteIndexCache } from '../../core/NoteIndexCache'
 import { NoteManager } from '../../core/NoteManager'
 import { ensureDirectory, logger } from '../../utils'
-import { ReadmeService } from '../readme/service'
+import { TocService } from '../toc/service'
 
 import type { NoteInfo, NoteConfig } from '../../types'
-
-/**
- * 新增笔记 README.md 模板
- *
- * 不包含一级标题（# 笔记编号. 笔记名称），由 createNote 动态生成
- */
-const NEW_NOTES_README_MD_TEMPLATE = `
-<!-- region:toc -->
-
-- [1. 🎯 本节内容](#1--本节内容)
-- [2. 🫧 评价](#2--评价)
-
-<!-- endregion:toc -->
-
-## 1. 🎯 本节内容
-
-- todo
-
-## 2. 🫧 评价
-
-- todo
-`
 
 /**
  * 创建新笔记的选项
@@ -139,7 +120,7 @@ export class NoteService {
     // 创建 README.md（包含一级标题）
     const readmePath = join(notePath, 'README.md')
     const noteTitle = generateNoteTitle(noteIndex, title, REPO_NOTES_URL)
-    const readmeContent = noteTitle + '\n' + NEW_NOTES_README_MD_TEMPLATE
+    const readmeContent = noteTitle + '\n' + getNewNoteReadmeBody()
     writeFileSync(readmePath, readmeContent, 'utf-8')
 
     // 创建 .tnotes.json（使用 UUID 作为配置 ID）
@@ -267,13 +248,10 @@ export class NoteService {
       logger.info(`检测到全局字段变更 (${noteIndex})，正在增量更新全局文件...`)
 
       // 使用增量更新
-      const readmeService = ReadmeService.getInstance()
+      const tocService = TocService.getInstance()
 
-      // 增量更新 README.md 中的笔记
-      await readmeService.updateNoteInReadme(noteIndex, updates)
-
-      // 重新生成 sidebar.json（基于更新后的 README.md）
-      await readmeService.regenerateSidebar()
+      await tocService.updateNoteInToc(noteIndex, updates)
+      await tocService.regenerateSidebar()
 
       logger.info(`全局文件增量更新完成 (${noteIndex})`)
     } else {

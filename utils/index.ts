@@ -13,6 +13,54 @@ export { LogLevel, Logger, logger, createLogger } from './logger'
 export { createAddNumberToTitle, generateToc } from './markdown'
 export { parseArgs } from './parseArgs'
 export { parseReadmeCompletedNotes } from './parseReadmeCompletedNotes'
+export {
+  parseTocLine,
+  buildTocLine,
+  buildFolderTocLine,
+  parseTocToTree,
+  parseTocToMutableTree,
+  migrateLegacyNoteParents,
+  serializeTocTree,
+  buildTreeFromFlatNodes,
+  parseTocLinesToFlatNodes,
+  getSubtreeLineRange,
+  getFolderSubtreeRange,
+  getTocEntrySubtreeRange,
+  collectNoteIndexesInSubtree,
+  renameFolderLine,
+  getPreviousNoteIndexOutsideSubtree,
+  isNoteIndexInSubtree,
+  findTocLineIndex,
+  findFolderLineIndex,
+  findTocEntryLineIndex,
+  getPreviousTocNoteIndex,
+  processTocEmptyLines,
+  parseTocCompletedNotes,
+  buildSidebarFromTocTree,
+  resolveNoteFromIndex,
+  getTocLineCompleted,
+  folderTitleFromNoteDirName,
+  isTocContentLine,
+  TOC_INDENT_SPACES,
+} from './tocHelpers'
+export type {
+  ParsedTocLine,
+  TocNode,
+  TocTreeNode,
+  TocFolderNode,
+  TocNoteNode,
+  TocSidebarItem,
+  TocLineKind,
+} from './tocHelpers'
+export {
+  migrateReadmeToToc,
+  extractReadmeBodyAfterToc,
+  README_TOC_END_TAG,
+} from './migrateReadmeToToc'
+export type {
+  MigratedTocEntry,
+  MigrateReadmeToTocResult,
+} from './migrateReadmeToToc'
 export { isPortInUse, killPortProcess, waitForPort } from './portUtils'
 export {
   parseNoteLine,

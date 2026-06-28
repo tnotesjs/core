@@ -9,7 +9,7 @@ import { NoteManager, NoteIndexCache } from '../../core'
 import {
   VitepressService,
   FileWatcherService,
-  ReadmeService,
+  TocService,
 } from '../../services'
 import { BaseCommand } from '../BaseCommand'
 
@@ -18,7 +18,7 @@ export class DevCommand extends BaseCommand {
   private fileWatcherService: FileWatcherService
   private noteIndexCache: NoteIndexCache
   private noteManager: NoteManager
-  private readmeService: ReadmeService
+  private tocService: TocService
   private vitepressService: VitepressService
 
   constructor() {
@@ -28,7 +28,7 @@ export class DevCommand extends BaseCommand {
     this.fileWatcherService = new FileWatcherService()
     this.noteIndexCache = NoteIndexCache.getInstance()
     this.noteManager = NoteManager.getInstance()
-    this.readmeService = ReadmeService.getInstance()
+    this.tocService = TocService.getInstance()
     this.vitepressService = new VitepressService()
   }
 
@@ -40,14 +40,15 @@ export class DevCommand extends BaseCommand {
     // 2. 初始化笔记索引缓存（在 VitePress 启动前完成，供插件使用）
     this.noteIndexCache.initialize(notes)
 
-    // 3. 重新生成 sidebar.json（必须在 VitePress 启动前完成）
+    // 3. 重新生成 sidebar.json（必须在 VitePress 启动前完成，基于 TOC.md）
     //
     // sidebar.data.ts 这个 VitePress data loader 只在启动时读取磁盘上的
     // sidebar.json，运行期间靠 HMR 监听其变化做热更新。但冷启动时若 sidebar.json
-    // 与当前笔记/README 不同步（例如 git pull、切分支、或上次会话外离线增删改了
+    // 与当前笔记/TOC.md 不同步（例如 git pull、切分支、或上次会话外离线增删改了
     // 笔记），VitePress 就会把过期数据读进来，导致侧边栏显示错误，需要手动删除
     // .vitepress/cache 才能恢复。这里在启动前主动重建一次，消除启动时的过期窗口。
-    await this.readmeService.regenerateSidebar(notes)
+    this.tocService.ensureTocExists()
+    await this.tocService.regenerateSidebar(notes)
 
     // 4. 启动 VitePress 服务器（会等待服务就绪后返回）
     const result = await this.vitepressService.startServer()

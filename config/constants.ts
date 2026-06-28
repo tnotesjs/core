@@ -7,9 +7,20 @@
 import { resolve } from 'path'
 
 import { getConfigManager } from './ConfigManager'
+import { getDefaultConfig } from './defaultConfig'
+
+import type { TNotesConfig } from '../types'
+
+function loadConfigOrDefault(): TNotesConfig {
+  try {
+    return getConfigManager().getAll()
+  } catch {
+    return getDefaultConfig()
+  }
+}
 
 const configManager = getConfigManager()
-const config = configManager.getAll()
+const config = loadConfigOrDefault()
 
 // 导出配置项（向后兼容）
 export const {
@@ -32,6 +43,7 @@ const rootPath = configManager.getRootPath()
  */
 export const ROOT_DIR_PATH = rootPath
 export const ROOT_README_PATH = resolve(ROOT_DIR_PATH, 'README.md')
+export const ROOT_TOC_PATH = resolve(ROOT_DIR_PATH, 'TOC.md')
 export const ROOT_CONFIG_PATH = resolve(ROOT_DIR_PATH, '.tnotes.json')
 export const NOTES_DIR_PATH = resolve(ROOT_DIR_PATH, 'notes')
 export const VP_DIR_PATH = resolve(ROOT_DIR_PATH, '.vitepress')
