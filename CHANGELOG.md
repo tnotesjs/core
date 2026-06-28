@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+暂无待发布的变更。
+
+## [0.2.2] - 2026-06-28
+
 ### Fixed
 
 - 修复 `0.2.1` npm 包仍缺少 `services/`、`utils/`、`config/`、`core/` 源码，导致宿主仓库 Vite 打包 `@tnotesjs/core` 的 `sidebar.data.ts` / Layout 组件时无法解析 `../../services/toc/service`、`../../../utils/tocNodeId` 等模块。`package.json` `files` 与 `.npmignore` 已对齐 vitepress 源码的实际依赖面。
